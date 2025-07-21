@@ -1,4 +1,4 @@
-class Vector {
+class Vector2 {
 	constructor(x, y) {
 		this.x = x;
 		this.y = y;
@@ -22,12 +22,12 @@ class Vector {
 
 	// Computing the length of the vector using square root
 	Length() {
-		return Math.sqrt(this.Length());
+		return Math.sqrt(this.x * this.x + this.y * this.y);
 	}
 
 	// Creates a new vector that is orthogonal of the original vector
 	GetNormal() {
-		return new Vector2(this.y - this.x);
+		return new Vector2(this.y, -this.x);
 	}
 
 	// Calculating the Dot product
@@ -37,7 +37,7 @@ class Vector {
 
 	// Copy function
 	Cpy() {
-		return new Vector(this.x, this.y);
+		return new Vector2(this.x, this.y);
 	}
 
 	// Adding vectors
