@@ -5,8 +5,8 @@ class Simulation {
 		this.testPolygon = new Polygon([
 			new Vector2(500, 500),
 			new Vector2(600, 600),
-			new Vector2(400, 600),
-			new Vector2(400, 500),
+			new Vector2(600, 700),
+			new Vector2(220, 600),
 		]);
 	}
 
@@ -25,6 +25,7 @@ class Simulation {
 		DrawUtils.strokePoint(new Vector2(400, 400), 20, 'blue');
 		DrawUtils.drawLine(new Vector2(100, 100), new Vector2(500, 500), 'red');
 		DrawUtils.drawText(new Vector2(600, 500), 50, 'black', 'Hello World');
+		
 		DrawUtils.drawArrow(
 			new Vector2(200, 600),
 			new Vector2(mousePos[0], mousePos[1]),
