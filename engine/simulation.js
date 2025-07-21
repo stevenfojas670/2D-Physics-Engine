@@ -1,5 +1,14 @@
 class Simulation {
-	constructor() {}
+	constructor() {
+		this.testCircle = new Circle(new Vector2(100, 100), 50);
+		this.testRect = new Rectangle(new Vector2(400, 400), 500, 250);
+		this.testPolygon = new Polygon([
+			new Vector2(500, 500),
+			new Vector2(600, 600),
+			new Vector2(400, 600),
+			new Vector2(400, 500),
+		]);
+	}
 
 	// Splitting update and draw methods
 	update(deltaTime) {
@@ -16,12 +25,16 @@ class Simulation {
 		DrawUtils.strokePoint(new Vector2(400, 400), 20, 'blue');
 		DrawUtils.drawLine(new Vector2(100, 100), new Vector2(500, 500), 'red');
 		DrawUtils.drawText(new Vector2(600, 500), 50, 'black', 'Hello World');
-		*/
 		DrawUtils.drawArrow(
 			new Vector2(200, 600),
 			new Vector2(mousePos[0], mousePos[1]),
 			'black'
 		);
+		*/
+
+		this.testCircle.draw(ctx);
+		this.testRect.draw(ctx);
+		this.testPolygon.draw(ctx);
 	}
 
 	onKeyboardPressed(evt) {

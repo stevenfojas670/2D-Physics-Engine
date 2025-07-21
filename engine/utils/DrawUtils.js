@@ -10,7 +10,7 @@ class DrawUtils {
 
 	static strokePoint(position, radius, color) {
 		ctx.beginPath();
-		ctx.rect(position.x, position.y, radius, 0, Math.PI * 2, true);
+		ctx.arc(position.x, position.y, radius, 0, Math.PI * 2, true);
 		ctx.strokeStyle = color;
 		ctx.stroke();
 		ctx.closePath();
