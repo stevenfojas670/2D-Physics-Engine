@@ -40,5 +40,52 @@ class Simulation {
 
 	onKeyboardPressed(evt) {
 		console.log(`Keyboard pressed: ${evt.keyCode}`);
+
+		// Moving a shape 5 pixels every frame
+		this.moveSpeed = 5;
+
+		switch (evt.key) {
+			// Moving shape one
+			case 'd':
+				this.testRect.move(new Vector2(this.moveSpeed, 0));
+				break;
+			case 'a':
+				this.testRect.move(new Vector2(-this.moveSpeed, 0));
+				break;
+			case 's':
+				this.testRect.move(new Vector2(0, this.moveSpeed));
+				break;
+			case 'w':
+				this.testRect.move(new Vector2(0, -this.moveSpeed));
+				break;
+			// Rotation
+			case 'e':
+				this.testRect.rotate(0.05);
+				break;
+			case 'q':
+				this.testRect.rotate(-0.05);
+				break;
+
+			// Moving shape two
+			case 'ArrowRight':
+				this.testCircle.move(new Vector2(this.moveSpeed, 0));
+				break;
+			case 'ArrowLeft':
+				this.testCircle.move(new Vector2(-this.moveSpeed, 0));
+				break;
+			case 'ArrowDown':
+				this.testCircle.move(new Vector2(0, this.moveSpeed));
+				break;
+			case 'ArrowUp':
+				this.testCircle.move(new Vector2(0, -this.moveSpeed));
+				break;
+			// Rotation
+			case '.':
+				this.testCircle.rotate(0.05);
+				break;
+			case ',':
+				this.testCircle.rotate(-0.05);
+				break;
+		}
 	}
 }

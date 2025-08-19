@@ -64,8 +64,9 @@ class MathHelper {
 			direction.x * Math.cos(radians) - direction.y * Math.sin(radians);
 
 		rotated.y =
-			direction.x * Math.sin(radians) + direction.y * Math.sin(radians);
+			direction.x * Math.sin(radians) + direction.y * Math.cos(radians);
 
+		// Adding vertices to centroid point so that the rotation occurs around the centroid
 		rotated.Add(point);
 		return rotated;
 	}

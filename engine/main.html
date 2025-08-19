@@ -78,6 +78,7 @@
 
 			function updateSimulation(deltaTime) {
 				simulation.update(deltaTime)
+				Clear()
 				simulation.draw(ctx)
 			}
 
@@ -89,6 +90,11 @@
 				updateSimulation(deltaTime)
 
 				lastTime = currentTime
+			}
+
+			function Clear() {
+				ctx.fillStyle = "white"
+				ctx.fillRect(0, 0, canvas.width, canvas.height)
 			}
 		</script>
 	</body>
