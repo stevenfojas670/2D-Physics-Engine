@@ -6,6 +6,7 @@ class Circle extends Shape {
 		]);
 		this.position = position;
 		this.radius = radius;
+		this.setCentroid(position);
 	}
 
 	draw(ctx) {

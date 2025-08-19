@@ -3,7 +3,7 @@ class Simulation {
 		this.testCircle = new Circle(new Vector2(100, 100), 50);
 		this.testRect = new Rectangle(new Vector2(400, 400), 500, 250);
 		this.testPolygon = new Polygon([
-			new Vector2(500, 500),
+			new Vector2(500, 200),
 			new Vector2(600, 600),
 			new Vector2(600, 700),
 			new Vector2(220, 600),

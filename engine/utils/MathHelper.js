@@ -50,4 +50,23 @@ class MathHelper {
 	static Index(idx, arraySize) {
 		return (idx + arraySize) % arraySize;
 	}
+
+	// Method to rotate a point around another point
+	static rotateAroundPoint(toRotateVertice, point, radians) {
+		// Result of calculation
+		let rotated = new Vector2(0, 0);
+
+		// Direction vector
+		let direction = Sub(toRotateVertice, point);
+
+		// Calculate the rotated point
+		rotated.x =
+			direction.x * Math.cos(radians) - direction.y * Math.sin(radians);
+
+		rotated.y =
+			direction.x * Math.sin(radians) + direction.y * Math.sin(radians);
+
+		rotated.Add(point);
+		return rotated;
+	}
 }

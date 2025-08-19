@@ -10,6 +10,10 @@ class Shape {
 		}
 	}
 
+	setCentroid(position) {
+		this.centroid = position;
+	}
+
 	draw(ctx) {
 		// Drawing lines to each vertices
 		for (let i = 1; i < this.vertices.length; i++) {
@@ -20,5 +24,25 @@ class Shape {
 			this.vertices[0],
 			'black'
 		);
+
+		DrawUtils.drawPoint(this.centroid, 5, 'black');
+	}
+
+	move(delta) {
+		for (let i = 0; i < this.vertices.length; i++) {
+			this.vertices[i].Add(delta);
+		}
+		this.centroid.Add(delta);
+	}
+
+	rotate(radiansDelta) {
+		for (let i = 0; i < this.vertices.length; i++) {
+			let rotatedVertices = MathHelper.rotateAroundPoint(
+				this.vertices[i],
+				this.centroid,
+				radiansDelta
+			);
+			this.vertices[i] = rotatedVertices;
+		}
 	}
 }
