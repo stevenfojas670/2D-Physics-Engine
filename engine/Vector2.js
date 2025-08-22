@@ -13,7 +13,13 @@ class Vector2 {
 		this.y /= length;
 	}
 
-	// Calculating the length of the vector
+	/**
+	 * @summary Use this for radial triggers, when checking if a point is
+	 * within a radius or not. If you want the true length between points,
+	 * use Length().
+	 * @description performs length calculation of x^2 + y^2 without sqrt.
+	 * @returns length2 without using square root.
+	 */
 	Length2() {
 		// Calculating the hypotenuse with sqrt(x^2 + y^2), but without
 		// using the square root, as the square root is performance intensive.

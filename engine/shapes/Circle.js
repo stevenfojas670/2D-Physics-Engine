@@ -9,8 +9,12 @@ class Circle extends Shape {
 		this.setCentroid(position);
 	}
 
+	getRadius() {
+		return this.radius;
+	}
+
 	draw(ctx) {
 		super.draw(ctx);
-		DrawUtils.strokePoint(this.position, this.radius, 'black');
+		DrawUtils.strokePoint(this.position, this.radius, this.color);
 	}
 }

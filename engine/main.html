@@ -26,6 +26,7 @@
 		<script src="shapes/Circle.js"></script>
 		<script src="shapes/Polygon.js"></script>
 		<script src="shapes/Rectangle.js"></script>
+		<script src="CollisionDetection.js"></script>
 
 		<script>
 			var canvas = document.getElementById("myCanvas")
@@ -57,21 +58,21 @@
 				mouse = getMousePos(canvas, evt)
 				mousePos = [mouse.x, mouse.y]
 
-				console.log(mousePos)
+				//console.log(mousePos)
 			})
 
 			window.addEventListener("mousedown", (evt) => {
 				if (evt.button === 0) mouseDownLeft = true
 				if (evt.button === 2) mouseDownRight = true
 
-				console.log(mouseDownLeft)
+				//console.log(mouseDownLeft)
 			})
 
 			window.addEventListener("mouseup", (evt) => {
 				if (evt.button === 0) mouseDownLeft = false
 				if (evt.button === 2) mouseDownRight = false
 
-				console.log(mouseDownLeft)
+				//console.log(mouseDownLeft)
 			})
 
 			mainLoop()

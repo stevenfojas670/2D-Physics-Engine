@@ -10,22 +10,31 @@ class Shape {
 		}
 	}
 
+	setColor(color) {
+		this.color = color;
+	}
+
 	setCentroid(position) {
 		this.centroid = position;
+	}
+
+	getCentroid() {
+		return this.centroid;
 	}
 
 	draw(ctx) {
 		// Drawing lines to each vertices
 		for (let i = 1; i < this.vertices.length; i++) {
-			DrawUtils.drawLine(this.vertices[i - 1], this.vertices[i], 'black');
+			DrawUtils.drawLine(this.vertices[i - 1], this.vertices[i], this.color);
 		}
 		DrawUtils.drawLine(
 			this.vertices[this.vertices.length - 1],
 			this.vertices[0],
-			'black'
+			this.color
 		);
 
-		DrawUtils.drawPoint(this.centroid, 5, 'black');
+		// Drawing centroid
+		DrawUtils.drawPoint(this.centroid, 5, this.color);
 	}
 
 	move(delta) {
