@@ -46,7 +46,14 @@ class MathHelper {
 		return A / 2;
 	}
 
-	// Circular index -> If the loop goes out of bounds it will just return the first index
+	/**
+	 * @description Turns an array into a circular buffer.
+	 * @example If idx is the next element after the final element in the array
+	 * then the first element of the array is returned, creating a circular buffer.
+	 * @param {*} idx | Desired index
+	 * @param {*} arraySize | Size of array
+	 * @returns | First element of the array
+	 */
 	static Index(idx, arraySize) {
 		return (idx + arraySize) % arraySize;
 	}
@@ -69,5 +76,28 @@ class MathHelper {
 		// Adding vertices to centroid point so that the rotation occurs around the centroid
 		rotated.Add(point);
 		return rotated;
+	}
+
+	/**
+	 * @description: Calculates the normal by:
+	 * 1: Calculating the direction vector between edges.
+	 * 2: Normalize the direction
+	 * 3: Get the normal of that direction vector.
+	 * @param {Vector2} vertices
+	 * @returns Array of normalized normals (orthogonal) of each vertice.
+	 */
+	static calcNormals(vertices) {
+		let normals = [];
+
+		for (let i = 0; i < vertices.length; i++) {
+			let direction = Sub(
+				vertices[this.Index(i + 1, vertices.length)],
+				vertices[i]
+			);
+			direction.Normalize();
+			normals.push(direction.GetNormal());
+		}
+
+		return normals;
 	}
 }

@@ -2,13 +2,11 @@ class Simulation {
 	constructor() {
 		this.testCircleA = new Circle(new Vector2(100, 100), 100);
 		this.testCircleB = new Circle(new Vector2(300, 300), 50);
-		// this.testRect = new Rectangle(new Vector2(400, 400), 500, 250);
-		// this.testPolygon = new Polygon([
-		// 	new Vector2(500, 200),
-		// 	new Vector2(600, 600),
-		// 	new Vector2(600, 700),
-		// 	new Vector2(220, 600),
-		// ]);
+
+		this.testRect = new Rectangle(new Vector2(400, 400), 500, 250);
+
+		// Draws collisions
+		this.collisionManifold = null;
 	}
 
 	// Splitting update and draw methods
@@ -19,18 +17,23 @@ class Simulation {
 		// 	`Mouse-left pressed: ${mouseDownLeft} - Mouse-right pressed: ${mouseDownRight}`
 		// );
 
-		let collisionResult = CollisionDetection.circleVsCircleOptimized(
-			this.testCircleA,
-			this.testCircleB
-		);
+		this.collisionManifold = null;
 
-		if (collisionResult) {
-			this.testCircleA.setColor('red');
-			this.testCircleB.setColor('red');
-		} else {
-			this.testCircleA.setColor('black');
-			this.testCircleB.setColor('black');
-		}
+		// let collisionResult = CollisionDetection.circleVsCircleOptimized(
+		// 	this.testCircleA,
+		// 	this.testCircleB
+		// );
+
+		// if (collisionResult) {
+		// 	this.testCircleA.setColor('red');
+		// 	this.testCircleB.setColor('red');
+		// 	this.collisionManifold = collisionResult;
+		// 	let push = Scale(collisionResult.normal, collisionResult.depth);
+		// 	this.testCircleB.move(push);
+		// } else {
+		// 	this.testCircleA.setColor('black');
+		// 	this.testCircleB.setColor('black');
+		// }
 	}
 
 	draw(ctx) {
@@ -47,10 +50,14 @@ class Simulation {
 		);
 		*/
 
-		this.testCircleA.draw(ctx);
+		this.testRect.draw(ctx);
 		this.testCircleB.draw(ctx);
 		// this.testRect.draw(ctx);
 		// this.testPolygon.draw(ctx);
+
+		if (this.collisionManifold) {
+			this.collisionManifold.draw(ctx);
+		}
 	}
 
 	onKeyboardPressed(evt) {
@@ -83,23 +90,23 @@ class Simulation {
 
 			// Moving shape two
 			case 'ArrowRight':
-				this.testCircleA.move(new Vector2(this.moveSpeed, 0));
+				this.testRect.move(new Vector2(this.moveSpeed, 0));
 				break;
 			case 'ArrowLeft':
-				this.testCircleA.move(new Vector2(-this.moveSpeed, 0));
+				this.testRect.move(new Vector2(-this.moveSpeed, 0));
 				break;
 			case 'ArrowDown':
-				this.testCircleA.move(new Vector2(0, this.moveSpeed));
+				this.testRect.move(new Vector2(0, this.moveSpeed));
 				break;
 			case 'ArrowUp':
-				this.testCircleA.move(new Vector2(0, -this.moveSpeed));
+				this.testRect.move(new Vector2(0, -this.moveSpeed));
 				break;
 			// Rotation
 			case '.':
-				this.testCircleA.rotate(0.05);
+				this.testRect.rotate(0.05);
 				break;
 			case ',':
-				this.testCircleA.rotate(-0.05);
+				this.testRect.rotate(-0.05);
 				break;
 		}
 	}

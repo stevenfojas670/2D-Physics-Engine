@@ -9,7 +9,7 @@ class CollisionDetection {
 		let centroidB = shapeCircleB.getCentroid();
 
 		// Get direction from one circle to another
-		let direction = Sub(centroidA, centroidB);
+		let direction = Sub(centroidB, centroidA);
 
 		// Get distance between centroids
 		let dist = direction.Length2();
@@ -20,9 +20,21 @@ class CollisionDetection {
 		let rSquare = rSum * rSum;
 
 		if (dist < rSquare) {
-			return true;
+			let directionLength = direction.Length();
+			let penetrationNormal = Scale(direction, 1 / directionLength);
+			let penetrationDepth = directionLength - rSum;
+			let penetrationPoint = Add(
+				centroidA,
+				Scale(penetrationNormal, shapeCircleA.getRadius())
+			);
+
+			return new CollisionManifold(
+				penetrationDepth * -1,
+				penetrationNormal,
+				penetrationPoint
+			);
 		} else {
-			return false;
+			return null;
 		}
 	}
 

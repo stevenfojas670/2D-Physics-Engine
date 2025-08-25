@@ -31,7 +31,10 @@ class Vector2 {
 		return Math.sqrt(this.x * this.x + this.y * this.y);
 	}
 
-	// Creates a new vector that is orthogonal of the original vector
+	/**
+	 * @description Calculates the orthogonal vector.
+	 * @returns Vector2(y,-x)
+	 */
 	GetNormal() {
 		return new Vector2(this.y, -this.x);
 	}
