@@ -6,6 +6,11 @@ class Polygon extends Shape {
 		this.normals = MathHelper.calcNormals(vertices);
 	}
 
+	/**
+	 *
+	 * @param {number} radiansDelta
+	 * @description Rotates this radians around a point.
+	 */
 	rotate(radiansDelta) {
 		super.rotate(radiansDelta);
 		this.normals = MathHelper.calcNormals(this.vertices);

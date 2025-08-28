@@ -1,3 +1,10 @@
+/**
+ * @abstract A collision manifold are contact points of a collision. When a
+ * collision occurs, it must be resolved. We resolve a collision so that
+ * two vectors don't occupy the same space. When resolving the collision we
+ * want to ensure that the physics is preserved and the objects move in an
+ * expected way.
+ */
 class CollisionManifold {
 	constructor(depth, normal, penetrationPoint) {
 		this.depth = depth;

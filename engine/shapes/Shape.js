@@ -2,7 +2,7 @@
 class Shape {
 	constructor(vertices) {
 		this.vertices = vertices;
-
+		this.color = 'black';
 		if (new.target === Shape) {
 			throw new TypeError(
 				"Cannot construct abstract instances of class 'Shape'."
@@ -44,6 +44,11 @@ class Shape {
 		this.centroid.Add(delta);
 	}
 
+	/**
+	 *
+	 * @param {number} radiansDelta
+	 * @description Rotates vertices around it's center by radians.
+	 */
 	rotate(radiansDelta) {
 		for (let i = 0; i < this.vertices.length; i++) {
 			let rotatedVertices = MathHelper.rotateAroundPoint(

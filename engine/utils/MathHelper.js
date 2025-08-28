@@ -2,6 +2,11 @@ class MathHelper {
 	// Static methods for calculating center for a polygon
 	// https://en.wikipedia.org/wiki/Polygon
 
+	/**
+	 *
+	 * @param {Array} vertices
+	 * @returns {Vector2} Vector2 of the centroid
+	 */
 	static calcCentroid(vertices) {
 		// Calculating centroid
 		let A = this.calcArea(vertices);
@@ -31,6 +36,11 @@ class MathHelper {
 		return new Vector2(Cx, Cy);
 	}
 
+	/**
+	 *
+	 * @param {Array} vertices
+	 * @returns {number} Area of a polygon.
+	 */
 	static calcArea(vertices) {
 		// Calculating the Area for CalCentroid formula
 		let A = 0;
@@ -50,15 +60,22 @@ class MathHelper {
 	 * @description Turns an array into a circular buffer.
 	 * @example If idx is the next element after the final element in the array
 	 * then the first element of the array is returned, creating a circular buffer.
-	 * @param {*} idx | Desired index
-	 * @param {*} arraySize | Size of array
-	 * @returns | First element of the array
+	 * @param {number} idx | Desired index
+	 * @param {number} arraySize | Size of array
+	 * @returns {number} | First element of the array
 	 */
 	static Index(idx, arraySize) {
 		return (idx + arraySize) % arraySize;
 	}
 
-	// Method to rotate a point around another point
+	/**
+	 *
+	 * @param {Vector2} toRotateVertice
+	 * @param {Vector2} point
+	 * @param {number} radians
+	 * @description Method to rotate a point around another point
+	 * @returns {Vector2} rotated vertices
+	 */
 	static rotateAroundPoint(toRotateVertice, point, radians) {
 		// Result of calculation
 		let rotated = new Vector2(0, 0);
@@ -83,8 +100,8 @@ class MathHelper {
 	 * 1: Calculating the direction vector between edges.
 	 * 2: Normalize the direction
 	 * 3: Get the normal of that direction vector.
-	 * @param {Vector2} vertices
-	 * @returns Array of normalized normals (orthogonal) of each vertice.
+	 * @param {Array} vertices
+	 * @returns {Array} Array of normalized normals (orthogonal) of each vertice.
 	 */
 	static calcNormals(vertices) {
 		let normals = [];

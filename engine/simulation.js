@@ -1,9 +1,17 @@
 class Simulation {
 	constructor() {
-		this.testCircleA = new Circle(new Vector2(100, 100), 100);
-		this.testCircleB = new Circle(new Vector2(300, 300), 50);
+		this.shapes = new Array();
 
-		this.testRect = new Rectangle(new Vector2(400, 400), 500, 250);
+		this.shapes.push(new Rectangle(new Vector2(400, 400), 500, 250));
+		this.shapes.push(
+			new Polygon([
+				new Vector2(25, 25),
+				new Vector2(100, 0),
+				new Vector2(50, 100),
+			])
+		);
+
+		this.shapes.push(new Rectangle(new Vector2(950, 400), 500, 250));
 
 		// Draws collisions
 		this.collisionManifold = null;
@@ -17,48 +25,35 @@ class Simulation {
 		// 	`Mouse-left pressed: ${mouseDownLeft} - Mouse-right pressed: ${mouseDownRight}`
 		// );
 
+		// Collision Detection Loop
+		for (let i = 0; i < this.shapes.length; i++) {
+			for (let j = 0; j < this.shapes.length; j++) {
+				if (i == j) continue;
+
+				let objectA = this.shapes[i];
+				let objectB = this.shapes[j];
+				let result = CollisionDetection.polygonVsPolygon(objectA, objectB);
+				console.log(result);
+			}
+		}
+
 		this.collisionManifold = null;
-
-		// let collisionResult = CollisionDetection.circleVsCircleOptimized(
-		// 	this.testCircleA,
-		// 	this.testCircleB
-		// );
-
-		// if (collisionResult) {
-		// 	this.testCircleA.setColor('red');
-		// 	this.testCircleB.setColor('red');
-		// 	this.collisionManifold = collisionResult;
-		// 	let push = Scale(collisionResult.normal, collisionResult.depth);
-		// 	this.testCircleB.move(push);
-		// } else {
-		// 	this.testCircleA.setColor('black');
-		// 	this.testCircleB.setColor('black');
-		// }
 	}
 
 	draw(ctx) {
-		/*
-		DrawUtils.drawPoint(new Vector2(400, 400), 20, 'black');
-		DrawUtils.strokePoint(new Vector2(400, 400), 20, 'blue');
-		DrawUtils.drawLine(new Vector2(100, 100), new Vector2(500, 500), 'red');
-		DrawUtils.drawText(new Vector2(600, 500), 50, 'black', 'Hello World');
-		
-		DrawUtils.drawArrow(
-			new Vector2(200, 600),
-			new Vector2(mousePos[0], mousePos[1]),
-			'black'
-		);
-		*/
-
-		this.testRect.draw(ctx);
-		this.testCircleB.draw(ctx);
-		// this.testRect.draw(ctx);
-		// this.testPolygon.draw(ctx);
+		for (let i = 0; i < this.shapes.length; i++) {
+			this.shapes[i].draw(ctx);
+		}
 
 		if (this.collisionManifold) {
 			this.collisionManifold.draw(ctx);
 		}
 	}
+
+	/**
+	 *
+	 * @todo Implement function to allow for assigning to shapes to be controllable.
+	 */
 
 	onKeyboardPressed(evt) {
 		// console.log(`Keyboard pressed: ${evt.keyCode}`);
@@ -69,44 +64,44 @@ class Simulation {
 		switch (evt.key) {
 			// Moving shape one
 			case 'd':
-				this.testCircleB.move(new Vector2(this.moveSpeed, 0));
+				this.shapes[0].move(new Vector2(this.moveSpeed, 0));
 				break;
 			case 'a':
-				this.testCircleB.move(new Vector2(-this.moveSpeed, 0));
+				this.shapes[0].move(new Vector2(-this.moveSpeed, 0));
 				break;
 			case 's':
-				this.testCircleB.move(new Vector2(0, this.moveSpeed));
+				this.shapes[0].move(new Vector2(0, this.moveSpeed));
 				break;
 			case 'w':
-				this.testCircleB.move(new Vector2(0, -this.moveSpeed));
+				this.shapes[0].move(new Vector2(0, -this.moveSpeed));
 				break;
 			// Rotation
 			case 'e':
-				this.testCircleB.rotate(0.05);
+				this.shapes[0].rotate(0.05);
 				break;
 			case 'q':
-				this.testCircleB.rotate(-0.05);
+				this.shapes[0].rotate(-0.05);
 				break;
 
 			// Moving shape two
 			case 'ArrowRight':
-				this.testRect.move(new Vector2(this.moveSpeed, 0));
+				this.shapes[1].move(new Vector2(this.moveSpeed, 0));
 				break;
 			case 'ArrowLeft':
-				this.testRect.move(new Vector2(-this.moveSpeed, 0));
+				this.shapes[1].move(new Vector2(-this.moveSpeed, 0));
 				break;
 			case 'ArrowDown':
-				this.testRect.move(new Vector2(0, this.moveSpeed));
+				this.shapes[1].move(new Vector2(0, this.moveSpeed));
 				break;
 			case 'ArrowUp':
-				this.testRect.move(new Vector2(0, -this.moveSpeed));
+				this.shapes[1].move(new Vector2(0, -this.moveSpeed));
 				break;
 			// Rotation
 			case '.':
-				this.testRect.rotate(0.05);
+				this.shapes[1].rotate(0.05);
 				break;
 			case ',':
-				this.testRect.rotate(-0.05);
+				this.shapes[1].rotate(-0.05);
 				break;
 		}
 	}
