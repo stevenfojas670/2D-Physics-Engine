@@ -4,6 +4,28 @@
 class CollisionDetection {
 	/**
 	 *
+	 * @param {Shape} shapeA
+	 * @param {Shape} shapeB
+	 */
+	static checkCollisions(shapeA, shapeB) {
+		let collisionManifold = null;
+
+		if (shapeA instanceof Circle && shapeB instanceof Circle) {
+			collisionManifold = this.circleVsCircleOptimized(shapeA, shapeB);
+		} else if (shapeA instanceof Polygon && shapeB instanceof Polygon) {
+			collisionManifold = this.polygonVsPolygon(shapeA, shapeB);
+		} else if (
+			(shapeA instanceof Circle && shapeB instanceof Polygon) ||
+			(shapeA instanceof Polygon && shapeB instanceof Circle)
+		) {
+			collisionManifold = this.circleVsPolygon;
+		}
+
+		return collisionManifold;
+	}
+
+	/**
+	 *
 	 * @param {Circle} shapeCircleA
 	 * @param {Circle} shapeCircleB
 	 * @returns {CollisionManifold | null} Returns the collision points or null
@@ -185,6 +207,69 @@ class CollisionDetection {
 
 		return supportPoint;
 	}
+
+	/**
+	 *
+	 * @param {Circle} shapeCircle
+	 * @param {Polygon} shapePolygon
+	 */
+	static circleVsPolygon(shapeCircle, shapePolygon) {
+		let contact = this.circleVsPolygonEdges(shapeCircle, shapePolygon);
+		if (contact) {
+			return contact;
+		} else {
+			return this.circleVsPolygonCorners(shapeCircle, shapePolygon);
+		}
+	}
+
+	/**
+	 *
+	 * @param {Circle} shapeCircle
+	 * @param {Polygon} shapePolygon
+	 * @description
+	 */
+	static circleVsPolygonEdges(shapeCircle, shapePolygon) {
+		let verticesLength = shapePolygon.vertices.length;
+		let circleCentroid = shapeCircle.centroid;
+		let nearestEdgeVertex = null;
+		let nearestEdgeNormal = null;
+
+		for (let i = 0; i < verticesLength; i++) {
+			let currVertex = shapePolygon.vertices[i];
+			let currNormal = shapePolygon.normals[i];
+			let nextVertex =
+				shapePolygon.vertices[MathHelper.Index(i + 1, verticesLength)];
+
+			let dirToNext = Sub(nextVertex, currVertex);
+			let vertToCircle = Sub(circleCentroid, currVertex);
+			let dirToNextLength = dirToNext.Length();
+			let circleProjectDirToNextProjection = vertToCircle.Dot(
+				dirToNext.Normalize()
+			);
+			let circleDirToNormalProjection = vertToCircle.Dot(currNormal);
+
+			if (
+				circleProjectDirToNextProjection > 0 &&
+				circleProjectDirToNextProjection < dirToNextLength &&
+				circleDirToNormalProjection >= 0
+			) {
+				// Valid edge
+				nearestEdgeNormal = currNormal;
+				nearestEdgeVertex = currVertex;
+			}
+		}
+
+		if (nearestEdgeNormal == null || nearestEdgeNormal == null) {
+			return null;
+		}
+	}
+
+	/**
+	 *
+	 * @param {Circle} shapeCircle
+	 * @param {Polygon} shapePolygon
+	 */
+	static circleVsPolygonCorners(shapeCircle, shapePolygon) {}
 }
 
 /**
