@@ -34,6 +34,12 @@ class Simulation {
 				let objectB = this.shapes[j];
 				let result = CollisionDetection.polygonVsPolygon(objectA, objectB);
 				console.log(result);
+
+				if (result) {
+					let push = Scale(result.normal, result.depth * 0.5);
+					objectB.move(push);
+					objectA.move(Scale(push, -1));
+				}
 			}
 		}
 

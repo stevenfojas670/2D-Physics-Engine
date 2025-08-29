@@ -105,6 +105,7 @@ class CollisionDetection {
 				contactPolyA.penetrationPoint
 			);
 		} else {
+			// @question Why do I scale by -1 here?
 			resultingContact = new CollisionManifold(
 				contactPolyB.depth,
 				Scale(contactPolyB.normal, -1),
