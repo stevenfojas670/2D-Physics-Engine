@@ -4,13 +4,13 @@ class Simulation {
 		this.controller = controller;
 		this.shapes = new Array();
 		this.shapes.push(new Circle(new Vector2(600, 300), 100));
-		// this.shapes.push(
-		// 	new Polygon([
-		// 		new Vector2(0, 0),
-		// 		new Vector2(100, 0),
-		// 		new Vector2(50, 100),
-		// 	])
-		// );
+		this.shapes.push(
+			new Polygon([
+				new Vector2(400, 50),
+				new Vector2(500, 50),
+				new Vector2(450, 100),
+			])
+		);
 		this.shapes.push(new Rectangle(new Vector2(600, 600), 150, 150));
 
 		// Draws collisions
