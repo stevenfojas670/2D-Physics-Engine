@@ -1,4 +1,16 @@
+/**
+ * @class Vector2
+ * @classdesc Represents the 2D vector class the performs basic vector math.
+ *
+ * @property {number} x - X position
+ * @property {number} y - Y position
+ */
 class Vector2 {
+	/**
+	 * @constructor
+	 * @param {number} x - X position
+	 * @param {number} y - Y position
+	 */
 	constructor(x, y) {
 		this.x = x;
 		this.y = y;

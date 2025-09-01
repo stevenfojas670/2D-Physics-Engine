@@ -6,6 +6,7 @@ class CollisionDetection {
 	 *
 	 * @param {Shape} shapeA
 	 * @param {Shape} shapeB
+	 * @returns {CollisionManifold} collisionManifold
 	 */
 	static checkCollisions(shapeA, shapeB) {
 		let collisionManifold = null;
@@ -14,11 +15,8 @@ class CollisionDetection {
 			collisionManifold = this.circleVsCircleOptimized(shapeA, shapeB);
 		} else if (shapeA instanceof Polygon && shapeB instanceof Polygon) {
 			collisionManifold = this.polygonVsPolygon(shapeA, shapeB);
-		} else if (
-			(shapeA instanceof Circle && shapeB instanceof Polygon) ||
-			(shapeA instanceof Polygon && shapeB instanceof Circle)
-		) {
-			collisionManifold = this.circleVsPolygon;
+		} else if (shapeA instanceof Circle && shapeB instanceof Polygon) {
+			collisionManifold = this.circleVsPolygon(shapeA, shapeB);
 		}
 
 		return collisionManifold;
@@ -226,7 +224,8 @@ class CollisionDetection {
 	 *
 	 * @param {Circle} shapeCircle
 	 * @param {Polygon} shapePolygon
-	 * @description
+	 * @description Computing collisions for circles against polgyon edges.
+	 * @returns {CollisionManifold} Collision Manifold - Circle's contact point on the polygon
 	 */
 	static circleVsPolygonEdges(shapeCircle, shapePolygon) {
 		let verticesLength = shapePolygon.vertices.length;
@@ -241,12 +240,12 @@ class CollisionDetection {
 				shapePolygon.vertices[MathHelper.Index(i + 1, verticesLength)];
 
 			let dirToNext = Sub(nextVertex, currVertex);
-			let vertToCircle = Sub(circleCentroid, currVertex);
 			let dirToNextLength = dirToNext.Length();
-			let circleProjectDirToNextProjection = vertToCircle.Dot(
-				dirToNext.Normalize()
-			);
-			let circleDirToNormalProjection = vertToCircle.Dot(currNormal);
+			dirToNext.Normalize();
+
+			let vertToCircle = Sub(circleCentroid, currVertex);
+			let circleProjectDirToNextProjection = vertToCircle.Dot(dirToNext);
+			let circleDirToNormalProjection = vertToCircle.Dot(currNormal); // Extra for continuous collision thing
 
 			if (
 				circleProjectDirToNextProjection > 0 &&
@@ -262,14 +261,58 @@ class CollisionDetection {
 		if (nearestEdgeNormal == null || nearestEdgeNormal == null) {
 			return null;
 		}
+
+		// Checking for collision
+		let circleRadius = shapeCircle.getRadius();
+		let vertexToCircle = Sub(circleCentroid, nearestEdgeVertex);
+		let projectionToEdgeNormal = vertexToCircle.Dot(nearestEdgeNormal);
+		let penetrationDepth = projectionToEdgeNormal - circleRadius;
+
+		if (penetrationDepth < 0) {
+			// collision
+			let scaledNormal = Scale(nearestEdgeNormal, circleRadius * -1);
+			let penetrationPoint = Add(circleCentroid, scaledNormal);
+
+			return new CollisionManifold(
+				penetrationDepth * -1,
+				Scale(nearestEdgeNormal, -1),
+				penetrationPoint
+			);
+		}
+
+		// no collision
+		return null;
 	}
 
 	/**
 	 *
 	 * @param {Circle} shapeCircle
 	 * @param {Polygon} shapePolygon
+	 * @description Computing collisions against a polygon corner.
+	 * @returns {CollisionManifold} Collision Manifold - Collision on polygon corner
 	 */
-	static circleVsPolygonCorners(shapeCircle, shapePolygon) {}
+	static circleVsPolygonCorners(shapeCircle, shapePolygon) {
+		let verticesLength = shapePolygon.vertices.length;
+		let circleRadius = shapeCircle.getRadius();
+		let circleCentroid = shapeCircle.centroid;
+		for (let i = 0; i < verticesLength; i++) {
+			let currVertex = shapePolygon.vertices[i];
+			let dirToCentroidCircle = Sub(currVertex, circleCentroid);
+
+			if (dirToCentroidCircle.Length2() < circleRadius * circleRadius) {
+				// collision
+				let penetrationDepth = circleRadius - dirToCentroidCircle.Length();
+				dirToCentroidCircle.Normalize();
+
+				return new CollisionManifold(
+					penetrationDepth,
+					Scale(dirToCentroidCircle, 1),
+					currVertex
+				);
+			}
+		}
+		return null;
+	}
 }
 
 /**

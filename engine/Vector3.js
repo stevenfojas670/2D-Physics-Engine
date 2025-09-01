@@ -9,17 +9,25 @@ class Vector3 {
 		this.z = z;
 	}
 
+	printCall() {
+		console.log('VECTOR 3 HAS BEEN CALLED. SHOULD NEVER BE CALLED!');
+	}
+
 	/**
 	 * @todo Learn to calculate the optmized length
 	 * @description The optimized length doesn't not perform the square root
 	 */
-	Length2() {}
+	Length2() {
+		this.printCall();
+	}
 
 	/**
 	 * @todo Learn to calculate length of a 3D vector
 	 * @description This calculates the true length using the square root.
 	 */
-	Length() {}
+	Length() {
+		this.printCall();
+	}
 
 	/**
 	 * @todo Learn to calculate the orthogonal of a 3D vector

@@ -2,16 +2,15 @@ class Simulation {
 	constructor() {
 		this.shapes = new Array();
 
-		this.shapes.push(new Rectangle(new Vector2(400, 400), 500, 250));
-		this.shapes.push(
-			new Polygon([
-				new Vector2(25, 25),
-				new Vector2(100, 0),
-				new Vector2(50, 100),
-			])
-		);
-
-		this.shapes.push(new Rectangle(new Vector2(950, 400), 500, 250));
+		this.shapes.push(new Circle(new Vector2(600, 300), 100));
+		// this.shapes.push(
+		// 	new Polygon([
+		// 		new Vector2(0, 0),
+		// 		new Vector2(100, 0),
+		// 		new Vector2(50, 100),
+		// 	])
+		// );
+		this.shapes.push(new Rectangle(new Vector2(600, 600), 150, 150));
 
 		// Draws collisions
 		this.collisionManifold = null;
@@ -32,13 +31,14 @@ class Simulation {
 
 				let objectA = this.shapes[i];
 				let objectB = this.shapes[j];
-				let result = CollisionDetection.polygonVsPolygon(objectA, objectB);
+				let result = CollisionDetection.checkCollisions(objectA, objectB);
 				console.log(result);
 
 				if (result) {
 					let push = Scale(result.normal, result.depth * 0.5);
 					objectB.move(push);
-					objectA.move(Scale(push, -1));
+					push = Scale(result.normal, result.depth * -0.5);
+					objectA.move(push);
 				}
 			}
 		}
