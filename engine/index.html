@@ -13,9 +13,32 @@
 		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
-		<div class="">
-			<h1 class="display-3">2D Physics Engine</h1>
-			<canvas id="myCanvas" width="1920" height="1080"></canvas>
+		<div class="d-flex justify-content-center">
+			<div class="body">
+				<div class="header"><h1 class="display-3">2D Physics Engine</h1></div>
+				<div class="d-flex gap-3">
+					<div class="canvas">
+						<canvas id="myCanvas" width="1920" height="1080"></canvas>
+					</div>
+					<div class="active-config">
+						<h3>Settings</h3>
+						<form>
+							<div class="mb-3">
+								<label for="movement-speed" class="form-lable"
+									>Movement Speed</label
+								>
+								<input
+									type="number"
+									class="form-control"
+									id="movement-speed"
+									min="0"
+								/>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="settings">Settings</div>
+			</div>
 		</div>
 
 		<script src="Player/Controller.js"></script>

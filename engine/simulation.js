@@ -1,6 +1,6 @@
 class Simulation {
-	constructor(controller = null) {
-		this.moveSpeed = 2;
+	constructor(controller = null, moveSpeed = 2) {
+		this.moveSpeed = moveSpeed;
 		this.controller = controller;
 		this.shapes = new Array();
 		this.shapes.push(new Circle(new Vector2(600, 300), 100));
@@ -33,7 +33,7 @@ class Simulation {
 				let objectA = this.shapes[i];
 				let objectB = this.shapes[j];
 				let result = CollisionDetection.checkCollisions(objectA, objectB);
-				console.log(result);
+				//console.log(result);
 
 				if (result) {
 					let push = Scale(result.normal, result.depth * 0.5);
@@ -45,7 +45,7 @@ class Simulation {
 		}
 
 		this.collisionManifold = null;
-		this.moveSpeed = 1 * deltaTime;
+		this.normalizedSpeed = this.moveSpeed * deltaTime;
 		this.pollMovement();
 	}
 
@@ -69,16 +69,16 @@ class Simulation {
 
 		// Moving shape one
 		if (this.controller.keys.d) {
-			this.shapes[0].move(new Vector2(this.moveSpeed, 0));
+			this.shapes[0].move(new Vector2(this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.a) {
-			this.shapes[0].move(new Vector2(-this.moveSpeed, 0));
+			this.shapes[0].move(new Vector2(-this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.s) {
-			this.shapes[0].move(new Vector2(0, this.moveSpeed));
+			this.shapes[0].move(new Vector2(0, this.normalizedSpeed));
 		}
 		if (this.controller.keys.w) {
-			this.shapes[0].move(new Vector2(0, -this.moveSpeed));
+			this.shapes[0].move(new Vector2(0, -this.normalizedSpeed));
 		}
 		if (this.controller.keys.e) {
 			this.shapes[0].rotate(0.05);
@@ -89,16 +89,16 @@ class Simulation {
 
 		// Moving shape two
 		if (this.controller.keys.ArrowRight) {
-			this.shapes[1].move(new Vector2(this.moveSpeed, 0));
+			this.shapes[1].move(new Vector2(this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.ArrowLeft) {
-			this.shapes[1].move(new Vector2(-this.moveSpeed, 0));
+			this.shapes[1].move(new Vector2(-this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.ArrowDown) {
-			this.shapes[1].move(new Vector2(0, this.moveSpeed));
+			this.shapes[1].move(new Vector2(0, this.normalizedSpeed));
 		}
 		if (this.controller.keys.ArrowUp) {
-			this.shapes[1].move(new Vector2(0, -this.moveSpeed));
+			this.shapes[1].move(new Vector2(0, -this.normalizedSpeed));
 		}
 		if (this.controller.keys['.']) {
 			this.shapes[1].rotate(0.05);
@@ -106,5 +106,21 @@ class Simulation {
 		if (this.controller.keys[',']) {
 			this.shapes[1].rotate(-0.05);
 		}
+	}
+
+	/**
+	 *
+	 * @param {number} speed - Desired movement speed
+	 */
+	setMoveSpeed(speed) {
+		this.moveSpeed = speed;
+	}
+
+	/**
+	 *
+	 * @returns {number} moveSpeed - The current movement speed value.
+	 */
+	getMoveSpeed() {
+		return this.moveSpeed;
 	}
 }

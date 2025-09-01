@@ -58,6 +58,22 @@ window.addEventListener('mouseup', (evt) => {
 	//console.log(mouseDownLeft)
 });
 
+/**SETTINGS EVENT LISTENERS */
+document.addEventListener('DOMContentLoaded', () => {
+	const moveSpeed = document.querySelector('#movement-speed');
+
+	moveSpeed.value = simulation.getMoveSpeed();
+
+	moveSpeed?.addEventListener(
+		'input',
+		(evt) => {
+			simulation.setMoveSpeed(evt.target.value);
+			console.log(evt.target.value);
+		},
+		false
+	);
+});
+
 mainLoop();
 
 function updateSimulation(deltaTime) {
