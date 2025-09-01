@@ -1,7 +1,8 @@
 class Simulation {
-	constructor() {
+	constructor(controller = null) {
+		this.moveSpeed = 2;
+		this.controller = controller;
 		this.shapes = new Array();
-
 		this.shapes.push(new Circle(new Vector2(600, 300), 100));
 		// this.shapes.push(
 		// 	new Polygon([
@@ -44,6 +45,8 @@ class Simulation {
 		}
 
 		this.collisionManifold = null;
+		this.moveSpeed = 1 * deltaTime;
+		this.pollMovement();
 	}
 
 	draw(ctx) {
@@ -61,54 +64,47 @@ class Simulation {
 	 * @todo Implement function to allow for assigning to shapes to be controllable.
 	 */
 
-	onKeyboardPressed(evt) {
-		// console.log(`Keyboard pressed: ${evt.keyCode}`);
+	pollMovement() {
+		// this.controller.log();
 
-		// Moving a shape 5 pixels every frame
-		this.moveSpeed = 5;
+		// Moving shape one
+		if (this.controller.keys.d) {
+			this.shapes[0].move(new Vector2(this.moveSpeed, 0));
+		}
+		if (this.controller.keys.a) {
+			this.shapes[0].move(new Vector2(-this.moveSpeed, 0));
+		}
+		if (this.controller.keys.s) {
+			this.shapes[0].move(new Vector2(0, this.moveSpeed));
+		}
+		if (this.controller.keys.w) {
+			this.shapes[0].move(new Vector2(0, -this.moveSpeed));
+		}
+		if (this.controller.keys.e) {
+			this.shapes[0].rotate(0.05);
+		}
+		if (this.controller.keys.q) {
+			this.shapes[0].rotate(-0.05);
+		}
 
-		switch (evt.key) {
-			// Moving shape one
-			case 'd':
-				this.shapes[0].move(new Vector2(this.moveSpeed, 0));
-				break;
-			case 'a':
-				this.shapes[0].move(new Vector2(-this.moveSpeed, 0));
-				break;
-			case 's':
-				this.shapes[0].move(new Vector2(0, this.moveSpeed));
-				break;
-			case 'w':
-				this.shapes[0].move(new Vector2(0, -this.moveSpeed));
-				break;
-			// Rotation
-			case 'e':
-				this.shapes[0].rotate(0.05);
-				break;
-			case 'q':
-				this.shapes[0].rotate(-0.05);
-				break;
-
-			// Moving shape two
-			case 'ArrowRight':
-				this.shapes[1].move(new Vector2(this.moveSpeed, 0));
-				break;
-			case 'ArrowLeft':
-				this.shapes[1].move(new Vector2(-this.moveSpeed, 0));
-				break;
-			case 'ArrowDown':
-				this.shapes[1].move(new Vector2(0, this.moveSpeed));
-				break;
-			case 'ArrowUp':
-				this.shapes[1].move(new Vector2(0, -this.moveSpeed));
-				break;
-			// Rotation
-			case '.':
-				this.shapes[1].rotate(0.05);
-				break;
-			case ',':
-				this.shapes[1].rotate(-0.05);
-				break;
+		// Moving shape two
+		if (this.controller.keys.ArrowRight) {
+			this.shapes[1].move(new Vector2(this.moveSpeed, 0));
+		}
+		if (this.controller.keys.ArrowLeft) {
+			this.shapes[1].move(new Vector2(-this.moveSpeed, 0));
+		}
+		if (this.controller.keys.ArrowDown) {
+			this.shapes[1].move(new Vector2(0, this.moveSpeed));
+		}
+		if (this.controller.keys.ArrowUp) {
+			this.shapes[1].move(new Vector2(0, -this.moveSpeed));
+		}
+		if (this.controller.keys['.']) {
+			this.shapes[1].rotate(0.05);
+		}
+		if (this.controller.keys[',']) {
+			this.shapes[1].rotate(-0.05);
 		}
 	}
 }

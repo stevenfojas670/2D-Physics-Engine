@@ -4,12 +4,14 @@ var ctx = canvas.getContext('2d');
 let lastTime = performance.now();
 let currentTime = 0;
 let deltaTime = 0;
+let perfectFrameRate = 60;
 
 let mousePos = [0, 0];
 let mouseDownLeft = false;
 let mouseDownRight = false;
 
-let simulation = new Simulation();
+let controller = new Controller();
+let simulation = new Simulation(controller);
 
 // Calculating the mouse position in the canvas
 function getMousePos(canvas, evt) {
@@ -18,9 +20,21 @@ function getMousePos(canvas, evt) {
 }
 
 // Event listener for keys being pressed
-window.addEventListener('keydown', (evt) => {
-	simulation.onKeyboardPressed(evt);
-});
+window.addEventListener(
+	'keydown',
+	(evt) => {
+		controller.keyboard(evt.key, true);
+	},
+	false
+);
+
+window.addEventListener(
+	'keyup',
+	(evt) => {
+		controller.keyboard(evt.key, false);
+	},
+	false
+);
 
 // Event listener for mouse position within the canvas
 canvas.addEventListener('mousemove', (evt) => {
@@ -56,7 +70,7 @@ function mainLoop() {
 	window.requestAnimationFrame(mainLoop);
 
 	currentTime = performance.now();
-	deltaTime = (currentTime - lastTime) / 1000;
+	deltaTime = (currentTime - lastTime) / (1000 / perfectFrameRate);
 	updateSimulation(deltaTime);
 
 	lastTime = currentTime;
