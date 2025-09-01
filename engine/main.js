@@ -13,53 +13,8 @@ let mouseDownRight = false;
 let controller = new Controller();
 let simulation = new Simulation(controller);
 
-// Calculating the mouse position in the canvas
-function getMousePos(canvas, evt) {
-	var rect = canvas.getBoundingClientRect();
-	return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
-}
-
-// Event listener for keys being pressed
-window.addEventListener(
-	'keydown',
-	(evt) => {
-		controller.keyboard(evt.key, true);
-	},
-	false
-);
-
-window.addEventListener(
-	'keyup',
-	(evt) => {
-		controller.keyboard(evt.key, false);
-	},
-	false
-);
-
-// Event listener for mouse position within the canvas
-canvas.addEventListener('mousemove', (evt) => {
-	mouse = getMousePos(canvas, evt);
-	mousePos = [mouse.x, mouse.y];
-
-	//console.log(mousePos)
-});
-
-window.addEventListener('mousedown', (evt) => {
-	if (evt.button === 0) mouseDownLeft = true;
-	if (evt.button === 2) mouseDownRight = true;
-
-	//console.log(mouseDownLeft)
-});
-
-window.addEventListener('mouseup', (evt) => {
-	if (evt.button === 0) mouseDownLeft = false;
-	if (evt.button === 2) mouseDownRight = false;
-
-	//console.log(mouseDownLeft)
-});
-
-/**SETTINGS EVENT LISTENERS */
 document.addEventListener('DOMContentLoaded', () => {
+	/**SETTINGS: EVENT LISTENERS */
 	const moveSpeed = document.querySelector('#movement-speed');
 
 	moveSpeed.value = simulation.getMoveSpeed();
@@ -72,6 +27,53 @@ document.addEventListener('DOMContentLoaded', () => {
 		},
 		false
 	);
+
+	/**LOGGING: EVENT LISTENERS */
+
+	// Calculating the mouse position in the canvas
+	function getMousePos(canvas, evt) {
+		var rect = canvas.getBoundingClientRect();
+		return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+	}
+
+	// Event listener for keys being pressed
+	window.addEventListener(
+		'keydown',
+		(evt) => {
+			controller.keyboard(evt.key, true);
+		},
+		false
+	);
+
+	window.addEventListener(
+		'keyup',
+		(evt) => {
+			controller.keyboard(evt.key, false);
+		},
+		false
+	);
+
+	// Event listener for mouse position within the canvas
+	canvas.addEventListener('mousemove', (evt) => {
+		mouse = getMousePos(canvas, evt);
+		mousePos = [mouse.x, mouse.y];
+
+		//console.log(mousePos)
+	});
+
+	window.addEventListener('mousedown', (evt) => {
+		if (evt.button === 0) mouseDownLeft = true;
+		if (evt.button === 2) mouseDownRight = true;
+
+		//console.log(mouseDownLeft)
+	});
+
+	window.addEventListener('mouseup', (evt) => {
+		if (evt.button === 0) mouseDownLeft = false;
+		if (evt.button === 2) mouseDownRight = false;
+
+		//console.log(mouseDownLeft)
+	});
 });
 
 mainLoop();
