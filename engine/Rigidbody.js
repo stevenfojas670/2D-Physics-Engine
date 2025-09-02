@@ -128,7 +128,7 @@ class Rigidbody {
 
 		// Compute k1
 		let acceleration = computeAcceleration(this.forceAccumulator, this.invMass);
-		k1 = Scale(acceleration, deltaTime);
+		k1 = Scale(acceleration, deltaTime); // New vector k1
 
 		// Compute k2
 		let tempForce = Add(this.forceAccumulator, Scale(k1, 0.5));
@@ -141,7 +141,7 @@ class Rigidbody {
 		k3 = Scale(acceleration, deltaTime);
 
 		// Compute k4
-		tempForce = Add(this.forceAccumulator, Scale(k3, 0.5));
+		tempForce = Add(this.forceAccumulator, k3);
 		acceleration = computeAcceleration(tempForce, this.invMass);
 		k4 = Scale(acceleration, deltaTime);
 
