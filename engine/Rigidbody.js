@@ -63,7 +63,7 @@ class Rigidbody {
 	 * See: Game Coding Complete (4th Edition) - Page 570
 	 */
 	integrate(deltaTime) {
-		this.rungeKutta4(deltaTime);
+		this.rungeKutta2(deltaTime);
 	}
 
 	/**
@@ -112,6 +112,30 @@ class Rigidbody {
 		let halfAcceleration = Scale(acceleration, 0.5);
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
 		let deltaPosition = Scale(this.velocity, deltaTime);
+		this.shape.move(deltaPosition);
+	}
+
+	/**
+	 * @param {number} deltaTime - Time step
+	 * @description RK2 positioning approximation function. This
+	 * is more accurate than Forward Euler (FE) but less accurate than Rk4.
+	 */
+	rungeKutta2(deltaTime) {
+		let k1, k2;
+
+		const computeAcceleration = (force, invMass) => Scale(force, invMass);
+
+		// Compute k1
+		let acceleration = computeAcceleration(this.forceAccumulator, this.invMass);
+		k1 = Scale(acceleration, deltaTime); // Computing velocity toward k1
+
+		// Compute k2
+		let tempForce = Add(this.forceAccumulator, Scale(k1, 0.5)); // Compute force (also a direction) half way toward k1
+		acceleration = computeAcceleration(tempForce, this.invMass); // Needed for calculating next velocity
+		k2 = Scale(acceleration, deltaTime); // Calculate the velocity toward k2 from the midpoint of k1
+
+		this.velocity = Add(this.velocity, k2); // Calculate the direction toward k2 directly from our current velocity
+		let deltaPosition = Scale(this.velocity, deltaTime); // p = p0 + vt
 		this.shape.move(deltaPosition);
 	}
 
