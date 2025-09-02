@@ -1,61 +1,35 @@
 class Simulation {
-	constructor(controller = null, moveSpeed = 2) {
-		this.moveSpeed = moveSpeed;
+	constructor(controller = null, force = 5) {
+		// Player movement
+		this.force = force;
 		this.controller = controller;
-		this.shapes = new Array();
-		this.shapes.push(new Circle(new Vector2(600, 300), 100));
-		this.shapes.push(
-			new Polygon([
-				new Vector2(400, 50),
-				new Vector2(500, 50),
-				new Vector2(450, 100),
-			])
-		);
-		this.shapes.push(new Rectangle(new Vector2(600, 600), 150, 150));
 
-		// Draws collisions
-		this.collisionManifold = null;
+		// Objects
+		this.rigidBodies = [];
+
+		this.rigidBodies.push(
+			new Rigibody(new Circle(new Vector2(600, 300), 100.0), 10)
+		);
+		this.rigidBodies.push(
+			new Rigibody(new Circle(new Vector2(300, 300), 100.0), 10)
+		);
 	}
 
-	// Splitting update and draw methods
 	update(deltaTime) {
-		// console.log(`deltaTime: ${deltaTime}`);
-		// console.log(`MousePos x: ${mousePos[0]} y: ${mousePos[1]}`);
-		// console.log(
-		// 	`Mouse-left pressed: ${mouseDownLeft} - Mouse-right pressed: ${mouseDownRight}`
-		// );
-
-		// Collision Detection Loop
-		for (let i = 0; i < this.shapes.length; i++) {
-			for (let j = 0; j < this.shapes.length; j++) {
-				if (i == j) continue;
-
-				let objectA = this.shapes[i];
-				let objectB = this.shapes[j];
-				let result = CollisionDetection.checkCollisions(objectA, objectB);
-				//console.log(result);
-
-				if (result) {
-					let push = Scale(result.normal, result.depth * 0.5);
-					objectB.move(push);
-					push = Scale(result.normal, result.depth * -0.5);
-					objectA.move(push);
-				}
-			}
+		for (let i = 0; i < this.rigidBodies.length; i++) {
+			this.rigidBodies[i].update(deltaTime);
 		}
+		this.rigidBodies[0].log();
 
-		this.collisionManifold = null;
-		this.normalizedSpeed = this.moveSpeed * deltaTime;
+		// Handling movement
+		// this.normalizedSpeed = this.force * deltaTime; My implementation
+		this.normalizedSpeed = this.force; // Following the video
 		this.pollMovement();
 	}
 
 	draw(ctx) {
-		for (let i = 0; i < this.shapes.length; i++) {
-			this.shapes[i].draw(ctx);
-		}
-
-		if (this.collisionManifold) {
-			this.collisionManifold.draw(ctx);
+		for (let i = 0; i < this.rigidBodies.length; i++) {
+			this.rigidBodies[i].getShape().draw(ctx);
 		}
 	}
 
@@ -69,43 +43,43 @@ class Simulation {
 
 		// Moving shape one
 		if (this.controller.keys.d) {
-			this.shapes[0].move(new Vector2(this.normalizedSpeed, 0));
+			this.rigidBodies[0].addForce(new Vector2(this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.a) {
-			this.shapes[0].move(new Vector2(-this.normalizedSpeed, 0));
+			this.rigidBodies[0].addForce(new Vector2(-this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.s) {
-			this.shapes[0].move(new Vector2(0, this.normalizedSpeed));
+			this.rigidBodies[0].addForce(new Vector2(0, this.normalizedSpeed));
 		}
 		if (this.controller.keys.w) {
-			this.shapes[0].move(new Vector2(0, -this.normalizedSpeed));
+			this.rigidBodies[0].addForce(new Vector2(0, -this.normalizedSpeed));
 		}
-		if (this.controller.keys.e) {
-			this.shapes[0].rotate(0.05);
-		}
-		if (this.controller.keys.q) {
-			this.shapes[0].rotate(-0.05);
-		}
+		// if (this.controller.keys.e) {
+		// 	this.rigidBodies[0].rotate(0.05);
+		// }
+		// if (this.controller.keys.q) {
+		// 	this.rigidBodies[0].rotate(-0.05);
+		// }
 
 		// Moving shape two
 		if (this.controller.keys.ArrowRight) {
-			this.shapes[1].move(new Vector2(this.normalizedSpeed, 0));
+			this.rigidBodies[1].addForce(new Vector2(this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.ArrowLeft) {
-			this.shapes[1].move(new Vector2(-this.normalizedSpeed, 0));
+			this.rigidBodies[1].addForce(new Vector2(-this.normalizedSpeed, 0));
 		}
 		if (this.controller.keys.ArrowDown) {
-			this.shapes[1].move(new Vector2(0, this.normalizedSpeed));
+			this.rigidBodies[1].addForce(new Vector2(0, this.normalizedSpeed));
 		}
 		if (this.controller.keys.ArrowUp) {
-			this.shapes[1].move(new Vector2(0, -this.normalizedSpeed));
+			this.rigidBodies[1].addForce(new Vector2(0, -this.normalizedSpeed));
 		}
-		if (this.controller.keys['.']) {
-			this.shapes[1].rotate(0.05);
-		}
-		if (this.controller.keys[',']) {
-			this.shapes[1].rotate(-0.05);
-		}
+		// if (this.controller.keys['.']) {
+		// 	this.rigidBodies[1].rotate(0.05);
+		// }
+		// if (this.controller.keys[',']) {
+		// 	this.rigidBodies[1].rotate(-0.05);
+		// }
 	}
 
 	/**

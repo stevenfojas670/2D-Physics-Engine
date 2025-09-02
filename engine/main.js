@@ -4,7 +4,6 @@ var ctx = canvas.getContext('2d');
 let lastTime = performance.now();
 let currentTime = 0;
 let deltaTime = 0;
-let perfectFrameRate = 60;
 
 let mousePos = [0, 0];
 let mouseDownLeft = false;
@@ -88,7 +87,7 @@ function mainLoop() {
 	window.requestAnimationFrame(mainLoop);
 
 	currentTime = performance.now();
-	deltaTime = (currentTime - lastTime) / (1000 / perfectFrameRate);
+	deltaTime = (currentTime - lastTime) / 1000;
 	updateSimulation(deltaTime);
 
 	lastTime = currentTime;
