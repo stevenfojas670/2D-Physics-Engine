@@ -8,10 +8,10 @@ class Simulation {
 		this.rigidBodies = [];
 
 		this.rigidBodies.push(
-			new Rigibody(new Circle(new Vector2(600, 300), 100.0), 10)
+			new Rigidbody(new Circle(new Vector2(600, 300), 100.0), 10)
 		);
 		this.rigidBodies.push(
-			new Rigibody(new Circle(new Vector2(300, 300), 100.0), 10)
+			new Rigidbody(new Circle(new Vector2(300, 300), 100.0), 10)
 		);
 	}
 

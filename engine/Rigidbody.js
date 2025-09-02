@@ -1,4 +1,4 @@
-class Rigibody {
+class Rigidbody {
 	/**
 	 *
 	 * @param {Shape} shape
@@ -55,14 +55,15 @@ class Rigibody {
 	}
 
 	/**
+	 *
+	 * @param {number} deltaTime
 	 * @description Converting the force from the force acummulator to
 	 * an acceleration then we convert the acceleration to a velocity then
 	 * we convert the velocity to a direction vector for movement.
 	 * See: Game Coding Complete (4th Edition) - Page 570
-	 * @param {number} deltaTime
 	 */
 	integrate(deltaTime) {
-		this.semiImplicitEuler(deltaTime);
+		this.rungeKutta4(deltaTime);
 	}
 
 	/**
@@ -112,7 +113,48 @@ class Rigibody {
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
 		let deltaPosition = Scale(this.velocity, deltaTime);
 		this.shape.move(deltaPosition);
-		this.velocity = Scale(this.velocity, Scale(halfAcceleration, deltaTime));
+	}
+
+	/**
+	 *
+	 * @param {number} deltaTime - Time step
+	 * @description RK4 positioning approximation function. This
+	 * is a more accurate predictor of position and velocity than Euler's method.
+	 */
+	rungeKutta4(deltaTime) {
+		let k1, k2, k3, k4;
+
+		const computeAcceleration = (force, invMass) => Scale(force, invMass);
+
+		// Compute k1
+		let acceleration = computeAcceleration(this.forceAccumulator, this.invMass);
+		k1 = Scale(acceleration, deltaTime);
+
+		// Compute k2
+		let tempForce = Add(this.forceAccumulator, Scale(k1, 0.5));
+		acceleration = computeAcceleration(tempForce, this.invMass);
+		k2 = Scale(acceleration, deltaTime);
+
+		// Compute k3
+		tempForce = Add(this.forceAccumulator, Scale(k2, 0.5));
+		acceleration = computeAcceleration(tempForce, this.invMass);
+		k3 = Scale(acceleration, deltaTime);
+
+		// Compute k4
+		tempForce = Add(this.forceAccumulator, Scale(k3, 0.5));
+		acceleration = computeAcceleration(tempForce, this.invMass);
+		k4 = Scale(acceleration, deltaTime);
+
+		// Combine ks to get new velocity
+		// (k1 + 2xk2 + 2xk3 + k4) / 6
+		let deltaVelocity = Scale(
+			Add(Add(k1, Scale(k2, 2)), Add(Scale(k3, 2), k4)),
+			1 / 6.0
+		);
+		this.velocity = Add(this.velocity, deltaVelocity);
+
+		let deltaPosition = Scale(this.velocity, deltaTime);
+		this.shape.move(deltaPosition);
 	}
 
 	getShape() {
