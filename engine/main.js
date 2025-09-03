@@ -1,5 +1,7 @@
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
+var width = 1920;
+var height = 1080;
 
 let lastTime = performance.now();
 let currentTime = 0;
@@ -10,7 +12,7 @@ let mouseDownLeft = false;
 let mouseDownRight = false;
 
 let controller = new Controller();
-let simulation = new Simulation(controller);
+let simulation = new Simulation(width, height, controller);
 
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */

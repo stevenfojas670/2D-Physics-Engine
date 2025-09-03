@@ -1,23 +1,44 @@
 class Simulation {
-	constructor(controller = null, force = 5) {
+	constructor(width, height, controller = null, force = 5) {
 		// Player movement
 		this.force = force;
+		this.gravity = new Vector2(0, 5000);
 		this.controller = controller;
+		this.height = height;
+		this.width = width;
 
 		// Objects
 		this.rigidBodies = [];
 
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(600, 300), 100.0), 10)
+			new Rigidbody(new Circle(new Vector2(600, 300), 50.0), 10)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(300, 300), 100.0), 10)
+			new Rigidbody(new Circle(new Vector2(300, 100), 100.0), 10)
+		);
+		this.rigidBodies.push(
+			new Rigidbody(new Circle(new Vector2(1000, 100), 75.0), 10)
 		);
 	}
 
 	update(deltaTime) {
+		let center = null;
+		let radius = null;
 		for (let i = 0; i < this.rigidBodies.length; i++) {
+			this.rigidBodies[i].addForce(this.gravity); // Applying gravity to all rigidbodies
 			this.rigidBodies[i].update(deltaTime);
+
+			center = this.rigidBodies[i].getShape().getCentroid();
+
+			if (this.rigidBodies[i].getShape() instanceof Circle) {
+				radius = this.rigidBodies[i].getShape().getRadius();
+			}
+
+			if (center.y + radius >= this.height) {
+				console.log('Invert Velocity');
+				let velocity = this.rigidBodies[i].getVelocity();
+				this.rigidBodies[i].setVelocity(Scale(velocity, -1));
+			}
 		}
 		this.rigidBodies[0].log();
 

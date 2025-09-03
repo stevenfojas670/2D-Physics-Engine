@@ -42,6 +42,14 @@ class Rigidbody {
 
 	/**
 	 *
+	 * @returns {void} velocity
+	 */
+	getVelocity() {
+		return this.velocity;
+	}
+
+	/**
+	 *
 	 * @param {Vector2} velocity - Velocity vector that will be set to
 	 * the current velocity.
 	 * @returns {void}
@@ -52,6 +60,9 @@ class Rigidbody {
 
 	update(deltaTime) {
 		this.integrate(deltaTime);
+
+		this.velocity.Scale(0.99);
+		this.forceAccumulator = new Vector2(0, 0);
 	}
 
 	/**
@@ -63,7 +74,11 @@ class Rigidbody {
 	 * See: Game Coding Complete (4th Edition) - Page 570
 	 */
 	integrate(deltaTime) {
-		this.rungeKutta2(deltaTime);
+		// this.semiImplicitEuler(deltaTime);
+		// this.forwardEuler(deltaTime);
+		// this.midPointMethod(deltaTime);
+		// this.rungeKutta2(deltaTime);
+		this.rungeKutta4(deltaTime);
 	}
 
 	/**
@@ -113,6 +128,7 @@ class Rigidbody {
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
 		let deltaPosition = Scale(this.velocity, deltaTime);
 		this.shape.move(deltaPosition);
+		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
 	}
 
 	/**
