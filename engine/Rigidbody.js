@@ -8,6 +8,8 @@ class Rigidbody {
 		this.shape = shape;
 		this.mass = mass;
 
+		this.material = new Material();
+
 		if (mass > 0) {
 			this.invMass = 1 / mass;
 		} else {

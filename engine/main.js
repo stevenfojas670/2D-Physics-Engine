@@ -11,8 +11,7 @@ let mousePos = [0, 0];
 let mouseDownLeft = false;
 let mouseDownRight = false;
 
-let controller = new Controller();
-let simulation = new Simulation(width, height, controller);
+let simulation = new Simulation(width, height);
 
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
@@ -41,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keydown',
 		(evt) => {
-			controller.keyboard(evt.key, true);
+			simulation.controller.keyboard(evt.key, true);
 		},
 		false
 	);
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keyup',
 		(evt) => {
-			controller.keyboard(evt.key, false);
+			simulation.controller.keyboard(evt.key, false);
 		},
 		false
 	);

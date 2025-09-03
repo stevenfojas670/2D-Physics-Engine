@@ -1,9 +1,9 @@
 class Simulation {
-	constructor(width, height, controller = null, force = 5) {
+	constructor(width, height, force = 5) {
 		// Player movement
 		this.force = force;
 		this.gravity = new Vector2(0, 5000);
-		this.controller = controller;
+		this.controller = new Controller();
 		this.height = height;
 		this.width = width;
 
@@ -19,6 +19,13 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(new Circle(new Vector2(1000, 100), 75.0), 10)
 		);
+
+		let rigidBounce = new Rigidbody(
+			new Circle(new Vector2(800, 100), 10.0),
+			10
+		);
+		rigidBounce.material.bounce = 0.5;
+		this.rigidBodies.push(rigidBounce);
 	}
 
 	update(deltaTime) {
@@ -37,7 +44,9 @@ class Simulation {
 			if (center.y + radius >= this.height) {
 				console.log('Invert Velocity');
 				let velocity = this.rigidBodies[i].getVelocity();
-				this.rigidBodies[i].setVelocity(Scale(velocity, -1));
+				this.rigidBodies[i].setVelocity(
+					Scale(velocity, -1 * this.rigidBodies[i].material.bounce)
+				);
 			}
 		}
 		this.rigidBodies[0].log();
