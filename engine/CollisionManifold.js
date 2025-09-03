@@ -12,7 +12,30 @@ class CollisionManifold {
 		this.penetrationPoint = penetrationPoint;
 	}
 
-	resolveCollision() {}
+	resolveCollision() {
+		// Linear Impulse
+		let relativeVelocity = Sub(this.rigBodyB.velocity, this.rigBodyA.velocity);
+		let relVelocityAlongNormal = relativeVelocity.Dot(this.normal);
+		console.log(`Velocity along normal: ${relVelocityAlongNormal}`);
+
+		if (relVelocityAlongNormal > 0) {
+			return;
+		}
+
+		let e = 1;
+		let j = -(1 + e) * relVelocityAlongNormal;
+		let impulseVector = Scale(this.normal, j);
+		let impulseVectorRigA = Scale(impulseVector, -0.5);
+		let impulseVectorRigB = Scale(impulseVector, 0.5);
+
+		this.rigBodyA.setVelocity(
+			Add(this.rigBodyA.getVelocity(), impulseVectorRigA)
+		);
+
+		this.rigBodyB.setVelocity(
+			Add(this.rigBodyB.getVelocity(), impulseVectorRigB)
+		);
+	}
 
 	positionalCorrection() {}
 
