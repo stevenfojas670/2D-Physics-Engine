@@ -13,28 +13,17 @@ class CollisionManifold {
 	}
 
 	resolveCollision() {
-		// Linear Impulse
-		let relativeVelocity = Sub(this.rigBodyB.velocity, this.rigBodyA.velocity);
-		let relVelocityAlongNormal = relativeVelocity.Dot(this.normal);
-		console.log(`Velocity along normal: ${relVelocityAlongNormal}`);
-
-		if (relVelocityAlongNormal > 0) {
-			return;
-		}
-
-		let e = 1;
-		let j = -(1 + e) * relVelocityAlongNormal;
-		let impulseVector = Scale(this.normal, j);
-		let impulseVectorRigA = Scale(impulseVector, -0.5);
-		let impulseVectorRigB = Scale(impulseVector, 0.5);
-
-		this.rigBodyA.setVelocity(
-			Add(this.rigBodyA.getVelocity(), impulseVectorRigA)
-		);
-
-		this.rigBodyB.setVelocity(
-			Add(this.rigBodyB.getVelocity(), impulseVectorRigB)
-		);
+		/**
+		 * Linear Impulse
+		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
+		 * Chapter 12.4.2 General Collision Response
+		 */
+		// Calculate impulse multiplier
+		// relativeVelocity = v1 - v2
+		// k = [(e+1) * Dot(relativeVelcity, normal)] / (1/m1 + 1/m2) * (normal * normal)
+		// Calculate the post-impulse velocity
+		// v1` = v1 + kn / m1
+		// v2` = v2 + kn / m2
 	}
 
 	positionalCorrection() {}
