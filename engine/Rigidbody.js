@@ -8,11 +8,14 @@ class Rigidbody {
 		this.shape = shape;
 		this.mass = mass;
 
+		// Kinematic body impelmentation
+
 		this.material = new Material();
 
 		if (mass > 0) {
 			this.invMass = 1 / mass;
 		} else {
+			// Accounts for mass being 0, since 1/0 is not allowed
 			this.mass = 0;
 			this.invMass = 0;
 		}

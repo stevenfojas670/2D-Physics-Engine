@@ -19,11 +19,10 @@ class CollisionManifold {
 		 * Linear Impulse
 		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
 		 * Chapter 12.4.2 General Collision Response
-		 * @todo Reimplement once mass is integrated.
 		 */
 		// Calculate impulse multiplier
 		// relativeVelocity = v1 - v2
-		// k = [(e+1) * Dot(relativeVelcity, normal)] / (1/m1 + 1/m2) * (normal * normal)
+		// k = [-(e+1) * relativeVelocity.Dot(normal)] / (1/m1 + 1/m2) * (normal * normal)
 		let relV = Sub(this.rigB.velocity, this.rigA.velocity);
 		let relVAlongNorm = relV.Dot(this.normal);
 
@@ -40,7 +39,10 @@ class CollisionManifold {
 		// v1` = v1 + kn / m1
 		// v2` = v2 - kn / m2
 		let kn = Scale(this.normal, k);
-		this.rigA.velocity = Add(this.rigA.velocity, Scale(kn, -this.rigA.invMass));
+		this.rigA.velocity = Add(
+			this.rigA.velocity,
+			Scale(kn, this.rigA.invMass * -1)
+		);
 		this.rigB.velocity = Add(this.rigB.velocity, Scale(kn, this.rigB.invMass));
 	}
 
