@@ -13,12 +13,17 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(new Circle(new Vector2(600, 300), 50.0), 10)
 		);
+		this.rigidBodies[0].mass = 100;
+
 		this.rigidBodies.push(
 			new Rigidbody(new Rectangle(new Vector2(600, 600), 200, 100), 10)
 		);
+		this.rigidBodies[1].mass = 10;
+
 		this.rigidBodies.push(
 			new Rigidbody(new Rectangle(new Vector2(200, 600), 100, 200), 10)
 		);
+		this.rigidBodies[2].mass = 50;
 
 		this.rigidBodies[1].getShape().rotate(1.3);
 	}

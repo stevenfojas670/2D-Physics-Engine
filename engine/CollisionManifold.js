@@ -30,16 +30,18 @@ class CollisionManifold {
 		if (relVAlongNorm > 0) return;
 
 		let e = 1;
-		let j = -(e + 1) * relVAlongNorm;
-		let impulseVector = Scale(this.normal, j);
-		let impulseVecA = Scale(impulseVector, -0.5);
-		let impulseVecB = Scale(impulseVector, 0.5);
+		let dividend = -(e + 1) * relVAlongNorm;
+		let divisor =
+			(1 / (this.rigA.invMass + this.rigB.invMass)) *
+			this.normal.Dot(this.normal);
+		let k = dividend * divisor;
 
 		// Calculate the post-impulse velocity
 		// v1` = v1 + kn / m1
 		// v2` = v2 - kn / m2
-		this.rigA.velocity = Add(this.rigA.velocity, impulseVecA);
-		this.rigB.velocity = Add(this.rigB.velocity, impulseVecB);
+		let kn = Scale(this.normal, k);
+		this.rigA.velocity = Add(this.rigA.velocity, Scale(kn, -this.rigA.invMass));
+		this.rigB.velocity = Add(this.rigB.velocity, Scale(kn, this.rigB.invMass));
 	}
 
 	positionalCorrection() {}
