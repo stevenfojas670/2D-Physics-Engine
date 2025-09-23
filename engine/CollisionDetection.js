@@ -8,8 +8,10 @@ class CollisionDetection {
 	 * @param {Shape} shapeB
 	 * @returns {CollisionManifold} collisionManifold
 	 */
-	static checkCollisions(shapeA, shapeB) {
+	static checkCollisions(rigA, rigB) {
 		let collisionManifold = null;
+		let shapeA = rigA.shape;
+		let shapeB = rigB.shape;
 
 		if (shapeA instanceof Circle && shapeB instanceof Circle) {
 			collisionManifold = this.circleVsCircleOptimized(shapeA, shapeB);
@@ -17,6 +19,11 @@ class CollisionDetection {
 			collisionManifold = this.polygonVsPolygon(shapeA, shapeB);
 		} else if (shapeA instanceof Circle && shapeB instanceof Polygon) {
 			collisionManifold = this.circleVsPolygon(shapeA, shapeB);
+		}
+
+		if (collisionManifold != null) {
+			collisionManifold.rigA = rigA;
+			collisionManifold.rigB = rigB;
 		}
 
 		return collisionManifold;

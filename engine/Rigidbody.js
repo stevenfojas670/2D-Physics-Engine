@@ -63,7 +63,7 @@ class Rigidbody {
 	update(deltaTime) {
 		this.integrate(deltaTime);
 
-		this.velocity.Scale(0.99);
+		this.velocity.Scale(1);
 		this.forceAccumulator = new Vector2(0, 0);
 	}
 

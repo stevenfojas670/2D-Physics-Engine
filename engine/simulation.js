@@ -1,5 +1,5 @@
 class Simulation {
-	constructor(width, height, force = 5) {
+	constructor(width, height, force = 5000) {
 		// Player movement
 		this.force = force;
 		this.gravity = new Vector2(0, 5000);
@@ -14,41 +14,38 @@ class Simulation {
 			new Rigidbody(new Circle(new Vector2(600, 300), 50.0), 10)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(300, 100), 100.0), 10)
+			new Rigidbody(new Rectangle(new Vector2(600, 600), 200, 100), 10)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(1000, 100), 75.0), 10)
+			new Rigidbody(new Rectangle(new Vector2(200, 600), 100, 200), 10)
 		);
 
-		let rigidBounce = new Rigidbody(
-			new Circle(new Vector2(800, 100), 10.0),
-			10
-		);
-		rigidBounce.material.bounce = 0.5;
-		this.rigidBodies.push(rigidBounce);
+		this.rigidBodies[1].getShape().rotate(1.3);
 	}
 
 	update(deltaTime) {
-		let center = null;
-		let radius = null;
 		for (let i = 0; i < this.rigidBodies.length; i++) {
-			this.rigidBodies[i].addForce(this.gravity); // Applying gravity to all rigidbodies
 			this.rigidBodies[i].update(deltaTime);
+		}
 
-			center = this.rigidBodies[i].getShape().getCentroid();
+		for (let i = 0; i < this.rigidBodies.length; i++) {
+			for (let j = 0; j < this.rigidBodies.length; j++) {
+				if (i != j) {
+					let rigA = this.rigidBodies[i];
+					let rigB = this.rigidBodies[j];
+					let collisionManifold = CollisionDetection.checkCollisions(
+						rigA,
+						rigB
+					);
 
-			if (this.rigidBodies[i].getShape() instanceof Circle) {
-				radius = this.rigidBodies[i].getShape().getRadius();
-			}
-
-			if (center.y + radius >= this.height) {
-				console.log('Invert Velocity');
-				let velocity = this.rigidBodies[i].getVelocity();
-				this.rigidBodies[i].setVelocity(
-					Scale(velocity, -1 * this.rigidBodies[i].material.bounce)
-				);
+					if (collisionManifold != null) {
+						collisionManifold.positionalCorrection();
+						collisionManifold.resolveCollision();
+					}
+				}
 			}
 		}
+
 		this.rigidBodies[0].log();
 
 		// Handling movement
