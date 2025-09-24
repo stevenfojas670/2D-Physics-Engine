@@ -4,11 +4,12 @@ class Rigidbody {
 	 * @param {Shape} shape
 	 * @param {number} mass
 	 */
-	constructor(shape, mass) {
+	constructor(shape, mass = 1) {
 		this.shape = shape;
 		this.mass = mass;
 
 		// Kinematic body impelmentation
+		this.isKinematic = false;
 
 		this.material = new Material();
 
@@ -18,6 +19,7 @@ class Rigidbody {
 			// Accounts for mass being 0, since 1/0 is not allowed
 			this.mass = 0;
 			this.invMass = 0;
+			this.isKinematic = true;
 		}
 
 		this.forceAccumulator = new Vector2(0, 0);

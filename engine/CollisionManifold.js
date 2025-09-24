@@ -21,6 +21,7 @@ class CollisionManifold {
 		 * Chapter 12.4.2 General Collision Response
 		 */
 		// Calculate impulse multiplier
+
 		// relativeVelocity = v1 - v2
 		// k = [-(e+1) * relativeVelocity.Dot(normal)] / (1/m1 + 1/m2) * (normal * normal)
 		let relV = Sub(this.rigB.velocity, this.rigA.velocity);
@@ -28,7 +29,21 @@ class CollisionManifold {
 
 		if (relVAlongNorm > 0) return;
 
-		let e = 1;
+		/**
+		 * Preventing division by 0, since mass will be 0 if isKinematic is true.
+		 * @see RigidBody class constructor
+		 */
+		if (this.rigA.isKinematic && this.rigB.isKinematic) return;
+
+		/**
+		 * Calculating the Restitution Coefficient
+		 * This is really the bounciness of the material
+		 * @see Material class
+		 */
+		let e =
+			(2 * this.rigA.material.bounce * this.rigB.material.bounce) /
+			(this.rigA.material.bounce + this.rigB.material.bounce);
+
 		let dividend = -(e + 1) * relVAlongNorm;
 		let divisor =
 			(1 / (this.rigA.invMass + this.rigB.invMass)) *

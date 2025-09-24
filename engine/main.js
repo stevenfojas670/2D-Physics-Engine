@@ -11,7 +11,7 @@ let mousePos = [0, 0];
 let mouseDownLeft = false;
 let mouseDownRight = false;
 
-let simulation = new Simulation(width, height);
+let simulation = new Simulation(new Vector2(canvas.width, canvas.height));
 
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */

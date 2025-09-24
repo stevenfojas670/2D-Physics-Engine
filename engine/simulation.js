@@ -1,33 +1,99 @@
 class Simulation {
-	constructor(width, height, force = 5000) {
+	constructor(worldSize, force = 20000) {
+		/**
+		 * @todo Create a Builder pattern for initializing the simulation
+		 * @description There will be so many parameters to configure for the user
+		 */
+
 		// Player movement
-		this.force = force;
-		this.gravity = new Vector2(0, 5000);
+		this.force = force * 10;
+		this.gravity = new Vector2(0, 100);
 		this.controller = new Controller();
-		this.height = height;
-		this.width = width;
+		this.worldSize = worldSize;
 
 		// Objects
 		this.rigidBodies = [];
+
+		this.createBoundary();
 
 		this.rigidBodies.push(
 			new Rigidbody(new Circle(new Vector2(900, 300), 50.0), 10)
 		);
 
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(100, 600), 200, 100), 100)
+			new Rigidbody(new Circle(new Vector2(400, 300), 50.0), 10)
 		);
 
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(600, 400), 300, 300), 800)
+			new Rigidbody(new Rectangle(new Vector2(200, 600), 200, 100), 5)
 		);
 
-		this.rigidBodies[1].getShape().rotate(1.3);
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Rectangle(new Vector2(500, this.worldSize.y / 2), 100, 800),
+				500
+			)
+		);
+	}
+
+	createBoundary() {
+		// Top Boundary
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x / 2, 0),
+					this.worldSize.x,
+					1
+				),
+				0
+			)
+		);
+
+		// Bottom Boundary
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x / 2, this.worldSize.y),
+					this.worldSize.x,
+					1
+				),
+				0
+			)
+		);
+
+		// Left Boundary
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(0, this.worldSize.y / 2),
+					1,
+					this.worldSize.y
+				),
+				0
+			)
+		);
+
+		// Right Boundary
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x, this.worldSize.y / 2),
+					1,
+					this.worldSize.y
+				),
+				0
+			)
+		);
 	}
 
 	update(deltaTime) {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
+
+			// F = m * a
+			this.rigidBodies[i].addForce(
+				Scale(this.gravity, this.rigidBodies[i].mass)
+			);
 		}
 
 		for (let i = 0; i < this.rigidBodies.length; i++) {
@@ -51,8 +117,8 @@ class Simulation {
 		this.rigidBodies[0].log();
 
 		// Handling movement
-		// this.normalizedSpeed = this.force * deltaTime; My implementation
-		this.normalizedSpeed = this.force; // Following the video
+		this.normalizedSpeed = this.force * deltaTime; // My implementation
+		// this.normalizedSpeed = this.force; // Following the video
 		this.pollMovement();
 	}
 
@@ -70,18 +136,28 @@ class Simulation {
 	pollMovement() {
 		// this.controller.log();
 
+		let length = this.rigidBodies.length;
+
 		// Moving shape one
 		if (this.controller.keys.d) {
-			this.rigidBodies[0].addForce(new Vector2(this.normalizedSpeed, 0));
+			this.rigidBodies[length - 4].addForce(
+				new Vector2(this.normalizedSpeed, 0)
+			);
 		}
 		if (this.controller.keys.a) {
-			this.rigidBodies[0].addForce(new Vector2(-this.normalizedSpeed, 0));
+			this.rigidBodies[length - 4].addForce(
+				new Vector2(-this.normalizedSpeed, 0)
+			);
 		}
 		if (this.controller.keys.s) {
-			this.rigidBodies[0].addForce(new Vector2(0, this.normalizedSpeed));
+			this.rigidBodies[length - 4].addForce(
+				new Vector2(0, this.normalizedSpeed)
+			);
 		}
 		if (this.controller.keys.w) {
-			this.rigidBodies[0].addForce(new Vector2(0, -this.normalizedSpeed));
+			this.rigidBodies[length - 4].addForce(
+				new Vector2(0, -this.normalizedSpeed)
+			);
 		}
 		// if (this.controller.keys.e) {
 		// 	this.rigidBodies[0].rotate(0.05);
@@ -92,16 +168,24 @@ class Simulation {
 
 		// Moving shape two
 		if (this.controller.keys.ArrowRight) {
-			this.rigidBodies[1].addForce(new Vector2(this.normalizedSpeed, 0));
+			this.rigidBodies[length - 5].addForce(
+				new Vector2(this.normalizedSpeed, 0)
+			);
 		}
 		if (this.controller.keys.ArrowLeft) {
-			this.rigidBodies[1].addForce(new Vector2(-this.normalizedSpeed, 0));
+			this.rigidBodies[length - 5].addForce(
+				new Vector2(-this.normalizedSpeed, 0)
+			);
 		}
 		if (this.controller.keys.ArrowDown) {
-			this.rigidBodies[1].addForce(new Vector2(0, this.normalizedSpeed));
+			this.rigidBodies[length - 5].addForce(
+				new Vector2(0, this.normalizedSpeed)
+			);
 		}
 		if (this.controller.keys.ArrowUp) {
-			this.rigidBodies[1].addForce(new Vector2(0, -this.normalizedSpeed));
+			this.rigidBodies[length - 5].addForce(
+				new Vector2(0, -this.normalizedSpeed)
+			);
 		}
 		// if (this.controller.keys['.']) {
 		// 	this.rigidBodies[1].rotate(0.05);
