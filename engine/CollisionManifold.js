@@ -100,10 +100,7 @@ class CollisionManifold {
 		// v1` = v1 + kn / m1
 		// v2` = v2 - kn / m2
 		let kn = Scale(this.normal, linearImpulse);
-		this.rigA.velocity = Add(
-			this.rigA.velocity,
-			Scale(kn, this.rigA.invMass * -1)
-		);
+		this.rigA.velocity = Sub(this.rigA.velocity, Scale(kn, this.rigA.invMass));
 		this.rigB.velocity = Add(this.rigB.velocity, Scale(kn, this.rigB.invMass));
 
 		this.rigA.angularVelocity +=
@@ -123,9 +120,10 @@ class CollisionManifold {
 		let tangent = Sub(relativeVelocity, velocityInNormalDirection);
 		tangent = Scale(tangent, -1);
 
-		let friction =
-			(2 * this.rigA.material.friction * this.rigB.material.friction) /
-			(this.rigA.material.friction + this.rigB.material.friction);
+		let friction = Math.min(
+			this.rigA.material.friction,
+			this.rigB.material.friction
+		);
 
 		if (tangent.x > 0.00001 || tangent.y > 0.00001) {
 			tangent.Normalize();
@@ -138,9 +136,11 @@ class CollisionManifold {
 
 		let pToCentroidCrossTangentA = penetrationToCentroidA.Cross(tangent);
 		let pToCentroidCrossTangentB = penetrationToCentroidB.Cross(tangent);
+
 		let crossSumTangent =
 			pToCentroidCrossTangentA * pToCentroidCrossTangentA * rigAInvInertia +
 			pToCentroidCrossTangentB * pToCentroidCrossTangentB * rigBInvInertia;
+
 		let frictionalImpulse = -(e + 1) * relativeVelocity.Dot(tangent) * friction;
 		frictionalImpulse /=
 			(this.rigA.invMass + this.rigB.invMass + crossSumTangent) *

@@ -31,8 +31,6 @@ class Rigidbody {
 		} else {
 			this.invInertia = 0;
 		}
-
-		console.log('Inertia: ' + this.inertia);
 	}
 
 	/**
@@ -87,6 +85,7 @@ class Rigidbody {
 		this.velocity.Scale(0.999);
 		this.angularVelocity *= 0.999;
 		this.forceAccumulator = new Vector2(0, 0);
+		this.log();
 	}
 
 	/**
@@ -241,6 +240,7 @@ class Rigidbody {
 	}
 
 	log() {
+		console.log('Inertia: ' + this.inertia);
 		console.log(
 			`Force: x = ${this.forceAccumulator.x}, y = ${this.forceAccumulator.y}\nVelocity: x = ${this.velocity.x}, y = ${this.velocity.y}`
 		);

@@ -21,7 +21,7 @@ class Simulation {
 
 		this.rigidBodies.push(new Rigidbody(rect, 0));
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(200, 0), 200, 100), 1)
+			new Rigidbody(new Rectangle(new Vector2(200, 100), 200, 100), 1)
 		);
 		this.rigidBodies.push(
 			new Rigidbody(new Circle(new Vector2(500, 300), 60), 1)
@@ -40,7 +40,7 @@ class Simulation {
 					this.worldSize.x,
 					50
 				),
-				0
+				false
 			)
 		);
 
@@ -52,7 +52,7 @@ class Simulation {
 					this.worldSize.x,
 					50
 				),
-				0
+				false
 			)
 		);
 
@@ -64,7 +64,7 @@ class Simulation {
 					50,
 					this.worldSize.y
 				),
-				0
+				false
 			)
 		);
 
@@ -76,7 +76,7 @@ class Simulation {
 					50,
 					this.worldSize.y
 				),
-				0
+				false
 			)
 		);
 	}
@@ -108,8 +108,6 @@ class Simulation {
 				}
 			}
 		}
-
-		this.rigidBodies[0].log();
 
 		// Handling movement
 		this.normalizedSpeed = this.force * deltaTime; // My implementation
