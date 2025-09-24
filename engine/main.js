@@ -79,8 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
 mainLoop();
 
 function updateSimulation(deltaTime) {
-	simulation.update(deltaTime);
 	Clear();
+	let deltaTimeText = `${Math.round(1.0 / deltaTime, 2)} FPS`;
+	DrawUtils.drawText(new Vector2(10, 20), 12, 'black', deltaTimeText);
+	simulation.update(deltaTime);
 	simulation.draw(ctx);
 }
 

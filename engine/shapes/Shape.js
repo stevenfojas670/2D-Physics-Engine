@@ -85,9 +85,8 @@ class Shape {
 		);
 
 		// Drawing centroid
-		DrawUtils.drawPoint(this.centroid, 5, this.color);
-
-		this.boundingBox.draw(ctx);
+		// DrawUtils.drawPoint(this.centroid, 5, this.color);
+		// this.boundingBox.draw(ctx);
 	}
 
 	/**

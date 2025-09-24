@@ -16,19 +16,40 @@ class Simulation {
 
 		this.createBoundary();
 
-		let rect = new Rectangle(new Vector2(500, 500), 800, 50);
-		rect.rotate(0.2);
+		this.createStressTestPyramid(25, 15);
 
-		this.rigidBodies.push(new Rigidbody(rect, 0));
-		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(200, 100), 200, 100), 1)
-		);
-		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(500, 300), 60), 1)
-		);
-		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(600, 300), 30), 1)
-		);
+		// let rect = new Rectangle(new Vector2(500, 500), 800, 50);
+		// rect.rotate(0.2);
+
+		// this.rigidBodies.push(new Rigidbody(rect, 0));
+		// this.rigidBodies.push(
+		// 	new Rigidbody(new Rectangle(new Vector2(200, 100), 200, 100), 1)
+		// );
+		// this.rigidBodies.push(
+		// 	new Rigidbody(new Circle(new Vector2(500, 300), 60), 1)
+		// );
+		// this.rigidBodies.push(
+		// 	new Rigidbody(new Circle(new Vector2(600, 300), 30), 1)
+		// );
+	}
+
+	createStressTestPyramid(_boxSize, _iterations) {
+		let boxSize = _boxSize;
+		let iterations = _iterations;
+		let topOffset = this.worldSize.y - iterations * boxSize;
+
+		for (let i = 0; i < iterations; i++) {
+			for (let j = iterations; j >= iterations - i; j--) {
+				let x = boxSize * i + j * (boxSize / 2);
+				let y = boxSize * j;
+				this.rigidBodies.push(
+					new Rigidbody(
+						new Rectangle(new Vector2(x, y + topOffset), boxSize, boxSize),
+						1
+					)
+				);
+			}
+		}
 	}
 
 	createBoundary() {
@@ -92,30 +113,35 @@ class Simulation {
 			);
 		}
 
-		for (let i = 0; i < this.rigidBodies.length; i++) {
-			for (let j = 0; j < this.rigidBodies.length; j++) {
-				if (i != j) {
-					let rigA = this.rigidBodies[i];
-					let rigB = this.rigidBodies[j];
+		// The higher iteration limit, the more stable
+		for (let solverIterations = 0; solverIterations < 20; solverIterations++) {
+			for (let i = 0; i < this.rigidBodies.length; i++) {
+				for (let j = 0; j < this.rigidBodies.length; j++) {
+					if (i != j) {
+						let rigA = this.rigidBodies[i];
+						let rigB = this.rigidBodies[j];
 
-					let isCollidingWithBoundingBox = rigA
-						.getShape()
-						.boundingBox.intersect(rigB.getShape().boundingBox);
+						let isCollidingWithBoundingBox = rigA
+							.getShape()
+							.boundingBox.intersect(rigB.getShape().boundingBox);
 
-					if (!isCollidingWithBoundingBox) continue;
+						if (!isCollidingWithBoundingBox) continue;
 
-					rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
-					rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+						rigA.getShape().boundingBox.isColliding =
+							isCollidingWithBoundingBox;
+						rigB.getShape().boundingBox.isColliding =
+							isCollidingWithBoundingBox;
 
-					let collisionManifold = CollisionDetection.checkCollisions(
-						rigA,
-						rigB
-					);
+						let collisionManifold = CollisionDetection.checkCollisions(
+							rigA,
+							rigB
+						);
 
-					if (collisionManifold != null) {
-						collisionManifold.draw();
-						collisionManifold.positionalCorrection();
-						collisionManifold.resolveCollision();
+						if (collisionManifold != null) {
+							// collisionManifold.draw();
+							collisionManifold.positionalCorrection();
+							collisionManifold.resolveCollision();
+						}
 					}
 				}
 			}

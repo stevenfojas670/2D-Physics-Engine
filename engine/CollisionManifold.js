@@ -127,11 +127,11 @@ class CollisionManifold {
 
 		if (tangent.x > 0.00001 || tangent.y > 0.00001) {
 			tangent.Normalize();
-			DrawUtils.drawArrow(
-				this.rigA.shape.centroid,
-				Add(this.rigA.shape.centroid, Scale(tangent, 40)),
-				'blue'
-			);
+			// DrawUtils.drawArrow(
+			// 	this.rigA.shape.centroid,
+			// 	Add(this.rigA.shape.centroid, Scale(tangent, 40)),
+			// 	'blue'
+			// );
 		}
 
 		let pToCentroidCrossTangentA = penetrationToCentroidA.Cross(tangent);
@@ -194,7 +194,7 @@ class CollisionManifold {
 			Scale(this.normal, this.depth * -1)
 		);
 
-		DrawUtils.drawArrow(startPoint, this.penetrationPoint, 'gray');
-		DrawUtils.drawPoint(this.penetrationPoint, 3, 'gray');
+		// DrawUtils.drawArrow(startPoint, this.penetrationPoint, 'gray');
+		// DrawUtils.drawPoint(this.penetrationPoint, 3, 'gray');
 	}
 }
