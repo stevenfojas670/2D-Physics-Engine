@@ -16,6 +16,8 @@ class Shape {
 	constructor(vertices) {
 		this.vertices = vertices;
 		this.color = 'black';
+		this.boundingBox = new BoundingBox();
+
 		if (new.target === Shape) {
 			throw new TypeError(
 				"Cannot construct abstract instances of class 'Shape'."
@@ -30,6 +32,23 @@ class Shape {
 	 */
 	setColor(color) {
 		this.color = color;
+	}
+
+	calculateBoundingBox() {
+		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE);
+		let bottomRight = new Vector2(Number.MIN_VALUE, Number.MIN_VALUE);
+
+		for (let i = 0; i < this.vertices.length; i++) {
+			let [x, y] = [this.vertices[i].x, this.vertices[i].y];
+
+			if (x < topLeft.x) topLeft.x = x;
+			if (y < topLeft.y) topLeft.y = y;
+			if (x > bottomRight.x) bottomRight.x = x;
+			if (y > bottomRight.y) bottomRight.y = y;
+		}
+
+		this.boundingBox.topLeft = topLeft;
+		this.boundingBox.bottomRight = bottomRight;
 	}
 
 	/**
@@ -67,6 +86,8 @@ class Shape {
 
 		// Drawing centroid
 		DrawUtils.drawPoint(this.centroid, 5, this.color);
+
+		this.boundingBox.draw(ctx);
 	}
 
 	/**
@@ -79,6 +100,9 @@ class Shape {
 			this.vertices[i].Add(delta);
 		}
 		this.centroid.Add(delta);
+
+		this.boundingBox.topLeft.Add(delta);
+		this.boundingBox.bottomRight.Add(delta);
 	}
 
 	/**
@@ -95,5 +119,7 @@ class Shape {
 			);
 			this.vertices[i] = rotatedVertices;
 		}
+
+		this.calculateBoundingBox();
 	}
 }

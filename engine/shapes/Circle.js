@@ -13,6 +13,14 @@ class Circle extends Shape {
 		return mass * (this.radius * this.radius) * 0.5;
 	}
 
+	calculateBoundingBox() {
+		this.boundingBox.topLeft.x = this.position.x - this.radius;
+		this.boundingBox.topLeft.y = this.position.y - this.radius;
+
+		this.boundingBox.bottomRight.x = this.position.x + this.radius;
+		this.boundingBox.bottomRight.y = this.position.y + this.radius;
+	}
+
 	getRadius() {
 		return this.radius;
 	}
