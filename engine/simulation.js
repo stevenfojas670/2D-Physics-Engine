@@ -84,6 +84,7 @@ class Simulation {
 	update(deltaTime) {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
+			this.rigidBodies[i].getShape().boundingBox.isColliding = false;
 
 			// F = m * a
 			this.rigidBodies[i].addForce(
@@ -96,12 +97,23 @@ class Simulation {
 				if (i != j) {
 					let rigA = this.rigidBodies[i];
 					let rigB = this.rigidBodies[j];
+
+					let isCollidingWithBoundingBox = rigA
+						.getShape()
+						.boundingBox.intersect(rigB.getShape().boundingBox);
+
+					if (!isCollidingWithBoundingBox) continue;
+
+					rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+					rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+
 					let collisionManifold = CollisionDetection.checkCollisions(
 						rigA,
 						rigB
 					);
 
 					if (collisionManifold != null) {
+						collisionManifold.draw();
 						collisionManifold.positionalCorrection();
 						collisionManifold.resolveCollision();
 					}
