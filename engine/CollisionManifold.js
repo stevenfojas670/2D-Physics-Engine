@@ -61,6 +61,9 @@ class CollisionManifold {
 		this.rigB.velocity = Add(this.rigB.velocity, Scale(kn, this.rigB.invMass));
 	}
 
+	/**
+	 * @todo Learn more about positional correction.
+	 */
 	positionalCorrection() {
 		// Objects will be pushed out by 20%
 		let correctionPercentage = 0.2;

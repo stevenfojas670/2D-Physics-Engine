@@ -17,16 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
 	const moveSpeed = document.querySelector('#movement-speed');
 
-	moveSpeed.value = simulation.getMoveSpeed();
+	// moveSpeed.value = simulation.getMoveSpeed();
 
-	moveSpeed?.addEventListener(
-		'input',
-		(evt) => {
-			simulation.setMoveSpeed(evt.target.value);
-			console.log(evt.target.value);
-		},
-		false
-	);
+	// moveSpeed?.addEventListener(
+	// 	'input',
+	// 	(evt) => {
+	// 		simulation.setMoveSpeed(evt.target.value);
+	// 		console.log(evt.target.value);
+	// 	},
+	// 	false
+	// );
 
 	/**LOGGING: EVENT LISTENERS */
 

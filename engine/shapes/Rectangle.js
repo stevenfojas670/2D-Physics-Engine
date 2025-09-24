@@ -18,4 +18,8 @@ class Rectangle extends Polygon {
 		this.width = width;
 		this.height = height;
 	}
+
+	calculateInertia(mass) {
+		return (mass * (this.width * this.width + this.height * this.height)) / 12;
+	}
 }

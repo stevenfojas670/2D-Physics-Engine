@@ -9,6 +9,10 @@ class Circle extends Shape {
 		this.setCentroid(position);
 	}
 
+	calculateInertia(mass) {
+		return mass * (this.radius * this.radius) * 0.5;
+	}
+
 	getRadius() {
 		return this.radius;
 	}

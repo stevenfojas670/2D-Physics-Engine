@@ -17,25 +17,16 @@ class Simulation {
 		this.createBoundary();
 
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(900, 300), 50.0), 10)
+			new Rigidbody(new Rectangle(new Vector2(300, 300), 200, 100), 20)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(900, 400), 50.0), 10)
+			new Rigidbody(new Rectangle(new Vector2(400, 150), 200, 100), 20)
 		);
-
 		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(400, 300), 50.0), 10)
+			new Rigidbody(new Rectangle(new Vector2(200, 0), 200, 100), 20)
 		);
-
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(200, 600), 200, 100), 5)
-		);
-
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Rectangle(new Vector2(500, this.worldSize.y / 2), 100, 800),
-				500
-			)
+			new Rigidbody(new Circle(new Vector2(900, 300), 60), 100)
 		);
 	}
 

@@ -7,11 +7,7 @@ class Rigidbody {
 	constructor(shape, mass = 1) {
 		this.shape = shape;
 		this.mass = mass;
-
-		// Kinematic body impelmentation
 		this.isKinematic = false;
-
-		this.material = new Material();
 
 		if (mass > 0) {
 			this.invMass = 1 / mass;
@@ -24,6 +20,19 @@ class Rigidbody {
 
 		this.forceAccumulator = new Vector2(0, 0);
 		this.velocity = new Vector2(0, 0);
+		this.angularVelocity = 0;
+
+		this.material = new Material();
+
+		this.inertia = this.shape.calculateInertia(this.mass);
+		// 0.00001 -> bias
+		if (this.inertia > 0.00001) {
+			this.invInertia = 1.0 / this.inertia;
+		} else {
+			this.invInertia = 0;
+		}
+
+		console.log('Inertia: ' + this.inertia);
 	}
 
 	/**
@@ -49,10 +58,17 @@ class Rigidbody {
 
 	/**
 	 *
-	 * @returns {void} velocity
+	 * @returns {number} velocity
 	 */
 	getVelocity() {
 		return this.velocity;
+	}
+
+	/**
+	 * @returns {number} angular velocity
+	 */
+	getAngularVelocity() {
+		return this.angularVelocity;
 	}
 
 	/**
@@ -68,7 +84,8 @@ class Rigidbody {
 	update(deltaTime) {
 		this.integrate(deltaTime);
 
-		this.velocity.Scale(1);
+		this.velocity.Scale(0.999);
+		this.angularVelocity *= 0.999;
 		this.forceAccumulator = new Vector2(0, 0);
 	}
 
@@ -112,6 +129,9 @@ class Rigidbody {
 		 */
 		let deltaPosition = Scale(this.velocity, deltaTime); // p = p0 + vt
 		this.shape.move(deltaPosition);
+
+		let deltaRotation = this.angularVelocity * deltaTime;
+		this.shape.rotate(deltaRotation);
 	}
 
 	/**
@@ -123,6 +143,9 @@ class Rigidbody {
 		let deltaPosition = Scale(this.velocity, deltaTime); // calculated new position
 		this.shape.move(deltaPosition); // Moved the shape to the new position
 		this.velocity = Add(this.velocity, Scale(acceleration, deltaTime)); // Calculate the new velocity at the new position
+
+		let deltaRotation = this.angularVelocity * deltaTime;
+		this.shape.rotate(deltaRotation);
 	}
 
 	/**
@@ -136,6 +159,9 @@ class Rigidbody {
 		let deltaPosition = Scale(this.velocity, deltaTime);
 		this.shape.move(deltaPosition);
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
+
+		let deltaRotation = this.angularVelocity * deltaTime;
+		this.shape.rotate(deltaRotation);
 	}
 
 	/**
@@ -160,6 +186,9 @@ class Rigidbody {
 		this.velocity = Add(this.velocity, k2); // Calculate the direction toward k2 directly from our current velocity
 		let deltaPosition = Scale(this.velocity, deltaTime); // p = p0 + vt
 		this.shape.move(deltaPosition);
+
+		let deltaRotation = this.angularVelocity * deltaTime;
+		this.shape.rotate(deltaRotation);
 	}
 
 	/**
@@ -202,6 +231,9 @@ class Rigidbody {
 
 		let deltaPosition = Scale(this.velocity, deltaTime);
 		this.shape.move(deltaPosition);
+
+		let deltaRotation = this.angularVelocity * deltaTime;
+		this.shape.rotate(deltaRotation);
 	}
 
 	getShape() {
