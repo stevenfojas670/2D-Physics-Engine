@@ -7,7 +7,7 @@ class Simulation {
 
 		// Player movement
 		this.force = force * 10;
-		this.gravity = new Vector2(0, 100);
+		this.gravity = new Vector2(0, 500);
 		this.controller = new Controller();
 		this.worldSize = worldSize;
 
@@ -18,6 +18,9 @@ class Simulation {
 
 		this.rigidBodies.push(
 			new Rigidbody(new Circle(new Vector2(900, 300), 50.0), 10)
+		);
+		this.rigidBodies.push(
+			new Rigidbody(new Circle(new Vector2(900, 400), 50.0), 10)
 		);
 
 		this.rigidBodies.push(

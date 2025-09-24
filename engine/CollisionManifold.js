@@ -61,7 +61,24 @@ class CollisionManifold {
 		this.rigB.velocity = Add(this.rigB.velocity, Scale(kn, this.rigB.invMass));
 	}
 
-	positionalCorrection() {}
+	positionalCorrection() {
+		// Objects will be pushed out by 20%
+		let correctionPercentage = 0.2;
+		let amountToCorrect =
+			(this.depth / (this.rigA.invMass + this.rigB.invMass)) *
+			correctionPercentage;
+		let correctionVec = Scale(this.normal, amountToCorrect);
+		let rigAMovement = Scale(correctionVec, this.rigA.invMass * -1);
+		let rigBMovement = Scale(correctionVec, this.rigB.invMass);
+
+		if (!this.rigA.isKinematic) {
+			this.rigA.getShape().move(rigAMovement);
+		}
+
+		if (!this.rigB.isKinematic) {
+			this.rigB.getShape().move(rigBMovement);
+		}
+	}
 
 	draw(ctx) {
 		let startPoint = Add(
