@@ -16,17 +16,18 @@ class Simulation {
 
 		this.createBoundary();
 
+		let rect = new Rectangle(new Vector2(500, 500), 800, 50);
+		rect.rotate(0.2);
+
+		this.rigidBodies.push(new Rigidbody(rect, 0));
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(300, 300), 200, 100), 20)
+			new Rigidbody(new Rectangle(new Vector2(200, 0), 200, 100), 1)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(400, 150), 200, 100), 20)
+			new Rigidbody(new Circle(new Vector2(500, 300), 60), 1)
 		);
 		this.rigidBodies.push(
-			new Rigidbody(new Rectangle(new Vector2(200, 0), 200, 100), 20)
-		);
-		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(900, 300), 60), 100)
+			new Rigidbody(new Circle(new Vector2(600, 300), 30), 1)
 		);
 	}
 
@@ -35,9 +36,9 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(
 				new Rectangle(
-					new Vector2(this.worldSize.x / 2, 0),
+					new Vector2(this.worldSize.x / 2, -25),
 					this.worldSize.x,
-					1
+					50
 				),
 				0
 			)
@@ -47,9 +48,9 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(
 				new Rectangle(
-					new Vector2(this.worldSize.x / 2, this.worldSize.y),
+					new Vector2(this.worldSize.x / 2, this.worldSize.y + 25),
 					this.worldSize.x,
-					1
+					50
 				),
 				0
 			)
@@ -59,8 +60,8 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(
 				new Rectangle(
-					new Vector2(0, this.worldSize.y / 2),
-					1,
+					new Vector2(-25, this.worldSize.y / 2),
+					50,
 					this.worldSize.y
 				),
 				0
@@ -71,8 +72,8 @@ class Simulation {
 		this.rigidBodies.push(
 			new Rigidbody(
 				new Rectangle(
-					new Vector2(this.worldSize.x, this.worldSize.y / 2),
-					1,
+					new Vector2(this.worldSize.x + 25, this.worldSize.y / 2),
+					50,
 					this.worldSize.y
 				),
 				0

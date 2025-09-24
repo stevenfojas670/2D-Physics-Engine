@@ -3,7 +3,7 @@
  */
 class Material {
 	constructor() {
-		this.bounce = 1.0;
-		this.friction = 0.0;
+		this.restitution = 0.5;
+		this.friction = 0.1;
 	}
 }
