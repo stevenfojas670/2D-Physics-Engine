@@ -16,7 +16,7 @@ class Simulation {
 
 		this.createBoundary();
 
-		this.createStressTestPyramid(25, 15);
+		this.createStressTestPyramid(50, 10);
 
 		// let rect = new Rectangle(new Vector2(500, 500), 800, 50);
 		// rect.rotate(0.2);
@@ -114,7 +114,7 @@ class Simulation {
 		}
 
 		// The higher iteration limit, the more stable
-		for (let solverIterations = 0; solverIterations < 20; solverIterations++) {
+		for (let solverIterations = 0; solverIterations < 60; solverIterations++) {
 			for (let i = 0; i < this.rigidBodies.length; i++) {
 				for (let j = 0; j < this.rigidBodies.length; j++) {
 					if (i != j) {
