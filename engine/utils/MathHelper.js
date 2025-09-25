@@ -69,6 +69,16 @@ class MathHelper {
 	}
 
 	/**
+	 * @description
+	 * @param
+	 * @param
+	 * @returns x where min < x < max
+	 */
+	static clamp(number, min, max) {
+		return Math.min(Math.max(number, min), max);
+	}
+
+	/**
 	 *
 	 * @param {Vector2} toRotateVertice
 	 * @param {Vector2} point

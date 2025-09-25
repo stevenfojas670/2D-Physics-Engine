@@ -25,6 +25,14 @@ class DrawUtils {
 		ctx.closePath();
 	}
 
+	static drawRect(startPosition, size, color) {
+		ctx.beginPath();
+		ctx.strokeStyle = color;
+		ctx.rect(startPosition.x, startPosition.y, size.x, size.y);
+		ctx.stroke();
+		ctx.closePath();
+	}
+
 	static drawText(position, size, color, text) {
 		ctx.font = size + 'px Arial';
 		ctx.fillStyle = color;

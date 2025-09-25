@@ -85,7 +85,7 @@ class Rigidbody {
 		this.velocity.Scale(0.999);
 		this.angularVelocity *= 0.999;
 		this.forceAccumulator = new Vector2(0, 0);
-		this.log();
+		// this.log();
 	}
 
 	/**
