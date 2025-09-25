@@ -170,8 +170,8 @@ class CollisionManifold {
 	 * @todo Learn more about positional correction.
 	 */
 	positionalCorrection() {
-		// Objects will be pushed out by 20%
-		let correctionPercentage = 0.2;
+		// Objects will be pushed out by x%
+		let correctionPercentage = 0.9;
 		let amountToCorrect =
 			(this.depth / (this.rigA.invMass + this.rigB.invMass)) *
 			correctionPercentage;

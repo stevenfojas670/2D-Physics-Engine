@@ -12,12 +12,14 @@ class Simulation {
 		this.worldSize = worldSize;
 		this.rigidBodies = [];
 
-		this.grid = new SpatialGrid(30);
+		this.grid = new HashGrid(50);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
 
-		this.createStressTestPyramid(20, 40);
+		this.createStressTestPyramid(20, 50);
+
+		console.log(this.rigidBodies.length + ' bodies instantiated');
 
 		// let rect = new Rectangle(new Vector2(500, 500), 800, 50);
 		// rect.rotate(0.2);
@@ -117,7 +119,7 @@ class Simulation {
 		this.grid.refreshGrid();
 
 		// The higher iteration limit, the more stable
-		for (let solverIterations = 0; solverIterations < 5; solverIterations++) {
+		for (let solverIterations = 0; solverIterations < 20; solverIterations++) {
 			for (let i = 0; i < this.rigidBodies.length; i++) {
 				let rigA = this.rigidBodies[i];
 				let neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA);
