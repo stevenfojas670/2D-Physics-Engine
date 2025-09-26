@@ -4,12 +4,12 @@ class Rigidbody {
 	 * @param {Shape} shape
 	 * @param {number} mass
 	 */
-	constructor(shape, mass = 1) {
+	constructor(shape, mass) {
 		this.shape = shape;
 		this.mass = mass;
 		this.isKinematic = false;
 
-		if (mass > 0.000001) {
+		if (mass > 0) {
 			this.invMass = 1.0 / mass;
 		} else {
 			// Accounts for mass being 0, since 1/0 is not allowed
@@ -48,7 +48,7 @@ class Rigidbody {
 		let direction = Sub(atPoint, this.shape.centroid); // Direction from point to centroid
 		this.forceAccumulator.Add(force);
 		this.torqueAccumulator += direction.Cross(force);
-		// console.log(this.torqueAccumulator);
+		console.log(`Torque Accumulator: ${this.torqueAccumulator}`);
 	}
 
 	/**
@@ -109,9 +109,6 @@ class Rigidbody {
 
 		this.velocity.Scale(0.999);
 		this.angularVelocity *= 0.999;
-
-		// If the velocity rate of change is really slow, just stop the object from moving
-
 		this.forceAccumulator = new Vector2(0, 0);
 		this.torqueAccumulator = 0;
 	}

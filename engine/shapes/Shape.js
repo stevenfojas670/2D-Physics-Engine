@@ -41,7 +41,6 @@ class Shape {
 		if (!removed) {
 			console.log(`Anchor with id [${anchorIndex}] not found!`);
 		}
-		console.log('Anchor removed');
 		return removed;
 	}
 

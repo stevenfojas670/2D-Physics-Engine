@@ -11,6 +11,7 @@ class Simulation {
 		this.controller = new Controller();
 		this.worldSize = worldSize;
 		this.rigidBodies = [];
+		this.joints = [];
 
 		this.grid = new HashGrid(50);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
@@ -18,17 +19,29 @@ class Simulation {
 		this.createBoundary();
 		//this.createStressTestPyramid(15, 50);
 
-		// let rect = new Rectangle(new Vector2(800, 400), 200, 100);
-		// rect.createAnchorPoint(new Vector2(-50, 25));
-		// this.rigidBodies.push(new Rigidbody(rect, 1));
+		let rect = new Rectangle(new Vector2(800, 400), 200, 100);
+		let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
+		let rectRigidBody = new Rigidbody(rect, 1);
+		this.rigidBodies.push(rectRigidBody);
+
+		let circle = new Circle(new Vector2(500, 300), 60.0);
+		let anchorCircleID = circle.createAnchorPoint(new Vector2(-60, 0));
+		let circleRigidyBody = new Rigidbody(circle, 1);
+		this.rigidBodies.push(circleRigidyBody);
 		// this.rigidBodies.push(
-		// 	new Rigidbody(new Circle(new Vector2(500, 300), 60.0), 1)
+		// 	new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
 		// );
-		this.rigidBodies.push(
-			new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
-		);
 
 		console.log(this.rigidBodies.length + ' bodies instantiated');
+
+		// Joint connections
+		let jointConnection = new JointConnection(
+			rectRigidBody,
+			anchorRectID,
+			circleRigidyBody,
+			anchorCircleID
+		);
+		this.joints.push(new ForceJoint(jointConnection, 1000));
 
 		// Grabbing objects
 		this.selectedRigidBody = null;
@@ -143,8 +156,17 @@ class Simulation {
 		}
 	}
 
+	handleJoints() {
+		for (let i = 0; i < this.joints.length; i++) {
+			this.joints[i].draw();
+			this.joints[i].updateConnectionA();
+			this.joints[i].updateConnectionB();
+		}
+	}
+
 	update(deltaTime) {
 		this.handleMouseObjectInteraction();
+		this.handleJoints();
 
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
