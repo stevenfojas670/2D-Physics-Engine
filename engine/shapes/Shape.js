@@ -16,11 +16,36 @@ class Shape {
 	constructor(vertices) {
 		this.vertices = vertices;
 		this.color = 'black';
+		this.boundingBox = new BoundingBox();
+		this.anchorPoints = new Map();
+
 		if (new.target === Shape) {
 			throw new TypeError(
 				"Cannot construct abstract instances of class 'Shape'."
 			);
 		}
+	}
+
+	createAnchorPoint(localAnchorPos) {
+		this.anchorPoints.set(
+			this.anchorPoints.size,
+			Add(this.centroid, localAnchorPos)
+		);
+		let id = this.anchorPoints.size - 1;
+		console.log(`Created anchor with id [${id}]`);
+		return id;
+	}
+
+	removeAnchor(anchorIndex) {
+		let removed = this.anchorPoints.delete(anchorIndex);
+		if (!removed) {
+			console.log(`Anchor with id [${anchorIndex}] not found!`);
+		}
+		return removed;
+	}
+
+	getAnchorPos(id) {
+		return this.anchorPoints.get(id);
 	}
 
 	/**
@@ -30,6 +55,40 @@ class Shape {
 	 */
 	setColor(color) {
 		this.color = color;
+	}
+
+	isPointInside(pos) {
+		let isInside = false;
+		for (let i = 0; i < this.vertices.length; i++) {
+			let vertex = this.vertices[i];
+			let normal = this.normals[i];
+			let vertToPoint = Sub(pos, vertex);
+			let dot = vertToPoint.Dot(normal);
+			if (dot > 0) {
+				return false;
+			} else {
+				isInside = true;
+			}
+		}
+
+		return isInside;
+	}
+
+	calculateBoundingBox() {
+		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE);
+		let bottomRight = new Vector2(Number.MIN_VALUE, Number.MIN_VALUE);
+
+		for (let i = 0; i < this.vertices.length; i++) {
+			let [x, y] = [this.vertices[i].x, this.vertices[i].y];
+
+			if (x < topLeft.x) topLeft.x = x;
+			if (y < topLeft.y) topLeft.y = y;
+			if (x > bottomRight.x) bottomRight.x = x;
+			if (y > bottomRight.y) bottomRight.y = y;
+		}
+
+		this.boundingBox.topLeft = topLeft;
+		this.boundingBox.bottomRight = bottomRight;
 	}
 
 	/**
@@ -65,8 +124,13 @@ class Shape {
 			this.color
 		);
 
+		for (const [key, value] of this.anchorPoints.entries()) {
+			DrawUtils.drawPoint(value, 5, 'green');
+		}
+
 		// Drawing centroid
-		DrawUtils.drawPoint(this.centroid, 5, this.color);
+		// DrawUtils.drawPoint(this.centroid, 5, this.color);
+		// this.boundingBox.draw(ctx);
 	}
 
 	/**
@@ -79,6 +143,13 @@ class Shape {
 			this.vertices[i].Add(delta);
 		}
 		this.centroid.Add(delta);
+
+		this.boundingBox.topLeft.Add(delta);
+		this.boundingBox.bottomRight.Add(delta);
+
+		for (const [key, anchorPos] of this.anchorPoints.entries()) {
+			this.anchorPoints.set(key, Add(anchorPos, delta));
+		}
 	}
 
 	/**
@@ -94,6 +165,17 @@ class Shape {
 				radiansDelta
 			);
 			this.vertices[i] = rotatedVertices;
+		}
+
+		this.calculateBoundingBox();
+
+		for (const [key, anchorPos] of this.anchorPoints.entries()) {
+			let rotated = MathHelper.rotateAroundPoint(
+				anchorPos,
+				this.centroid,
+				radiansDelta
+			);
+			this.anchorPoints.set(key, rotated);
 		}
 	}
 }

@@ -7,7 +7,7 @@ let lastTime = performance.now();
 let currentTime = 0;
 let deltaTime = 0;
 
-let mousePos = [0, 0];
+let mousePos = new Vector2(0, 0);
 let mouseDownLeft = false;
 let mouseDownRight = false;
 
@@ -17,16 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
 	const moveSpeed = document.querySelector('#movement-speed');
 
-	moveSpeed.value = simulation.getMoveSpeed();
+	// moveSpeed.value = simulation.getMoveSpeed();
 
-	moveSpeed?.addEventListener(
-		'input',
-		(evt) => {
-			simulation.setMoveSpeed(evt.target.value);
-			console.log(evt.target.value);
-		},
-		false
-	);
+	// moveSpeed?.addEventListener(
+	// 	'input',
+	// 	(evt) => {
+	// 		simulation.setMoveSpeed(evt.target.value);
+	// 		console.log(evt.target.value);
+	// 	},
+	// 	false
+	// );
 
 	/**LOGGING: EVENT LISTENERS */
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Event listener for mouse position within the canvas
 	canvas.addEventListener('mousemove', (evt) => {
 		mouse = getMousePos(canvas, evt);
-		mousePos = [mouse.x, mouse.y];
+		mousePos = new Vector2(mouse.x, mouse.y);
 
 		//console.log(mousePos)
 	});
@@ -79,8 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
 mainLoop();
 
 function updateSimulation(deltaTime) {
-	simulation.update(deltaTime);
 	Clear();
+	let deltaTimeText = `${Math.round(1.0 / deltaTime, 2)} FPS`;
+	DrawUtils.drawText(new Vector2(10, 20), 12, 'black', deltaTimeText);
+	simulation.update(deltaTime);
 	simulation.draw(ctx);
 }
 

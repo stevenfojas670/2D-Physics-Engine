@@ -20,24 +20,7 @@
 					<div class="canvas">
 						<canvas id="myCanvas" width="1920" height="1080"></canvas>
 					</div>
-					<div class="active-config">
-						<h3>Settings</h3>
-						<form>
-							<div class="mb-3">
-								<label for="movement-speed" class="form-lable"
-									>Movement Speed</label
-								>
-								<input
-									type="number"
-									class="form-control"
-									id="movement-speed"
-									min="0"
-								/>
-							</div>
-						</form>
-					</div>
 				</div>
-				<div class="settings">Settings</div>
 			</div>
 		</div>
 
@@ -47,6 +30,13 @@
 		<script src="Vector2.js"></script>
 		<script src="utils/DrawUtils.js"></script>
 		<script src="utils/MathHelper.js"></script>
+		<script src="optimizations/BoundingBox.js"></script>
+		<script src="optimizations/SpatialGrid.js"></script>
+		<script src="optimizations/HashGrid.js"></script>
+		<script src="joints/Joint.js"></script>
+		<script src="joints/JointConnection.js"></script>
+		<script src="joints/ForceJoints.js"></script>
+		<script src="joints/SpringJoints.js"></script>
 		<script src="shapes/Shape.js"></script>
 		<script src="shapes/Circle.js"></script>
 		<script src="shapes/Polygon.js"></script>
