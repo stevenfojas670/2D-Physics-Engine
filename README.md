@@ -25,3 +25,10 @@ A lightweight, dependency-free 2D physics engine written in vanilla JavaScript. 
 * Port to Typescript and C++
 * Official Deployment
 * 3D Implementation
+
+## Usage
+
+If you would like to use this, you can clone the repo, and run it with the Vscode Extension Live Server
+
+<img width="743" height="145" alt="image" src="https://github.com/user-attachments/assets/55c7620b-5986-4a1f-a8d5-bb1bb902e574" />
+
