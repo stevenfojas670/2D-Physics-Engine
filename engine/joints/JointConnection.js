@@ -4,11 +4,12 @@ class JointConnection {
 		this.anchorAID = anchorAID;
 		this.rigidBodyB = rigidBodyB;
 		this.anchorBID = anchorBID;
+		this.color = 'orange';
 	}
 
 	draw() {
 		let start = this.rigidBodyA.getShape().getAnchorPos(this.anchorAID);
 		let end = this.rigidBodyB.getShape().getAnchorPos(this.anchorBID);
-		DrawUtils.drawLine(start, end, 'orange');
+		DrawUtils.drawLine(start, end, this.color);
 	}
 }

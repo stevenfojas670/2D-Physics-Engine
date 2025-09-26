@@ -21,7 +21,7 @@ class Simulation {
 
 		let rect = new Rectangle(new Vector2(800, 400), 200, 100);
 		let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
-		let rectRigidBody = new Rigidbody(rect, 1);
+		let rectRigidBody = new Rigidbody(rect, 0);
 		this.rigidBodies.push(rectRigidBody);
 
 		let circle = new Circle(new Vector2(500, 300), 60.0);
@@ -41,7 +41,7 @@ class Simulation {
 			circleRigidyBody,
 			anchorCircleID
 		);
-		this.joints.push(new ForceJoint(jointConnection, 1000));
+		this.joints.push(new SpringJoint(jointConnection, 0.05, 500));
 
 		// Grabbing objects
 		this.selectedRigidBody = null;
