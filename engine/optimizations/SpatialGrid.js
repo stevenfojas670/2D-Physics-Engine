@@ -97,6 +97,16 @@ class SpatialGrid {
 		}
 	}
 
+	getContentOfCell(id) {
+		return this.cells[id];
+	}
+
+	getGridIdFromPosition(pos) {
+		let x = parseInt(pos.x / this.cellSize);
+		let y = parseInt(pos.y / this.cellSize);
+		return x + y * this.cellCountX;
+	}
+
 	clearGrid() {
 		for (let i = 0; i < this.cellCountX * this.cellCountY; i++) {
 			this.cells[i] = [];

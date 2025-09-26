@@ -65,6 +65,21 @@ class HashGrid extends SpatialGrid {
 		}
 	}
 
+	getContentOfCell(id) {
+		let content = this.hashMap.get(id);
+		if (content == null) {
+			return [];
+		} else {
+			return content;
+		}
+	}
+
+	getGridIdFromPosition(pos) {
+		let x = parseInt(pos.x / this.cellSize);
+		let y = parseInt(pos.y / this.cellSize);
+		return this.cellIndexToHash(x, y);
+	}
+
 	getNeighborRigidBodies(rigIndex, rigidBody) {
 		let occupiedCells = this.rigidBodiesToCells[rigIndex];
 		let neighborRigidBodies = [];

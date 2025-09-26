@@ -7,7 +7,7 @@ let lastTime = performance.now();
 let currentTime = 0;
 let deltaTime = 0;
 
-let mousePos = [0, 0];
+let mousePos = new Vector2(0, 0);
 let mouseDownLeft = false;
 let mouseDownRight = false;
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Event listener for mouse position within the canvas
 	canvas.addEventListener('mousemove', (evt) => {
 		mouse = getMousePos(canvas, evt);
-		mousePos = [mouse.x, mouse.y];
+		mousePos = new Vector2(mouse.x, mouse.y);
 
 		//console.log(mousePos)
 	});

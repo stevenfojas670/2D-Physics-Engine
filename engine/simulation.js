@@ -16,24 +16,24 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
+		//this.createStressTestPyramid(15, 50);
 
-		this.createStressTestPyramid(20, 50);
+		// let rect = new Rectangle(new Vector2(800, 400), 200, 100);
+		// rect.createAnchorPoint(new Vector2(-50, 25));
+		// this.rigidBodies.push(new Rigidbody(rect, 1));
+		// this.rigidBodies.push(
+		// 	new Rigidbody(new Circle(new Vector2(500, 300), 60.0), 1)
+		// );
+		this.rigidBodies.push(
+			new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
+		);
 
 		console.log(this.rigidBodies.length + ' bodies instantiated');
 
-		// let rect = new Rectangle(new Vector2(500, 500), 800, 50);
-		// rect.rotate(0.2);
-
-		// this.rigidBodies.push(new Rigidbody(rect, 0));
-		// this.rigidBodies.push(
-		// 	new Rigidbody(new Rectangle(new Vector2(200, 100), 200, 100), 1)
-		// );
-		// this.rigidBodies.push(
-		// 	new Rigidbody(new Circle(new Vector2(500, 300), 60), 1)
-		// );
-		// this.rigidBodies.push(
-		// 	new Rigidbody(new Circle(new Vector2(600, 300), 30), 1)
-		// );
+		// Grabbing objects
+		this.selectedRigidBody = null;
+		this.selectedPosition = null;
+		this.selectedAnchorId = null;
 	}
 
 	createStressTestPyramid(_boxSize, _iterations) {
@@ -105,7 +105,47 @@ class Simulation {
 		);
 	}
 
+	handleMouseObjectInteraction() {
+		if (mouseDownLeft) {
+			let id = this.grid.getGridIdFromPosition(mousePos);
+			let nearBodies = this.grid.getContentOfCell(id);
+			for (let i = 0; i < nearBodies.length; i++) {
+				let mouseInside = nearBodies[i].shape.isPointInside(mousePos);
+
+				if (mouseInside && this.selectedRigidBody == null) {
+					this.selectedRigidBody = nearBodies[i];
+					this.selectedPosition = mousePos.Cpy();
+					// to local position
+					let localPos = Sub(mousePos, nearBodies[i].getShape().centroid);
+
+					this.selectedAnchorId = nearBodies[i]
+						.getShape()
+						.createAnchorPoint(localPos);
+				}
+			}
+		} else {
+			if (this.selectedRigidBody != null) {
+				this.selectedRigidBody.getShape().removeAnchor(this.selectedAnchorId);
+				this.selectedRigidBody = null;
+			}
+
+			this.selectedAnchorId = null;
+			this.selectedPosition = null;
+		}
+
+		if (this.selectedRigidBody && this.selectedPosition) {
+			let anchorPos = this.selectedRigidBody
+				.getShape()
+				.getAnchorPos(this.selectedAnchorId);
+			let force = Sub(mousePos, anchorPos);
+			this.selectedRigidBody.addForceAtPoint(anchorPos, force);
+			DrawUtils.drawLine(anchorPos, mousePos, 'black');
+		}
+	}
+
 	update(deltaTime) {
+		this.handleMouseObjectInteraction();
+
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
 			this.rigidBodies[i].getShape().boundingBox.isColliding = false;
@@ -114,12 +154,19 @@ class Simulation {
 			this.rigidBodies[i].addForce(
 				Scale(this.gravity, this.rigidBodies[i].mass)
 			);
+
+			this.rigidBodies[i].log();
 		}
 
 		this.grid.refreshGrid();
 
 		// The higher iteration limit, the more stable
-		for (let solverIterations = 0; solverIterations < 20; solverIterations++) {
+		let iterationLimit = 10;
+		for (
+			let solverIterations = 0;
+			solverIterations < iterationLimit;
+			solverIterations++
+		) {
 			for (let i = 0; i < this.rigidBodies.length; i++) {
 				let rigA = this.rigidBodies[i];
 				let neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA);

@@ -25,6 +25,11 @@ class Circle extends Shape {
 		return this.radius;
 	}
 
+	isPointInside(pos) {
+		let distanceToCenter = Sub(this.centroid, pos).Length2();
+		return this.radius * this.radius > distanceToCenter;
+	}
+
 	draw(ctx) {
 		super.draw(ctx);
 		DrawUtils.strokePoint(this.position, this.radius, this.color);
