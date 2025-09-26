@@ -17,15 +17,15 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
-		//this.createStressTestPyramid(15, 50);
+		// this.createStressTestPyramid(20, 40);
 
-		let rect = new Rectangle(new Vector2(800, 400), 200, 100);
+		let rect = new Rectangle(new Vector2(200, 400), 200, 100);
 		let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
 		let rectRigidBody = new Rigidbody(rect, 0);
 		this.rigidBodies.push(rectRigidBody);
 
 		let circle = new Circle(new Vector2(500, 300), 60.0);
-		let anchorCircleID = circle.createAnchorPoint(new Vector2(-60, 0));
+		let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
 		let circleRigidyBody = new Rigidbody(circle, 1);
 		this.rigidBodies.push(circleRigidyBody);
 		// this.rigidBodies.push(
@@ -41,7 +41,7 @@ class Simulation {
 			circleRigidyBody,
 			anchorCircleID
 		);
-		this.joints.push(new SpringJoint(jointConnection, 0.05, 500));
+		this.joints.push(new ForceJoint(jointConnection, 1000));
 
 		// Grabbing objects
 		this.selectedRigidBody = null;
@@ -183,7 +183,7 @@ class Simulation {
 		this.grid.refreshGrid();
 
 		// The higher iteration limit, the more stable
-		let iterationLimit = 10;
+		let iterationLimit = 20;
 		for (
 			let solverIterations = 0;
 			solverIterations < iterationLimit;
