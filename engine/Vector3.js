@@ -78,7 +78,19 @@ class Vector3 {
 		this.z *= scalar;
 	}
 
-	Cross(_vec) {}
+	Cross(_vec) {
+		return new Vector3(
+			this.y * _vec.z - this.z * _vec.y,
+			this.x * _vec.z - this.z * _vec.x,
+			this.x * _vec.y - this.y * _vec.x
+		);
+	}
+
+	SelfCross(_vec) {
+		this.x = this.y * _vec.z - this.z * _vec.y;
+		this.y = this.x * _vec.z - this.z * _vec.x;
+		this.z = this.x * _vec.y - this.y * _vec.x;
+	}
 
 	Log() {
 		console.log(`x: ${this.x}, y: ${this.y}, z: ${this.z}`);

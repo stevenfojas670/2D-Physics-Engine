@@ -17,12 +17,11 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
-		this.createStressTestPyramid(20, 40);
+		// this.createStressTestPyramid(20, 40);
 
-		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
-		// let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
-		// let rectRigidBody = new Rigidbody(rect, 0);
-		// this.rigidBodies.push(rectRigidBody);
+		let rect = new Rectangle(new Vector2(200, 400), 200, 100);
+		let rectRigidBody = new Rigidbody(rect, 1);
+		this.rigidBodies.push(rectRigidBody);
 
 		// let circle = new Circle(new Vector2(500, 300), 60.0);
 		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));

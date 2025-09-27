@@ -105,16 +105,6 @@ class Vector2 {
 	}
 
 	/**
-	 * @description Multiplies two vectors together.
-	 * @param {Vector2} _vecA
-	 * @param {Vector2} _vecB
-	 * @returns {Vector2} New Vector2
-	 */
-	ComponentProduct(_vecA, _vecB) {
-		return new Vector2(_vecA.x * _vecB.x, _vecA.y * _vecB.y);
-	}
-
-	/**
 	 * @description Multiplies this vector, to passed vector
 	 * @param {Vector2} _vec
 	 * @returns {null}
@@ -137,6 +127,8 @@ class Vector2 {
 
 	/**
 	 * @description Computes the cross product of this and the passed vector.
+	 * Cross products are typically done on 3D vectors, so this is really just the determinant.
+	 * Det([a,b]) = a.x*b.y - b.x*a.y
 	 * @param {Vector2} _vec
 	 * @returns Cross product
 	 */
@@ -166,4 +158,14 @@ function Sub(vecA, vecB) {
 // Scaling a vector
 function Scale(vecA, scale) {
 	return new Vector2(vecA.x * scale, vecA.y * scale);
+}
+
+/**
+ * @description Multiplies two vectors together.
+ * @param {Vector2} _vecA
+ * @param {Vector2} _vecB
+ * @returns {Vector2} New Vector2
+ */
+function ComponentProduct(_vecA, _vecB) {
+	return new Vector2(_vecA.x * _vecB.x, _vecA.y * _vecB.y);
 }
