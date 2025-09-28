@@ -3,11 +3,16 @@
  * physics system.
  */
 class Particle {
-	constructor(_pos) {
+	constructor(_pos, _mass = 0) {
 		/**
 		 * Linear position of the particle.
 		 */
 		this.position = new Vector2(_pos.x, _pos.y);
+
+		/**
+		 * Mass to be used for gravity calculations
+		 */
+		this.mass = _mass;
 
 		/**
 		 * Linear velocity of the particle.
@@ -45,7 +50,11 @@ class Particle {
 		 * useful to have objects with infinite mass (immovable) than
 		 * zero mass (completely unstable in numerical simulation).
 		 */
-		this.inverseMass = 0;
+		if (mass > 0) {
+			this.inverseMass = 1.0 / _mass;
+		} else {
+			this.inverseMass = 0;
+		}
 
 		/**
 		 * This for
@@ -116,5 +125,103 @@ class Particle {
 	 */
 	UpdateVelocity(deltaTime) {
 		this.velocity.AddScaledVector(this.acceleration, deltaTime);
+	}
+
+	/**
+	 * Accessor Methods
+	 */
+
+	/**
+	 * Sets the current mass.
+	 * @param {number} _mass - Desired mass
+	 */
+	setMass(_mass) {
+		this.mass = _mass;
+	}
+
+	/**
+	 *
+	 * @returns {number} Current mass
+	 */
+	getMass() {
+		return this.mass;
+	}
+
+	/**
+	 * Sets the current position.
+	 * @param {number} _x - Vector2.x position
+	 * @param {number} _y - Vector2.y position
+	 */
+	setPosition(_x, _y) {
+		this.position.x = _x;
+		this.position.y = _y;
+	}
+
+	/**
+	 *
+	 * @returns {Vector2} Current position
+	 */
+	getPosition() {
+		return this.position;
+	}
+
+	/**
+	 * Sets the current velocity.
+	 * @param {number} _x - Vector2.x velocity
+	 * @param {number} _y - Vector2.y velocity
+	 */
+	setVelocity(_x, _y) {
+		this.velocity.x = _x;
+		this.velocity.y = _y;
+	}
+
+	/**
+	 *
+	 * @returns {Vector2} Current velocity.
+	 */
+	getVelocity() {
+		return this.velocity;
+	}
+
+	/**
+	 * Sets the current acceleration.
+	 * @param {number} _x - Vector2.x acceleration
+	 * @param {number} _y - Vector2.y acceleration
+	 */
+	setAcceleration(_x, _y) {
+		this.acceleration.x = _x;
+		this.acceleration.y = _y;
+	}
+
+	/**
+	 *
+	 * @returns {Vector2} Current acceleration
+	 */
+	getAcceleration() {
+		return this.acceleration;
+	}
+
+	/**
+	 * Sets the current damping.
+	 * @param {number} _damping - Desired damping value
+	 */
+	setDamping(_damping) {
+		this.damping = _damping;
+	}
+
+	/**
+	 *
+	 * @returns {number} Current damping
+	 */
+	getDamping() {
+		return this.damping;
+	}
+
+	/**
+	 * Clears the current force accumulator
+	 */
+	clearAccumulator() {
+		this.forceAccumulator.x = 0;
+		this.forceAccumulator.y = 0;
 	}
 }
