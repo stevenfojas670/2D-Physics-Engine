@@ -107,10 +107,13 @@ class Rigidbody {
 		// this.rungeKutta2(deltaTime);
 		this.rungeKutta4(deltaTime);
 
+		// Adding a damper to simulate drag
 		this.velocity.Scale(0.999);
+
+		// Angular velocity damper
 		this.angularVelocity *= 0.999;
 		this.forceAccumulator = new Vector2(0, 0);
-		// this.torqueAccumulator = 0;
+		this.torqueAccumulator = 0;
 	}
 
 	/**
