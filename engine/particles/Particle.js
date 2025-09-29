@@ -57,7 +57,8 @@ class Particle {
 		}
 
 		/**
-		 * This for
+		 * Holds teh accumulated force to be applied at the next simulation
+		 * integration only. This value is zeroed at each integration step.
 		 */
 		this.forceAccumulator = new Vector2(0, 0);
 	}
@@ -78,17 +79,30 @@ class Particle {
 	 * @param {number} deltaTime
 	 */
 	integrate(deltaTime) {
-		// Update position
-		this.UpdatePosition(deltaTime);
+		/**
+		 * Updating acceleration using the following formula:
+		 * new_acceleration = current_acceleration + force * inverse mass
+		 */
+		let resultingAcc = this.acceleration;
+		resultingAcc.AddScaledVector(this.forceAccumulator, this.inverseMass);
 
-		// Update the acceleration
-		this.UpdateAcceleration(deltaTime);
+		/**
+		 * Updates the current velocity with the following formula:
+		 * new_velocity = current_velocity + acceleration * time
+		 */
+		this.velocity.AddScaledVector(resultingAcc, deltaTime);
 
-		// Update velocities
-		this.UpdateVelocity(deltaTime);
+		/**
+		 * Updates the current position with the following formula:
+		 * new_position = current_position + velocity * time
+		 */
+		this.shape.position.AddScaledVector(this.velocity, deltaTime);
 
 		// Impose drag
 		this.velocity.Scale(this.damping);
+
+		// Clear forces
+		this.clearAccumulator();
 	}
 
 	/**
@@ -97,34 +111,6 @@ class Particle {
 	 */
 	AddForce(force) {
 		this.forceAccumulator.Add(force);
-	}
-
-	/**
-	 * Updating acceleration using the following formula:
-	 * new_acceleration = current_acceleration + force * time
-	 * @param {number} deltaTime
-	 */
-	UpdateAcceleration(deltaTime) {
-		let resultingAcc = this.acceleration;
-		resultingAcc.AddScaledVector(this.forceAccumulator, deltaTime);
-	}
-
-	/**
-	 * Updates the current position with the following formula:
-	 * new_position = current_position + velocity * time
-	 * @param {number} deltaTime
-	 */
-	UpdatePosition(deltaTime) {
-		this.shape.position.AddScaledVector(this.velocity, deltaTime);
-	}
-
-	/**
-	 * Updates the current velocity with the following formula:
-	 * new_velocity = current_velocity + acceleration * time
-	 * @param {number} deltaTime
-	 */
-	UpdateVelocity(deltaTime) {
-		this.velocity.AddScaledVector(this.acceleration, deltaTime);
 	}
 
 	/**
@@ -222,7 +208,8 @@ class Particle {
 	}
 
 	/**
-	 * Clears the current force accumulator
+	 * Clears the force applied to the particle. This will be
+	 * called automatically after each integration step.
 	 */
 	clearAccumulator() {
 		this.forceAccumulator.x = 0;

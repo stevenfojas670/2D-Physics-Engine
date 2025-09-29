@@ -19,29 +19,7 @@ class Simulation {
 
 		this.createBoundary();
 
-		// Create player model
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Circle(new Vector2(this.worldSize.x / 2, this.worldSize.y / 2), 20),
-				1
-			)
-		);
-
 		// this.createStressTestPyramid(20, 30);
-
-		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
-		// let rectRigidBody = new Rigidbody(rect, 1);
-		// this.rigidBodies.push(rectRigidBody);
-
-		// let circle = new Circle(new Vector2(500, 300), 60.0);
-		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
-		// let circleRigidyBody = new Rigidbody(circle, 1);
-		// this.rigidBodies.push(circleRigidyBody);
-		// this.rigidBodies.push(
-		// 	new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
-		// );
-
-		console.log(this.rigidBodies.length + ' bodies instantiated');
 
 		// Joint connections
 		// let jointConnection = new JointConnection(
