@@ -18,12 +18,17 @@ A lightweight, dependency-free 2D physics engine written in vanilla JavaScript. 
 
 <img width="2184" height="1210" alt="image" src="https://github.com/user-attachments/assets/4aea75f2-2050-4b08-9326-5c57eeb4b6d6" />
 
-## Roadmap
+## Goals
 
-* Management Plane for user customization
-* Optimization for Collision Detection
+* Following Game Physics Engine Development by Ian Millington, restructure the engine to be more professional.
+* Implement a management plane for user customization
+* Implement a particle system.
+* Implement buoyancy.
+* Implement ragdolls.
+* Implement more advanced springs.
+* Implement fractures.
+* Development an Entity-Component-System.
 * Port to Typescript and C++
-* Official Deployment
 * 3D Implementation
 
 ## Usage
