@@ -109,7 +109,7 @@ class Particle {
 	 * Adds the force vector to our force accumulator.
 	 * @param {Vector2} force
 	 */
-	AddForce(force) {
+	addForce(force) {
 		this.forceAccumulator.Add(force);
 	}
 

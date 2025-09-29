@@ -20,7 +20,7 @@ class Simulation {
 		this.createBoundary();
 
 		// Create particles
-		this.particles.push(new Particle(new Circle(new Vector2(100, 100), 5), 5));
+		this.particles.push(new Particle(new Circle(new Vector2(100, 100), 10), 5));
 
 		// this.createStressTestPyramid(20, 30);
 
@@ -198,7 +198,30 @@ class Simulation {
 		}
 
 		for (let i = 0; i < this.particles.length; i++) {
+			/**
+			 * Simulating a bullet
+			 * The mass should be large so that when it hits things
+			 * they move dramatically.
+			 */
 			this.particles[i].update(deltaTime);
+			this.particles[i].setMass(1000);
+
+			this.particles[i].setVelocity(800.0, 0.0);
+			// Acceleration adds slight down force
+			this.particles[i].setAcceleration(0.0, -10.0);
+			// Sets the energy loss
+			this.particles[i].setDamping(0.995);
+
+			/**
+			 * gravity_bullet = (1/speed) * gravity
+			 * Faster the bullet, the less gravity
+			 */
+			this.particles[i].addForce(
+				Scale(
+					Scale(this.gravity, 1 / this.particles[i].velocity.Length()),
+					this.particles[i].mass
+				)
+			);
 		}
 
 		this.grid.refreshGrid();
