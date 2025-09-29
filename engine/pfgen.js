@@ -40,7 +40,7 @@ class ParticleGravity extends ParticleForceGenerator {
 		if (_particle.inverseMass == 0) return;
 
 		// Apply the mass-scaled force to the particle.
-		_particle.AddForce(this.gravity * _particle.getMass());
+		_particle.addForce(this.gravity * _particle.getMass());
 	}
 }
 
@@ -65,7 +65,7 @@ class ParticleDrag extends ParticleForceGenerator {
 		// Calculate the final force and apply it.
 		force.Normalize();
 		force.Scale(-dragCoeff);
-		_particle.AddForce(force);
+		_particle.addForce(force);
 	}
 }
 

@@ -185,6 +185,9 @@ class Simulation {
 		this.handleMouseObjectInteraction();
 		// this.handleJoints();
 
+		/**
+		 * Updating RigidBody motion
+		 */
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
 			this.rigidBodies[i].getShape().boundingBox.isColliding = false;
@@ -197,35 +200,18 @@ class Simulation {
 			// this.rigidBodies[i].log();
 		}
 
+		/**
+		 * Updating Particle motion
+		 */
 		for (let i = 0; i < this.particles.length; i++) {
-			/**
-			 * Simulating a bullet
-			 * The mass should be large so that when it hits things
-			 * they move dramatically.
-			 */
 			this.particles[i].update(deltaTime);
-			this.particles[i].setMass(1000);
-
-			this.particles[i].setVelocity(800.0, 0.0);
-			// Acceleration adds slight down force
-			this.particles[i].setAcceleration(0.0, -10.0);
-			// Sets the energy loss
-			this.particles[i].setDamping(0.995);
-
-			/**
-			 * gravity_bullet = (1/speed) * gravity
-			 * Faster the bullet, the less gravity
-			 */
-			this.particles[i].addForce(
-				Scale(
-					Scale(this.gravity, 1 / this.particles[i].velocity.Length()),
-					this.particles[i].mass
-				)
-			);
 		}
 
 		this.grid.refreshGrid();
 
+		/**
+		 * Performing Collision Detection and Response on RigidBodies
+		 */
 		// The higher iteration limit, the more stable
 		let iterationLimit = 25;
 		for (
@@ -269,6 +255,10 @@ class Simulation {
 		this.pollMovement();
 	}
 
+	/**
+	 * Draws all objects.
+	 * @param {} ctx - Canvas context for rendering onto the HTML Canvas
+	 */
 	draw(ctx) {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].getShape().draw(ctx);
