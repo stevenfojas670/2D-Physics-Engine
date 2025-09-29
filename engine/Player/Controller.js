@@ -6,18 +6,13 @@
 class Controller {
 	constructor(log = true) {
 		this.keys = Object.seal({
-			w: false,
-			a: false,
-			s: false,
-			d: false,
-			q: false,
-			e: false,
-			ArrowRight: false,
-			ArrowLeft: false,
-			ArrowDown: false,
-			ArrowUp: false,
-			'.': false,
-			',': false,
+			KeyW: false,
+			KeyA: false,
+			KeyS: false,
+			KeyD: false,
+			KeyQ: false,
+			KeyE: false,
+			Space: false,
 		});
 
 		if (log) this.log();

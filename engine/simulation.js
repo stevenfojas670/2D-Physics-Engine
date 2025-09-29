@@ -18,6 +18,15 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
+
+		// Create player model
+		this.rigidBodies.push(
+			new Rigidbody(
+				new Circle(new Vector2(this.worldSize.x / 2, this.worldSize.y / 2), 20),
+				1
+			)
+		);
+
 		// this.createStressTestPyramid(20, 30);
 
 		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
@@ -247,7 +256,7 @@ class Simulation {
 		}
 
 		// Handling movement
-		this.normalizedSpeed = this.force * deltaTime; // My implementation
+		this.normalizedSpeed = 10000 * deltaTime; // My implementation
 		// this.normalizedSpeed = this.force; // Following the video
 		this.pollMovement();
 	}
@@ -271,25 +280,20 @@ class Simulation {
 		let length = this.rigidBodies.length;
 
 		// Moving shape one
-		if (this.controller.keys.d) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(this.normalizedSpeed, 0)
-			);
+		if (this.controller.keys.KeyD) {
+			this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0));
 		}
-		if (this.controller.keys.a) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(-this.normalizedSpeed, 0)
-			);
+		if (this.controller.keys.KeyA) {
+			this.rigidBodies[4].addForce(new Vector2(-this.normalizedSpeed, 0));
 		}
-		if (this.controller.keys.s) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(0, this.normalizedSpeed)
-			);
+		if (this.controller.keys.KeyS) {
+			this.rigidBodies[4].addForce(new Vector2(0, this.normalizedSpeed));
 		}
-		if (this.controller.keys.w) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(0, -this.normalizedSpeed)
-			);
+		if (this.controller.keys.KeyW) {
+			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed));
+		}
+		if (this.controller.keys.Space) {
+			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed * 10));
 		}
 		// if (this.controller.keys.e) {
 		// 	this.rigidBodies[0].rotate(0.05);
@@ -299,26 +303,26 @@ class Simulation {
 		// }
 
 		// Moving shape two
-		if (this.controller.keys.ArrowRight) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(this.normalizedSpeed, 0)
-			);
-		}
-		if (this.controller.keys.ArrowLeft) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(-this.normalizedSpeed, 0)
-			);
-		}
-		if (this.controller.keys.ArrowDown) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(0, this.normalizedSpeed)
-			);
-		}
-		if (this.controller.keys.ArrowUp) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(0, -this.normalizedSpeed)
-			);
-		}
+		// if (this.controller.keys.ArrowRight) {
+		// 	this.rigidBodies[length - 5].addForce(
+		// 		new Vector2(this.normalizedSpeed, 0)
+		// 	);
+		// }
+		// if (this.controller.keys.ArrowLeft) {
+		// 	this.rigidBodies[length - 5].addForce(
+		// 		new Vector2(-this.normalizedSpeed, 0)
+		// 	);
+		// }
+		// if (this.controller.keys.ArrowDown) {
+		// 	this.rigidBodies[length - 5].addForce(
+		// 		new Vector2(0, this.normalizedSpeed)
+		// 	);
+		// }
+		// if (this.controller.keys.ArrowUp) {
+		// 	this.rigidBodies[length - 5].addForce(
+		// 		new Vector2(0, -this.normalizedSpeed)
+		// 	);
+		// }
 		// if (this.controller.keys['.']) {
 		// 	this.rigidBodies[1].rotate(0.05);
 		// }

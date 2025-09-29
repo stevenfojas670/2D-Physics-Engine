@@ -47,7 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keydown',
 		(evt) => {
-			simulation.controller.keyboard(evt.key, true);
+			simulation.controller.keyboard(evt.code, true);
+			console.log(evt.code);
 		},
 		false
 	);
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keyup',
 		(evt) => {
-			simulation.controller.keyboard(evt.key, false);
+			simulation.controller.keyboard(evt.code, false);
 		},
 		false
 	);
