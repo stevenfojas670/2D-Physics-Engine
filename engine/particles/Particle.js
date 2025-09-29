@@ -50,7 +50,7 @@ class Particle {
 		 * useful to have objects with infinite mass (immovable) than
 		 * zero mass (completely unstable in numerical simulation).
 		 */
-		if (mass > 0) {
+		if (_mass > 0) {
 			this.inverseMass = 1.0 / _mass;
 		} else {
 			this.inverseMass = 0;
@@ -96,7 +96,7 @@ class Particle {
 		 * Updates the current position with the following formula:
 		 * new_position = current_position + velocity * time
 		 */
-		this.shape.position.AddScaledVector(this.velocity, deltaTime);
+		this.shape.move(Scale(this.velocity, deltaTime));
 
 		// Impose drag
 		this.velocity.Scale(this.damping);
@@ -204,7 +204,7 @@ class Particle {
 	}
 
 	getShape() {
-		return this.getShape;
+		return this.shape;
 	}
 
 	/**

@@ -19,6 +19,9 @@ class Simulation {
 
 		this.createBoundary();
 
+		// Create particles
+		this.particles.push(new Particle(new Circle(new Vector2(100, 100), 5), 5));
+
 		// this.createStressTestPyramid(20, 30);
 
 		// Joint connections
@@ -194,6 +197,10 @@ class Simulation {
 			// this.rigidBodies[i].log();
 		}
 
+		for (let i = 0; i < this.particles.length; i++) {
+			this.particles[i].update(deltaTime);
+		}
+
 		this.grid.refreshGrid();
 
 		// The higher iteration limit, the more stable
@@ -244,6 +251,10 @@ class Simulation {
 			this.rigidBodies[i].getShape().draw(ctx);
 		}
 
+		for (let i = 0; i < this.particles.length; i++) {
+			this.particles[i].getShape().draw(ctx);
+		}
+
 		this.grid.draw();
 	}
 
@@ -258,54 +269,20 @@ class Simulation {
 		let length = this.rigidBodies.length;
 
 		// Moving shape one
-		if (this.controller.keys.KeyD) {
-			this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0));
-		}
-		if (this.controller.keys.KeyA) {
-			this.rigidBodies[4].addForce(new Vector2(-this.normalizedSpeed, 0));
-		}
-		if (this.controller.keys.KeyS) {
-			this.rigidBodies[4].addForce(new Vector2(0, this.normalizedSpeed));
-		}
-		if (this.controller.keys.KeyW) {
-			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed));
-		}
-		if (this.controller.keys.Space) {
-			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed * 10));
-		}
-		// if (this.controller.keys.e) {
-		// 	this.rigidBodies[0].rotate(0.05);
+		// if (this.controller.keys.KeyD) {
+		// 	this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0));
 		// }
-		// if (this.controller.keys.q) {
-		// 	this.rigidBodies[0].rotate(-0.05);
+		// if (this.controller.keys.KeyA) {
+		// 	this.rigidBodies[4].addForce(new Vector2(-this.normalizedSpeed, 0));
 		// }
-
-		// Moving shape two
-		// if (this.controller.keys.ArrowRight) {
-		// 	this.rigidBodies[length - 5].addForce(
-		// 		new Vector2(this.normalizedSpeed, 0)
-		// 	);
+		// if (this.controller.keys.KeyS) {
+		// 	this.rigidBodies[4].addForce(new Vector2(0, this.normalizedSpeed));
 		// }
-		// if (this.controller.keys.ArrowLeft) {
-		// 	this.rigidBodies[length - 5].addForce(
-		// 		new Vector2(-this.normalizedSpeed, 0)
-		// 	);
+		// if (this.controller.keys.KeyW) {
+		// 	this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed));
 		// }
-		// if (this.controller.keys.ArrowDown) {
-		// 	this.rigidBodies[length - 5].addForce(
-		// 		new Vector2(0, this.normalizedSpeed)
-		// 	);
-		// }
-		// if (this.controller.keys.ArrowUp) {
-		// 	this.rigidBodies[length - 5].addForce(
-		// 		new Vector2(0, -this.normalizedSpeed)
-		// 	);
-		// }
-		// if (this.controller.keys['.']) {
-		// 	this.rigidBodies[1].rotate(0.05);
-		// }
-		// if (this.controller.keys[',']) {
-		// 	this.rigidBodies[1].rotate(-0.05);
+		// if (this.controller.keys.Space) {
+		// 	this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed * 10));
 		// }
 	}
 
