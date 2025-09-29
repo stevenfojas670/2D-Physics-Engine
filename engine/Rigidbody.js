@@ -88,7 +88,6 @@ class Rigidbody {
 
 	update(deltaTime) {
 		this.integrate(deltaTime);
-
 		// this.log();
 	}
 
@@ -101,11 +100,11 @@ class Rigidbody {
 	 * See: Game Coding Complete (4th Edition) - Page 570
 	 */
 	integrate(deltaTime) {
-		// this.semiImplicitEuler(deltaTime);
+		this.semiImplicitEuler(deltaTime);
 		// this.forwardEuler(deltaTime);
 		// this.midPointMethod(deltaTime);
 		// this.rungeKutta2(deltaTime);
-		this.rungeKutta4(deltaTime);
+		// this.rungeKutta4(deltaTime);
 
 		// Adding a damper to simulate drag
 		this.velocity.Scale(0.999);
@@ -141,8 +140,8 @@ class Rigidbody {
 		let deltaPosition = Scale(this.velocity, deltaTime); // p = p0 + vt
 		this.shape.move(deltaPosition);
 
-		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
-		// this.angularVelocity += rotationalAcceleration * deltaTime;
+		let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
+		this.angularVelocity += rotationalAcceleration * deltaTime;
 
 		let deltaRotation = this.angularVelocity * deltaTime;
 		this.shape.rotate(deltaRotation);

@@ -13,9 +13,12 @@ let mouseDownRight = false;
 
 let simulation = new Simulation(new Vector2(canvas.width, canvas.height));
 
+let objectToSpawn = null;
+
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
 	const moveSpeed = document.querySelector('#movement-speed');
+	const rigidBodySelector = document.querySelector('#RigidBodySelector');
 
 	// moveSpeed.value = simulation.getMoveSpeed();
 
@@ -29,6 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	// );
 
 	/**LOGGING: EVENT LISTENERS */
+	rigidBodySelector.addEventListener('change', (e) => {
+		console.log(e.target.value + ' has been selected.');
+		objectToSpawn = e.target.value;
+	});
 
 	// Calculating the mouse position in the canvas
 	function getMousePos(canvas, evt) {
@@ -58,21 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		mouse = getMousePos(canvas, evt);
 		mousePos = new Vector2(mouse.x, mouse.y);
 
-		//console.log(mousePos)
+		// console.log(mousePos);
 	});
 
 	window.addEventListener('mousedown', (evt) => {
 		if (evt.button === 0) mouseDownLeft = true;
 		if (evt.button === 2) mouseDownRight = true;
 
-		//console.log(mouseDownLeft)
+		// simulation.SpawnObject(objectToSpawn, getMousePos(canvas, evt));
+
+		// console.log(mouseDownLeft)
 	});
 
 	window.addEventListener('mouseup', (evt) => {
 		if (evt.button === 0) mouseDownLeft = false;
 		if (evt.button === 2) mouseDownRight = false;
 
-		//console.log(mouseDownLeft)
+		// console.log(mouseDownLeft)
 	});
 });
 

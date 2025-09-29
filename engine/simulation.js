@@ -11,17 +11,18 @@ class Simulation {
 		this.controller = new Controller();
 		this.worldSize = worldSize;
 		this.rigidBodies = [];
+		this.particles = [];
 		this.joints = [];
 
 		this.grid = new HashGrid(50);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
-		// this.createStressTestPyramid(20, 40);
+		// this.createStressTestPyramid(20, 30);
 
-		let rect = new Rectangle(new Vector2(200, 400), 200, 100);
-		let rectRigidBody = new Rigidbody(rect, 1);
-		this.rigidBodies.push(rectRigidBody);
+		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
+		// let rectRigidBody = new Rigidbody(rect, 1);
+		// this.rigidBodies.push(rectRigidBody);
 
 		// let circle = new Circle(new Vector2(500, 300), 60.0);
 		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
@@ -117,6 +118,33 @@ class Simulation {
 		);
 	}
 
+	SpawnObject(_object, _mousePosition) {
+		switch (_object) {
+			case 'Rectangle':
+				this.rigidBodies.push(
+					new Rigidbody(
+						new Rectangle(
+							new Vector2(_mousePosition.x, _mousePosition.y),
+							100,
+							50
+						),
+						10
+					)
+				);
+				break;
+			case 'Polygon':
+				break;
+			case 'Circle':
+				this.rigidBodies.push(
+					new Rigidbody(
+						new Circle(new Vector2(_mousePosition.x, _mousePosition.y), 50),
+						10
+					)
+				);
+				break;
+		}
+	}
+
 	handleMouseObjectInteraction() {
 		if (mouseDownLeft) {
 			let id = this.grid.getGridIdFromPosition(mousePos);
@@ -176,13 +204,13 @@ class Simulation {
 				Scale(this.gravity, this.rigidBodies[i].mass)
 			);
 
-			this.rigidBodies[i].log();
+			// this.rigidBodies[i].log();
 		}
 
 		this.grid.refreshGrid();
 
 		// The higher iteration limit, the more stable
-		let iterationLimit = 20;
+		let iterationLimit = 25;
 		for (
 			let solverIterations = 0;
 			solverIterations < iterationLimit;

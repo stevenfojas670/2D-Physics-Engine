@@ -35,7 +35,7 @@ class SpatialGrid {
 			this.cells[i] = [];
 		}
 
-		this.log();
+		// this.log();
 	}
 
 	refreshGrid() {

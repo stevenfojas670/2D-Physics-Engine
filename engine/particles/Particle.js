@@ -3,11 +3,11 @@
  * physics system.
  */
 class Particle {
-	constructor(_pos, _mass = 0) {
+	constructor(_shape, _mass = 0) {
 		/**
-		 * Linear position of the particle.
+		 * The shape will contain the particle details
 		 */
-		this.position = new Vector2(_pos.x, _pos.y);
+		this.shape = _shape;
 
 		/**
 		 * Mass to be used for gravity calculations
@@ -115,7 +115,7 @@ class Particle {
 	 * @param {number} deltaTime
 	 */
 	UpdatePosition(deltaTime) {
-		this.position.AddScaledVector(this.velocity, deltaTime);
+		this.shape.position.AddScaledVector(this.velocity, deltaTime);
 	}
 
 	/**
@@ -153,8 +153,8 @@ class Particle {
 	 * @param {number} _y - Vector2.y position
 	 */
 	setPosition(_x, _y) {
-		this.position.x = _x;
-		this.position.y = _y;
+		this.shape.x = _x;
+		this.shape.y = _y;
 	}
 
 	/**
@@ -162,7 +162,7 @@ class Particle {
 	 * @returns {Vector2} Current position
 	 */
 	getPosition() {
-		return this.position;
+		return this.shape.position;
 	}
 
 	/**
@@ -215,6 +215,10 @@ class Particle {
 	 */
 	getDamping() {
 		return this.damping;
+	}
+
+	getShape() {
+		return this.getShape;
 	}
 
 	/**
