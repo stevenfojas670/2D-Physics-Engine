@@ -186,6 +186,23 @@ class Simulation {
 		// this.handleJoints();
 
 		/**
+		 * Implementing ECS
+		 *
+		 * TODO: Instead of performing collision detection checks on
+		 * only rigid bodies, we will perform a collision check on the
+		 * structure storing the entities.
+		 *
+		 */
+
+		// Example of how the ECS would work
+		// for (entity in m_entityManager.getEntities()) {
+		// 	// Check if certain type exists
+		// 	if (entity.get(CTransform)) {
+		// 		entity.CTransform.position += velocity;
+		// 	}
+		// }
+
+		/**
 		 * Updating RigidBody motion
 		 */
 		for (let i = 0; i < this.rigidBodies.length; i++) {
