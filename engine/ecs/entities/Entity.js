@@ -1,17 +1,27 @@
 class Entity {
-	constructor() {
-		this._m_components = {
+	/**
+	 *
+	 * @param {String} _tag - tag for the entity
+	 * @param {Number} _id - id the entity will have
+	 */
+	constructor(_tag = 'default', _id = 0) {
+		this.m_components = {
 			CTransform: null,
 			CShape: null,
 			CLifeSpan: null,
 		};
 
-		this._m_is_alive = true;
-		this._m_tag = 'default';
-		this._m_id = 0;
+		this.m_is_alive = true;
+		this.m_tag = _tag;
+		this.m_id = _id;
 	}
 
-	add() {}
+	/**
+	 *
+	 * @param {Component} Component
+	 * Adds components to the current entity
+	 */
+	add(Component) {}
 
 	get() {}
 
@@ -19,7 +29,9 @@ class Entity {
 
 	isAlive() {}
 
-	destroy() {}
+	destroy() {
+		this.m_is_alive = false;
+	}
 
 	tag() {}
 }

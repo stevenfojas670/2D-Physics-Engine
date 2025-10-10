@@ -5,7 +5,7 @@ class CTransform extends Component {
 	 * @param {Vector2} vel
 	 */
 	constructor(pos, vel) {
-		this._position = pos;
-		this._velocity = vel;
+		this.position = pos;
+		this.velocity = vel;
 	}
 }

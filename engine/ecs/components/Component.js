@@ -10,6 +10,6 @@ class Component {
 		 * Defaults to false so default constructed components are not
 		 * considered part of the Entity
 		 */
-		this._exists = false;
+		this.exists = false;
 	}
 }

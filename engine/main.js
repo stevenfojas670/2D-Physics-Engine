@@ -92,8 +92,13 @@ function updateSimulation(deltaTime) {
 	Clear();
 	let deltaTimeText = `${Math.round(1.0 / deltaTime, 2)} FPS`;
 	DrawUtils.drawText(new Vector2(10, 20), 12, 'black', deltaTimeText);
+	// TODO: Change simulation to Physics
 	simulation.update(deltaTime);
 	simulation.draw(ctx);
+
+	// TODO: Implement user contorls here
+
+	// TODO: Implement entity manager here
 }
 
 function mainLoop() {
