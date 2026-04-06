@@ -31,6 +31,32 @@ class Rigidbody {
 		} else {
 			this.invInertia = 0;
 		}
+
+		// Configuring Collision Masks and Groups
+		this.collisionMask = DEFAULT_COLLISION;
+		this.collisionGroup = DEFAULT_COLLISION;
+	}
+
+	/**
+	 * @summary The mask sets the target groups that you'd like to collide with.
+	 * @param {*} mask 
+	 */
+	setCollisionMask(mask) {
+		this.collisionMask = mask;
+	}
+
+	setCollisionGroup(group) {
+		this.collisionGroup = group;
+	}
+
+	/**
+	 * @summary Rigidbodies can only collide with other objects within the
+	 * same Collision Group. Different groups will result in anything other than 0.
+	 * @param {*} rigi | Rigidbody to check collision mask
+	 * @returns 
+	 */
+	canCollideWith(rigi){
+		return (this.collisionMask & rigi.collisionGroup) != 0;
 	}
 
 	/**

@@ -13,21 +13,36 @@ class Simulation {
 		this.rigidBodies = [];
 		this.joints = [];
 
-		this.grid = new HashGrid(50);
+		this.grid = new HashGrid(10);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
-		// this.createStressTestPyramid(20, 40);
+		let circleA = new Circle(new Vector2(300,420), 60.0);
+		let circleRigA = new Rigidbody(circleA, 1);
+		this.rigidBodies.push(circleRigA);
 
-		let rect = new Rectangle(new Vector2(200, 400), 200, 100);
-		let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
-		let rectRigidBody = new Rigidbody(rect, 0);
-		this.rigidBodies.push(rectRigidBody);
+		let circleB = new Circle(new Vector2(300,280), 60.0);
+		let circleRigB = new Rigidbody(circleB, 1);
+		this.rigidBodies.push(circleRigB);
 
-		let circle = new Circle(new Vector2(500, 300), 60.0);
-		let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
-		let circleRigidyBody = new Rigidbody(circle, 1);
-		this.rigidBodies.push(circleRigidyBody);
+		// This means circleRigA cannot collide with circleRigB
+		circleRigA.setCollisionGroup(CollisionGroups.GROUP1);
+		circleRigA.setCollisionMask(CollisionGroups.GROUP1);
+
+		circleRigB.setCollisionGroup(CollisionGroups.GROUP2);
+		circleRigB.setCollisionMask(CollisionGroups.GROUP1);
+
+		// this.createStressTestPyramid(50, 10);
+
+		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
+		// let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
+		// let rectRigidBody = new Rigidbody(rect, 0);
+		// this.rigidBodies.push(rectRigidBody);
+
+		// let circle = new Circle(new Vector2(500, 300), 60.0);
+		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
+		// let circleRigidyBody = new Rigidbody(circle, 1);
+		// this.rigidBodies.push(circleRigidyBody);
 		// this.rigidBodies.push(
 		// 	new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
 		// );
@@ -35,13 +50,13 @@ class Simulation {
 		console.log(this.rigidBodies.length + ' bodies instantiated');
 
 		// Joint connections
-		let jointConnection = new JointConnection(
-			rectRigidBody,
-			anchorRectID,
-			circleRigidyBody,
-			anchorCircleID
-		);
-		this.joints.push(new ForceJoint(jointConnection, 1000));
+		// let jointConnection = new JointConnection(
+		// 	rectRigidBody,
+		// 	anchorRectID,
+		// 	circleRigidyBody,
+		// 	anchorCircleID
+		// );
+		// this.joints.push(new ForceJoint(jointConnection, 1000));
 
 		// Grabbing objects
 		this.selectedRigidBody = null;
@@ -196,24 +211,27 @@ class Simulation {
 				for (let j = 0; j < neighborRigidBodies.length; j++) {
 					let rigB = neighborRigidBodies[j];
 
-					let isCollidingWithBoundingBox = rigA
-						.getShape()
-						.boundingBox.intersect(rigB.getShape().boundingBox);
+					// Collision Checks
+					if (rigA.canCollideWith(rigB)) {
+						let isCollidingWithBoundingBox = rigA
+							.getShape()
+							.boundingBox.intersect(rigB.getShape().boundingBox);
 
-					if (!isCollidingWithBoundingBox) continue;
+						if (!isCollidingWithBoundingBox) continue;
 
-					rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
-					rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+						rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+						rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
 
-					let collisionManifold = CollisionDetection.checkCollisions(
-						rigA,
-						rigB
-					);
+						let collisionManifold = CollisionDetection.checkCollisions(
+							rigA,
+							rigB
+						);
 
-					if (collisionManifold != null) {
-						// collisionManifold.draw();
-						collisionManifold.positionalCorrection();
-						collisionManifold.resolveCollision();
+						if (collisionManifold != null) {
+							// collisionManifold.draw();
+							collisionManifold.positionalCorrection();
+							collisionManifold.resolveCollision();
+						}
 					}
 				}
 			}
