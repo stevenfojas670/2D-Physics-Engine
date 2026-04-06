@@ -1,6 +1,6 @@
 /**
  * @class BoundingBox
- * @classdesc ...
+ * @classdesc Implements AABB bounding boxes using the Top Left and Bottom Right (min-max)
  *
  * @property {} vertices - Array of shape vertices (Vector2)
  */
@@ -11,6 +11,7 @@ class BoundingBox {
 		this.isColliding = false;
 	}
 
+	/*This is used to check if the bounding box is intersecting with other bounding boxes*/
 	intersect(otherBoundingBox) {
 		let leftX = this.topLeft.x;
 		let rightX = this.bottomRight.x;
