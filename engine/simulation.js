@@ -27,10 +27,12 @@ class Simulation {
 
 		// This means circleRigA cannot collide with circleRigB
 		circleRigA.setCollisionGroup(CollisionGroups.GROUP1);
-		circleRigA.setCollisionMask(CollisionGroups.GROUP1);
 
-		circleRigB.setCollisionGroup(CollisionGroups.GROUP2);
-		circleRigB.setCollisionMask(CollisionGroups.GROUP1);
+		// Setting names of the collision groups
+		CollisionGroups.GROUP1.name = "Kinematic Objects";
+		CollisionGroups.GROUP2.name = "Non Kinematic Circles";
+
+		this.disableCollisionBetweenGroups(CollisionGroups.GROUP1, CollisionGroups.GROUP2);
 
 		// this.createStressTestPyramid(50, 10);
 
@@ -63,6 +65,28 @@ class Simulation {
 		this.selectedPosition = null;
 		this.selectedAnchorId = null;
 	}
+
+	/**
+	 * @summary Rigidbodies can only collide with other objects within the
+	 * same Collision Group. Different groups will result in anything other than 0.
+	 * @param {*} rigi | Rigidbody to check collision mask
+	 * @returns 
+	 */
+	canCollide(groupA, groupB){
+		return (CollisionMatrix[groupA] & groupB) != 0;
+	}
+
+	// HELPER METHODS ----START----
+	enableCollisionBetweenGroups(groupA, groupB) {
+		CollisionMatrix[groupA.id] |= groupB.id;
+		CollisionMatrix[groupB.id] |= groupA.id;
+	}
+
+	disableCollisionBetweenGroups(groupA, groupB) {
+		CollisionMatrix[groupA.id] &= ~groupB.id;
+		CollisionMatrix[groupB.id] &= ~groupA.id;
+	}
+	// HELPER METHODS ----END----
 
 	createStressTestPyramid(_boxSize, _iterations) {
 		let boxSize = _boxSize;
@@ -212,7 +236,7 @@ class Simulation {
 					let rigB = neighborRigidBodies[j];
 
 					// Collision Checks
-					if (rigA.canCollideWith(rigB)) {
+					if (this.canCollide(rigA.collisionGroup, rigB.collisionGroup)) {
 						let isCollidingWithBoundingBox = rigA
 							.getShape()
 							.boundingBox.intersect(rigB.getShape().boundingBox);
