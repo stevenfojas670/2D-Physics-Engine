@@ -13,7 +13,7 @@ class Simulation {
 		this.rigidBodies = [];
 		this.joints = [];
 
-		this.grid = new HashGrid(10);
+		this.grid = new SpatialGrid(20);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
