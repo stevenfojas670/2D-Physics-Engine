@@ -1,7 +1,7 @@
 /**
  * @class BoundingBox
- * @classdesc Implements AABB bounding boxes using the Top Left and Bottom Right (min-max)
- *
+ * @classdesc Implements AABB bounding boxes using the Top Left and Bottom Right (min-max).
+ * The bounding box calculations are implemented on Shape.js
  * @property {} vertices - Array of shape vertices (Vector2)
  */
 class BoundingBox {
