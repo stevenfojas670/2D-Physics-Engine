@@ -75,9 +75,14 @@ class Shape {
 	}
 
 	calculateBoundingBox() {
+		// Initializing the points for topLeft and bottomRight. Inital value are irrelevant.
 		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE);
 		let bottomRight = new Vector2(Number.MIN_VALUE, Number.MIN_VALUE);
 
+		/*
+		Iterating over each vertice within this shape and setting the points
+		of the bounding box.
+		*/
 		for (let i = 0; i < this.vertices.length; i++) {
 			let [x, y] = [this.vertices[i].x, this.vertices[i].y];
 
@@ -89,6 +94,18 @@ class Shape {
 
 		this.boundingBox.topLeft = topLeft;
 		this.boundingBox.bottomRight = bottomRight;
+	}
+
+	calculateConvexHull() {
+		// Need to implement
+	}
+
+	calculateEightDOP() {
+		// Need to implement
+	}
+
+	calculateOBB() {
+		// Need to implement
 	}
 
 	/**
@@ -130,7 +147,7 @@ class Shape {
 
 		// Drawing centroid
 		// DrawUtils.drawPoint(this.centroid, 5, this.color);
-		// this.boundingBox.draw(ctx);
+		this.boundingBox.draw(ctx);
 	}
 
 	/**

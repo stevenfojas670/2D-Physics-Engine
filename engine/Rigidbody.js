@@ -31,6 +31,13 @@ class Rigidbody {
 		} else {
 			this.invInertia = 0;
 		}
+
+		// Configuring Collision Masks and Groups
+		this.collisionGroup = CollisionGroups.GROUP0.id;
+	}
+
+	setCollisionGroup(group) {
+		this.collisionGroup = group.id;
 	}
 
 	/**

@@ -14,15 +14,43 @@ class Simulation {
 		this.particles = [];
 		this.joints = [];
 
-		this.grid = new HashGrid(50);
+		this.grid = new SpatialGrid(20);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
+		let circleA = new Circle(new Vector2(300,420), 60.0);
+		let circleRigA = new Rigidbody(circleA, 1);
+		this.rigidBodies.push(circleRigA);
 
-		// Create particles
-		this.particles.push(new Particle(new Circle(new Vector2(100, 100), 10), 5));
+		let circleB = new Circle(new Vector2(300,280), 60.0);
+		let circleRigB = new Rigidbody(circleB, 1);
+		this.rigidBodies.push(circleRigB);
 
-		// this.createStressTestPyramid(20, 30);
+		// This means circleRigA cannot collide with circleRigB
+		circleRigA.setCollisionGroup(CollisionGroups.GROUP1);
+
+		// Setting names of the collision groups
+		CollisionGroups.GROUP1.name = "Kinematic Objects";
+		CollisionGroups.GROUP2.name = "Non Kinematic Circles";
+
+		this.disableCollisionBetweenGroups(CollisionGroups.GROUP1, CollisionGroups.GROUP2);
+
+		// this.createStressTestPyramid(50, 10);
+
+		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
+		// let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
+		// let rectRigidBody = new Rigidbody(rect, 0);
+		// this.rigidBodies.push(rectRigidBody);
+
+		// let circle = new Circle(new Vector2(500, 300), 60.0);
+		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
+		// let circleRigidyBody = new Rigidbody(circle, 1);
+		// this.rigidBodies.push(circleRigidyBody);
+		// this.rigidBodies.push(
+		// 	new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
+		// );
+
+		console.log(this.rigidBodies.length + ' bodies instantiated');
 
 		// Joint connections
 		// let jointConnection = new JointConnection(
@@ -38,6 +66,28 @@ class Simulation {
 		// this.selectedPosition = null;
 		// this.selectedAnchorId = null;
 	}
+
+	/**
+	 * @summary Rigidbodies can only collide with other objects within the
+	 * same Collision Group. Different groups will result in anything other than 0.
+	 * @param {*} rigi | Rigidbody to check collision mask
+	 * @returns 
+	 */
+	canCollide(groupA, groupB){
+		return (CollisionMatrix[groupA] & groupB) != 0;
+	}
+
+	// HELPER METHODS ----START----
+	enableCollisionBetweenGroups(groupA, groupB) {
+		CollisionMatrix[groupA.id] |= groupB.id;
+		CollisionMatrix[groupB.id] |= groupA.id;
+	}
+
+	disableCollisionBetweenGroups(groupA, groupB) {
+		CollisionMatrix[groupA.id] &= ~groupB.id;
+		CollisionMatrix[groupB.id] &= ~groupA.id;
+	}
+	// HELPER METHODS ----END----
 
 	createStressTestPyramid(_boxSize, _iterations) {
 		let boxSize = _boxSize;
@@ -226,24 +276,27 @@ class Simulation {
 				for (let j = 0; j < neighborRigidBodies.length; j++) {
 					let rigB = neighborRigidBodies[j];
 
-					let isCollidingWithBoundingBox = rigA
-						.getShape()
-						.boundingBox.intersect(rigB.getShape().boundingBox);
+					// Collision Checks
+					if (this.canCollide(rigA.collisionGroup, rigB.collisionGroup)) {
+						let isCollidingWithBoundingBox = rigA
+							.getShape()
+							.boundingBox.intersect(rigB.getShape().boundingBox);
 
-					if (!isCollidingWithBoundingBox) continue;
+						if (!isCollidingWithBoundingBox) continue;
 
-					rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
-					rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+						rigA.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
+						rigB.getShape().boundingBox.isColliding = isCollidingWithBoundingBox;
 
-					let collisionManifold = CollisionDetection.checkCollisions(
-						rigA,
-						rigB
-					);
+						let collisionManifold = CollisionDetection.checkCollisions(
+							rigA,
+							rigB
+						);
 
-					if (collisionManifold != null) {
-						// collisionManifold.draw();
-						collisionManifold.positionalCorrection();
-						collisionManifold.resolveCollision();
+						if (collisionManifold != null) {
+							// collisionManifold.draw();
+							collisionManifold.positionalCorrection();
+							collisionManifold.resolveCollision();
+						}
 					}
 				}
 			}
