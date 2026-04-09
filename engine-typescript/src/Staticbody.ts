@@ -1,0 +1,5 @@
+class Staticbody {
+
+}
+
+export { Staticbody }
