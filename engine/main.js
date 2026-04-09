@@ -1,7 +1,5 @@
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
-var width = 1920;
-var height = 1080;
 
 let lastTime = performance.now();
 let currentTime = 0;
@@ -17,25 +15,9 @@ let objectToSpawn = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
-	const moveSpeed = document.querySelector('#movement-speed');
 	const rigidBodySelector = document.querySelector('#RigidBodySelector');
 
-	// moveSpeed.value = simulation.getMoveSpeed();
-
-	// moveSpeed?.addEventListener(
-	// 	'input',
-	// 	(evt) => {
-	// 		simulation.setMoveSpeed(evt.target.value);
-	// 		console.log(evt.target.value);
-	// 	},
-	// 	false
-	// );
-
 	/**LOGGING: EVENT LISTENERS */
-	rigidBodySelector.addEventListener('change', (e) => {
-		console.log(e.target.value + ' has been selected.');
-		objectToSpawn = e.target.value;
-	});
 
 	// Calculating the mouse position in the canvas
 	function getMousePos(canvas, evt) {
@@ -72,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener('mousedown', (evt) => {
 		if (evt.button === 0) mouseDownLeft = true;
 		if (evt.button === 2) mouseDownRight = true;
-
-		// simulation.SpawnObject(objectToSpawn, getMousePos(canvas, evt));
 
 		// console.log(mouseDownLeft)
 	});
