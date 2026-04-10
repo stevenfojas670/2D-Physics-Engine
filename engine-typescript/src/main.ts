@@ -1,5 +1,4 @@
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap"
+import "@/style.css"
 
 import { Vector2 } from "@/Vector2"
 import { Simulation } from "@/Simulation"
@@ -23,6 +22,8 @@ let deltaTime = 0
 let mousePos = new Vector2(0, 0)
 let mouseDownLeft = false
 let mouseDownRight = false
+
+resizeCanvas()
 
 let simulation = new Simulation(new Vector2(canvas.width, canvas.height))
 
@@ -61,6 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (evt.button === 0) mouseDownLeft = false
 		if (evt.button === 2) mouseDownRight = false
 	})
+
+	window.addEventListener("resize", () => {
+		resizeCanvas()
+		simulation.resizeWorld(new Vector2(canvas.width, canvas.height))
+	})
 })
 
 mainLoop()
@@ -95,4 +101,12 @@ function mainLoop() {
 function clear() {
 	ctx.fillStyle = "rgb(240, 240, 240)"
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
+}
+
+/**
+ * Resize the canvas drawing surface to occupy 75% of the browser viewport.
+ */
+function resizeCanvas() {
+	canvas.width = Math.max(1, Math.floor(window.innerWidth * 0.75))
+	canvas.height = Math.max(1, Math.floor(window.innerHeight * 0.75))
 }

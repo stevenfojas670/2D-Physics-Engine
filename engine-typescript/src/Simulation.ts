@@ -18,6 +18,7 @@ import { DrawUtils } from "./utils/DrawUtils"
 import { CollisionDetection } from "./collisionDetectionSystem/CollisionDetection"
 
 class Simulation {
+	private static readonly BOUNDARY_THICKNESS = 50
 	private force: number
 	private gravity: Vector2
 	private worldSize: Vector2
@@ -90,6 +91,51 @@ class Simulation {
 	}
 
 	/**
+	 * Build the four world-boundary rigidbodies for the current world size.
+	 *
+	 * @returns Boundary rigidbodies ordered as top, bottom, left, right.
+	 */
+	private createBoundaryBodies(): Rigidbody[] {
+		const boundaryThickness = Simulation.BOUNDARY_THICKNESS
+		const halfThickness = boundaryThickness / 2
+
+		return [
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x / 2, -halfThickness),
+					this.worldSize.x,
+					boundaryThickness,
+				),
+				0,
+			),
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x / 2, this.worldSize.y + halfThickness),
+					this.worldSize.x,
+					boundaryThickness,
+				),
+				0,
+			),
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(-halfThickness, this.worldSize.y / 2),
+					boundaryThickness,
+					this.worldSize.y,
+				),
+				0,
+			),
+			new Rigidbody(
+				new Rectangle(
+					new Vector2(this.worldSize.x + halfThickness, this.worldSize.y / 2),
+					boundaryThickness,
+					this.worldSize.y,
+				),
+				0,
+			),
+		]
+	}
+
+	/**
 	 * @summary Rigidbodies can only collide with other objects within the
 	 * same Collision Group. Different groups will result in anything other than 0.
 	 * @param {*} rigi | Rigidbody to check collision mask
@@ -137,53 +183,27 @@ class Simulation {
 	}
 
 	createBoundary(): void {
-		// Top Boundary
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Rectangle(
-					new Vector2(this.worldSize.x / 2, -25),
-					this.worldSize.x,
-					50,
-				),
-				0,
-			),
-		)
+		this.rigidBodies.push(...this.createBoundaryBodies())
+	}
 
-		// Bottom Boundary
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Rectangle(
-					new Vector2(this.worldSize.x / 2, this.worldSize.y + 25),
-					this.worldSize.x,
-					50,
-				),
-				0,
-			),
-		)
+	/**
+	 * Resize the simulation world and rebuild its boundary colliders.
+	 *
+	 * @param worldSize - New world dimensions in pixels.
+	 */
+	resizeWorld(worldSize: Vector2): void {
+		this.worldSize = worldSize
 
-		// Left Boundary
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Rectangle(
-					new Vector2(-25, this.worldSize.y / 2),
-					50,
-					this.worldSize.y,
-				),
-				0,
-			),
-		)
+		const boundaryBodies = this.createBoundaryBodies()
+		for (let i = 0; i < boundaryBodies.length; i++) {
+			if (i < this.rigidBodies.length) {
+				this.rigidBodies[i] = boundaryBodies[i]
+			} else {
+				this.rigidBodies.push(boundaryBodies[i])
+			}
+		}
 
-		// Right Boundary
-		this.rigidBodies.push(
-			new Rigidbody(
-				new Rectangle(
-					new Vector2(this.worldSize.x + 25, this.worldSize.y / 2),
-					50,
-					this.worldSize.y,
-				),
-				0,
-			),
-		)
+		this.grid.initialize(this.worldSize, this.rigidBodies)
 	}
 
 	SpawnObject(_object: string, _mousePosition: Vector2): void {
