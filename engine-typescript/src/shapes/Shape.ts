@@ -1,6 +1,8 @@
-import { Vector2, Sub, Add } from "@/Vector2";
-import { BoundingVolume } from "@/optimizations/boundingVolumes/BoundingVolume";
-import { DrawUtils } from "@/utils/DrawUtils";
+import { Vector2, Sub, Add } from "@/Vector2"
+import { BoundingBox } from "@/optimizations/boundingVolumes/BoundingBox"
+import { BoundingVolume } from "@/optimizations/boundingVolumes/BoundingVolume"
+import { DrawUtils } from "@/utils/DrawUtils"
+import MathHelper from "@/utils/MathHelpers"
 
 /**
  * @class Shape
@@ -12,13 +14,13 @@ import { DrawUtils } from "@/utils/DrawUtils";
  * @property {Vector2} centroid - Center of the shape
  */
 abstract class Shape {
+	protected vertices: Array<Vector2>
+	protected color: string
+	protected normals: Array<Vector2>
+	protected centroid: Vector2
 
-    private vertices: Array<Vector2>;
-    private color: string;
-    private boundingVolume: BoundingVolume;
-    private anchorPoints: Map<number, Vector2>;
-    private normals: Array<Vector2>;
-    private centroid: Vector2;
+	private boundingVolume: BoundingVolume
+	private anchorPoints: Map<number, Vector2>
 
 	/**
 	 * @constructor
@@ -26,40 +28,39 @@ abstract class Shape {
 	 * @throws {TypeError} Throws if instantiated directly instead of via subclass
 	 */
 	constructor(vertices: Array<Vector2>) {
-		this.vertices = vertices;
-		this.color = 'black';
-		this.boundingBox = new BoundingBox();
-		this.anchorPoints = new Map();
-        this.normals = [];
-        this.centroid = new Vector2(0,0);
+		this.vertices = vertices
+		this.color = "black"
+		this.boundingVolume = new BoundingBox()
+		this.anchorPoints = new Map()
+		this.normals = []
+		this.centroid = new Vector2(0, 0)
 
 		if (new.target === Shape) {
 			throw new TypeError(
-				"Cannot construct abstract instances of class 'Shape'."
-			);
+				"Cannot construct abstract instances of class 'Shape'.",
+			)
 		}
 	}
 
-	createAnchorPoint(localAnchorPos: Vector2): number {
-		this.anchorPoints.set(
-			this.anchorPoints.size,
-			Add(this.centroid, localAnchorPos)
-		);
-		let id = this.anchorPoints.size - 1;
-		console.log(`Created anchor with id [${id}]`);
-		return id;
+	/**
+	 * Gets the shape's current axis-aligned bounding box.
+	 *
+	 * @returns The active AABB used for broad-phase queries.
+	 */
+	get boundingBox(): BoundingBox {
+		return this.boundingVolume as BoundingBox
 	}
 
-	removeAnchor(anchorIndex: number): boolean {
-		let removed = this.anchorPoints.delete(anchorIndex);
-		if (!removed) {
-			console.log(`Anchor with id [${anchorIndex}] not found!`);
-		}
-		return removed;
+	getAnchorPos(id: number): Vector2 {
+		return this.anchorPoints.get(id)!
 	}
 
-	getAnchorPos(id: number): Vector2 | undefined {
-		return this.anchorPoints.get(id);
+	getNormals(): Vector2[] {
+		return this.normals
+	}
+
+	getVertices(): Vector2[] {
+		return this.vertices
 	}
 
 	/**
@@ -68,46 +69,81 @@ abstract class Shape {
 	 * @returns {void}
 	 */
 	setColor(color: string): void {
-		this.color = color;
+		this.color = color
+	}
+
+	/**
+	 * Sets the shape's centroid position.
+	 * @param {Vector2} position - The new centroid position.
+	 * @returns {void}
+	 */
+	setCentroid(position: Vector2): void {
+		this.centroid = position
+	}
+
+	/**
+	 * Gets the shape's centroid position.
+	 * @returns {Vector2} The current centroid position.
+	 */
+	getCentroid(): Vector2 {
+		return this.centroid!
+	}
+
+	createAnchorPoint(localAnchorPos: Vector2): number {
+		this.anchorPoints.set(
+			this.anchorPoints.size,
+			Add(this.centroid, localAnchorPos),
+		)
+		let id = this.anchorPoints.size - 1
+		console.log(`Created anchor with id [${id}]`)
+		return id
+	}
+
+	removeAnchor(anchorIndex: number): boolean {
+		let removed = this.anchorPoints.delete(anchorIndex)
+		if (!removed) {
+			console.log(`Anchor with id [${anchorIndex}] not found!`)
+		}
+		return removed
 	}
 
 	isPointInside(pos: Vector2): boolean {
-		let isInside = false;
+		let isInside = false
 		for (let i = 0; i < this.vertices.length; i++) {
-			let vertex = this.vertices[i];
-			let normal = this.normals[i];
-			let vertToPoint = Sub(pos, vertex);
-			let dot = vertToPoint.Dot(normal);
+			let vertex = this.vertices[i]
+			let normal = this.normals[i]
+			let vertToPoint = Sub(pos, vertex)
+			let dot = vertToPoint.Dot(normal)
 			if (dot > 0) {
-				return false;
+				return false
 			} else {
-				isInside = true;
+				isInside = true
 			}
 		}
 
-		return isInside;
+		return isInside
 	}
 
 	calculateBoundingBox(): void {
 		// Initializing the points for topLeft and bottomRight. Inital value are irrelevant.
-		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE);
-		let bottomRight = new Vector2(Number.MIN_VALUE, Number.MIN_VALUE);
+		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE)
+		let bottomRight = new Vector2(-Number.MAX_VALUE, -Number.MAX_VALUE)
 
 		/*
 		Iterating over each vertice within this shape and setting the points
 		of the bounding box.
 		*/
 		for (let i = 0; i < this.vertices.length; i++) {
-			let [x, y] = [this.vertices[i].x, this.vertices[i].y];
+			let [x, y] = [this.vertices[i].x, this.vertices[i].y]
 
-			if (x < topLeft.x) topLeft.x = x;
-			if (y < topLeft.y) topLeft.y = y;
-			if (x > bottomRight.x) bottomRight.x = x;
-			if (y > bottomRight.y) bottomRight.y = y;
+			if (x < topLeft.x) topLeft.x = x
+			if (y < topLeft.y) topLeft.y = y
+			if (x > bottomRight.x) bottomRight.x = x
+			if (y > bottomRight.y) bottomRight.y = y
 		}
 
-		this.boundingBox.topLeft = topLeft;
-		this.boundingBox.bottomRight = bottomRight;
+		this.boundingBox.topLeft = topLeft
+		this.boundingBox.bottomRight = bottomRight
 	}
 
 	calculateConvexHull() {
@@ -122,22 +158,7 @@ abstract class Shape {
 		// Need to implement
 	}
 
-	/**
-	 * Sets the shape's centroid position.
-	 * @param {Vector2} position - The new centroid position.
-	 * @returns {void}
-	 */
-	set setCentroid(position: Vector2) {
-		this.centroid = position;
-	}
-
-	/**
-	 * Gets the shape's centroid position.
-	 * @returns {Vector2 | undefined} The current centroid position.
-	 */
-	getCentroid(): Vector2 | undefined {
-		return this.centroid;
-	}
+	abstract calculateInertia(mass: number): number
 
 	/**
 	 * Draws the shape on the provided 2D rendering context.
@@ -147,21 +168,21 @@ abstract class Shape {
 	draw(ctx: CanvasRenderingContext2D): void {
 		// Drawing lines to each vertices
 		for (let i = 1; i < this.vertices.length; i++) {
-			DrawUtils.drawLine(this.vertices[i - 1], this.vertices[i], this.color);
+			DrawUtils.drawLine(this.vertices[i - 1], this.vertices[i], this.color)
 		}
 		DrawUtils.drawLine(
 			this.vertices[this.vertices.length - 1],
 			this.vertices[0],
-			this.color
-		);
+			this.color,
+		)
 
-		for (const [key, value] of this.anchorPoints.entries()) {
-			DrawUtils.drawPoint(value, 5, 'green');
+		for (const [, value] of this.anchorPoints.entries()) {
+			DrawUtils.drawPoint(value, 5, "green")
 		}
 
 		// Drawing centroid
-		DrawUtils.drawPoint(this.centroid, 5, this.color);
-		this.boundingBox.draw(ctx);
+		DrawUtils.drawPoint(this.centroid, 5, this.color)
+		this.boundingBox.draw(ctx)
 	}
 
 	/**
@@ -171,15 +192,15 @@ abstract class Shape {
 	 */
 	move(delta: Vector2): void {
 		for (let i = 0; i < this.vertices.length; i++) {
-			this.vertices[i].Add(delta);
+			this.vertices[i].Add(delta)
 		}
-		this.centroid.Add(delta);
+		this.centroid.Add(delta)
 
-		this.boundingBox.topLeft.Add(delta);
-		this.boundingBox.bottomRight.Add(delta);
+		this.boundingBox.topLeft.Add(delta)
+		this.boundingBox.bottomRight.Add(delta)
 
 		for (const [key, anchorPos] of this.anchorPoints.entries()) {
-			this.anchorPoints.set(key, Add(anchorPos, delta));
+			this.anchorPoints.set(key, Add(anchorPos, delta))
 		}
 	}
 
@@ -193,20 +214,20 @@ abstract class Shape {
 			let rotatedVertices = MathHelper.rotateAroundPoint(
 				this.vertices[i],
 				this.centroid,
-				radiansDelta
-			);
-			this.vertices[i] = rotatedVertices;
+				radiansDelta,
+			)
+			this.vertices[i] = rotatedVertices
 		}
 
-		this.calculateBoundingBox();
+		this.calculateBoundingBox()
 
 		for (const [key, anchorPos] of this.anchorPoints.entries()) {
 			let rotated = MathHelper.rotateAroundPoint(
 				anchorPos,
 				this.centroid,
-				radiansDelta
-			);
-			this.anchorPoints.set(key, rotated);
+				radiansDelta,
+			)
+			this.anchorPoints.set(key, rotated)
 		}
 	}
 }
