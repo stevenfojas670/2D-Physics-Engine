@@ -3,21 +3,39 @@
  *
  */
 class Vector3 {
-	constructor(x, y, z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
+	constructor(_x = 0, _y = 0, _z = 0) {
+		this.x = _x;
+		this.y = _y;
+		this.z = _z;
+	}
+
+	Invert() {
+		this.x *= -1;
+		this.y *= -1;
+		this.z *= -1;
 	}
 
 	printCall() {
 		console.log('VECTOR 3 HAS BEEN CALLED. SHOULD NEVER BE CALLED!');
 	}
 
+	// Vector Normalization
+	Normalize() {
+		length = this.Magnitude();
+
+		// Normalizing the components
+		if (length > 0) {
+			this.x /= length;
+			this.y /= length;
+			this.z /= length;
+		}
+	}
+
 	/**
 	 * @todo Learn to calculate the optmized length
 	 * @description The optimized length doesn't not perform the square root
 	 */
-	Length2() {
+	SquareMagnitude() {
 		this.printCall();
 	}
 
@@ -25,8 +43,8 @@ class Vector3 {
 	 * @todo Learn to calculate length of a 3D vector
 	 * @description This calculates the true length using the square root.
 	 */
-	Length() {
-		this.printCall();
+	Magnitude() {
+		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
 	}
 
 	/**
@@ -34,24 +52,24 @@ class Vector3 {
 	 */
 	GetNormal() {}
 
-	Dot(vec) {
-		return this.x * vec.x + this.y * vec.y + this.z * vec.z;
+	Dot(_vec) {
+		return this.x * _vec.x + this.y * _vec.y + this.z * _vec.z;
 	}
 
 	Cpy() {
 		return new Vector3(this.x, this.y, this.z);
 	}
 
-	Add(vec) {
-		this.x += vec.x;
-		this.y += vec.y;
-		this.z += vec.z;
+	Add(_vec) {
+		this.x += _vec.x;
+		this.y += _vec.y;
+		this.z += _vec.z;
 	}
 
-	Sub(vec) {
-		this.x += vec.x;
-		this.y += vec.y;
-		this.z += vec.z;
+	Sub(_vec) {
+		this.x += _vec.x;
+		this.y += _vec.y;
+		this.z += _vec.z;
 	}
 
 	Scale(scalar) {
@@ -60,7 +78,19 @@ class Vector3 {
 		this.z *= scalar;
 	}
 
-	Cross(vec) {}
+	Cross(_vec) {
+		return new Vector3(
+			this.y * _vec.z - this.z * _vec.y,
+			this.x * _vec.z - this.z * _vec.x,
+			this.x * _vec.y - this.y * _vec.x
+		);
+	}
+
+	SelfCross(_vec) {
+		this.x = this.y * _vec.z - this.z * _vec.y;
+		this.y = this.x * _vec.z - this.z * _vec.x;
+		this.z = this.x * _vec.y - this.y * _vec.x;
+	}
 
 	Log() {
 		console.log(`x: ${this.x}, y: ${this.y}, z: ${this.z}`);
@@ -69,25 +99,25 @@ class Vector3 {
 
 // General methods
 
-// Adding two vectors
-function Add(vecA, vecB, vecC) {
-	return new Vector3(
-		vecA.x + vecB.x + vecC.x,
-		vecA.y + vecB.y + vecC.y,
-		vecA.z + vecB.z + vecC.z
+// Adding two _vectors
+function Add(_vecA, _vecB, _vecC) {
+	return new _vector3(
+		_vecA.x + _vecB.x + _vecC.x,
+		_vecA.y + _vecB.y + _vecC.y,
+		_vecA.z + _vecB.z + _vecC.z
 	);
 }
 
 // Subtracting two vectors
-function Sub(vecA, vecB) {
-	return new Vector3(
-		vecA.x - vecB.x - vecC.x,
-		vecA.y - vecB.y - vecC.y,
-		vecA.z - vecB.z - vecC.z
+function Sub(_vecA, _vecB) {
+	return new _vector3(
+		_vecA.x - _vecB.x - _vecC.x,
+		_vecA.y - _vecB.y - _vecC.y,
+		_vecA.z - _vecB.z - _vecC.z
 	);
 }
 
 // Scaling a vector
-function Scale(vec, scale) {
-	return new Vector3(vec.x * scale, vec.y * scale, vec.z * scale);
+function Scale(_vec, scale) {
+	return new Vector3(_vec.x * scale, _vec.y * scale, _vec.z * scale);
 }

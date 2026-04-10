@@ -6,64 +6,39 @@ class Simulation {
 		 */
 
 		// Player movement
-		this.force = force * 10;
-		this.gravity = new Vector2(0, 500);
+		this.force = force;
+		this.gravity = new Vector2(0, 0);
 		this.controller = new Controller();
 		this.worldSize = worldSize;
 		this.rigidBodies = [];
+		this.staticBodies = [];
+		this.particles = [];
 		this.joints = [];
 
-		this.grid = new SpatialGrid(20);
+		this.grid = new HashGrid(20);
 		this.grid.initialize(this.worldSize, this.rigidBodies);
 
 		this.createBoundary();
-		let circleA = new Circle(new Vector2(300,420), 60.0);
-		let circleRigA = new Rigidbody(circleA, 1);
-		this.rigidBodies.push(circleRigA);
+		let Polygon = new Rectangle(new Vector2(300,420), 40, 40);
+		let PolygonKinematic = new Rigidbody(Polygon, 1);
+		this.rigidBodies.push(PolygonKinematic);
 
-		let circleB = new Circle(new Vector2(300,280), 60.0);
-		let circleRigB = new Rigidbody(circleB, 1);
-		this.rigidBodies.push(circleRigB);
+		let staticPolygon = new Rectangle(new Vector2(300, 300), 100, 400);
+		let staticBody = new Rigidbody(staticPolygon, 0);
+		this.rigidBodies.push(staticBody);
+
+		let recA = new Rectangle(new Vector2(200, 200), 50, 100);
+		let staticRectangle = new StaticBody(recA)
+		this.staticBodies.push(staticRectangle);
 
 		// This means circleRigA cannot collide with circleRigB
-		circleRigA.setCollisionGroup(CollisionGroups.GROUP1);
+		PolygonKinematic.setCollisionGroup(CollisionGroups.GROUP1);
 
 		// Setting names of the collision groups
 		CollisionGroups.GROUP1.name = "Kinematic Objects";
-		CollisionGroups.GROUP2.name = "Non Kinematic Circles";
+		CollisionGroups.GROUP2.name = "Static Objects";
 
 		this.disableCollisionBetweenGroups(CollisionGroups.GROUP1, CollisionGroups.GROUP2);
-
-		// this.createStressTestPyramid(50, 10);
-
-		// let rect = new Rectangle(new Vector2(200, 400), 200, 100);
-		// let anchorRectID = rect.createAnchorPoint(new Vector2(-50, 25));
-		// let rectRigidBody = new Rigidbody(rect, 0);
-		// this.rigidBodies.push(rectRigidBody);
-
-		// let circle = new Circle(new Vector2(500, 300), 60.0);
-		// let anchorCircleID = circle.createAnchorPoint(new Vector2(40, 5));
-		// let circleRigidyBody = new Rigidbody(circle, 1);
-		// this.rigidBodies.push(circleRigidyBody);
-		// this.rigidBodies.push(
-		// 	new Rigidbody(new Circle(new Vector2(600, 300), 60.0), 0.5)
-		// );
-
-		console.log(this.rigidBodies.length + ' bodies instantiated');
-
-		// Joint connections
-		// let jointConnection = new JointConnection(
-		// 	rectRigidBody,
-		// 	anchorRectID,
-		// 	circleRigidyBody,
-		// 	anchorCircleID
-		// );
-		// this.joints.push(new ForceJoint(jointConnection, 1000));
-
-		// Grabbing objects
-		this.selectedRigidBody = null;
-		this.selectedPosition = null;
-		this.selectedAnchorId = null;
 	}
 
 	/**
@@ -157,6 +132,33 @@ class Simulation {
 		);
 	}
 
+	SpawnObject(_object, _mousePosition) {
+		switch (_object) {
+			case 'Rectangle':
+				this.rigidBodies.push(
+					new Rigidbody(
+						new Rectangle(
+							new Vector2(_mousePosition.x, _mousePosition.y),
+							100,
+							50
+						),
+						10
+					)
+				);
+				break;
+			case 'Polygon':
+				break;
+			case 'Circle':
+				this.rigidBodies.push(
+					new Rigidbody(
+						new Circle(new Vector2(_mousePosition.x, _mousePosition.y), 50),
+						10
+					)
+				);
+				break;
+		}
+	}
+
 	handleMouseObjectInteraction() {
 		if (mouseDownLeft) {
 			let id = this.grid.getGridIdFromPosition(mousePos);
@@ -205,8 +207,11 @@ class Simulation {
 
 	update(deltaTime) {
 		this.handleMouseObjectInteraction();
-		this.handleJoints();
+		// this.handleJoints();
 
+		/**
+		 * Updating RigidBody motion
+		 */
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime);
 			this.rigidBodies[i].getShape().boundingBox.isColliding = false;
@@ -216,13 +221,23 @@ class Simulation {
 				Scale(this.gravity, this.rigidBodies[i].mass)
 			);
 
-			this.rigidBodies[i].log();
+			// this.rigidBodies[i].log();
+		}
+
+		/**
+		 * Updating Particle motion
+		 */
+		for (let i = 0; i < this.particles.length; i++) {
+			this.particles[i].update(deltaTime);
 		}
 
 		this.grid.refreshGrid();
 
+		/**
+		 * Performing Collision Detection and Response on RigidBodies
+		 */
 		// The higher iteration limit, the more stable
-		let iterationLimit = 20;
+		let iterationLimit = 25;
 		for (
 			let solverIterations = 0;
 			solverIterations < iterationLimit;
@@ -262,17 +277,29 @@ class Simulation {
 		}
 
 		// Handling movement
-		this.normalizedSpeed = this.force * deltaTime; // My implementation
+		this.normalizedSpeed = 10000 * deltaTime; // My implementation
 		// this.normalizedSpeed = this.force; // Following the video
 		this.pollMovement();
 	}
 
+	/**
+	 * Draws all objects.
+	 * @param {} ctx - Canvas context for rendering onto the HTML Canvas
+	 */
 	draw(ctx) {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].getShape().draw(ctx);
 		}
 
-		this.grid.draw();
+		for (let i = 0; i < this.staticBodies.length; i++) {
+			this.staticBodies[i].getShape().draw(ctx);
+		}
+
+		// for (let i = 0; i < this.particles.length; i++) {
+		// 	this.particles[i].getShape().draw(ctx);
+		// }
+
+		// this.grid.draw();
 	}
 
 	/**
@@ -286,60 +313,21 @@ class Simulation {
 		let length = this.rigidBodies.length;
 
 		// Moving shape one
-		if (this.controller.keys.d) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(this.normalizedSpeed, 0)
-			);
+		if (this.controller.keys.KeyD) {
+			this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0));
 		}
-		if (this.controller.keys.a) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(-this.normalizedSpeed, 0)
-			);
+		if (this.controller.keys.KeyA) {
+			this.rigidBodies[4].addForce(new Vector2(-this.normalizedSpeed, 0));
 		}
-		if (this.controller.keys.s) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(0, this.normalizedSpeed)
-			);
+		if (this.controller.keys.KeyS) {
+			this.rigidBodies[4].addForce(new Vector2(0, this.normalizedSpeed));
 		}
-		if (this.controller.keys.w) {
-			this.rigidBodies[length - 4].addForce(
-				new Vector2(0, -this.normalizedSpeed)
-			);
+		if (this.controller.keys.KeyW) {
+			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed));
 		}
-		// if (this.controller.keys.e) {
-		// 	this.rigidBodies[0].rotate(0.05);
-		// }
-		// if (this.controller.keys.q) {
-		// 	this.rigidBodies[0].rotate(-0.05);
-		// }
-
-		// Moving shape two
-		if (this.controller.keys.ArrowRight) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(this.normalizedSpeed, 0)
-			);
+		if (this.controller.keys.Space) {
+			this.rigidBodies[4].addForce(new Vector2(0, -this.normalizedSpeed * 10));
 		}
-		if (this.controller.keys.ArrowLeft) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(-this.normalizedSpeed, 0)
-			);
-		}
-		if (this.controller.keys.ArrowDown) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(0, this.normalizedSpeed)
-			);
-		}
-		if (this.controller.keys.ArrowUp) {
-			this.rigidBodies[length - 5].addForce(
-				new Vector2(0, -this.normalizedSpeed)
-			);
-		}
-		// if (this.controller.keys['.']) {
-		// 	this.rigidBodies[1].rotate(0.05);
-		// }
-		// if (this.controller.keys[',']) {
-		// 	this.rigidBodies[1].rotate(-0.05);
-		// }
 	}
 
 	/**

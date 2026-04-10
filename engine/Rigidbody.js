@@ -95,7 +95,6 @@ class Rigidbody {
 
 	update(deltaTime) {
 		this.integrate(deltaTime);
-
 		// this.log();
 	}
 
@@ -108,13 +107,16 @@ class Rigidbody {
 	 * See: Game Coding Complete (4th Edition) - Page 570
 	 */
 	integrate(deltaTime) {
-		// this.semiImplicitEuler(deltaTime);
+		this.semiImplicitEuler(deltaTime);
 		// this.forwardEuler(deltaTime);
 		// this.midPointMethod(deltaTime);
 		// this.rungeKutta2(deltaTime);
-		this.rungeKutta4(deltaTime);
+		// this.rungeKutta4(deltaTime);
 
+		// Adding a damper to simulate drag
 		this.velocity.Scale(0.999);
+
+		// Angular velocity damper
 		this.angularVelocity *= 0.999;
 		this.forceAccumulator = new Vector2(0, 0);
 		this.torqueAccumulator = 0;
@@ -162,8 +164,8 @@ class Rigidbody {
 		this.shape.move(deltaPosition); // Moved the shape to the new position
 		this.velocity = Add(this.velocity, Scale(acceleration, deltaTime)); // Calculate the new velocity at the new position
 
-		let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
-		this.angularVelocity += rotationalAcceleration * deltaTime;
+		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
+		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
 		let deltaRotation = this.angularVelocity * deltaTime;
 		this.shape.rotate(deltaRotation);
@@ -181,8 +183,8 @@ class Rigidbody {
 		this.shape.move(deltaPosition);
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
 
-		let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
-		this.angularVelocity += rotationalAcceleration * deltaTime;
+		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
+		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
 		let deltaRotation = this.angularVelocity * deltaTime;
 		this.shape.rotate(deltaRotation);
@@ -211,8 +213,8 @@ class Rigidbody {
 		let deltaPosition = Scale(this.velocity, deltaTime); // p = p0 + vt
 		this.shape.move(deltaPosition);
 
-		let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
-		this.angularVelocity += rotationalAcceleration * deltaTime;
+		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
+		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
 		let deltaRotation = this.angularVelocity * deltaTime;
 		this.shape.rotate(deltaRotation);

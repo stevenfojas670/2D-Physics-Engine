@@ -1,7 +1,5 @@
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
-var width = 1920;
-var height = 1080;
 
 let lastTime = performance.now();
 let currentTime = 0;
@@ -13,20 +11,11 @@ let mouseDownRight = false;
 
 let simulation = new Simulation(new Vector2(canvas.width, canvas.height));
 
+let objectToSpawn = null;
+
 document.addEventListener('DOMContentLoaded', () => {
 	/**SETTINGS: EVENT LISTENERS */
-	const moveSpeed = document.querySelector('#movement-speed');
-
-	// moveSpeed.value = simulation.getMoveSpeed();
-
-	// moveSpeed?.addEventListener(
-	// 	'input',
-	// 	(evt) => {
-	// 		simulation.setMoveSpeed(evt.target.value);
-	// 		console.log(evt.target.value);
-	// 	},
-	// 	false
-	// );
+	const rigidBodySelector = document.querySelector('#RigidBodySelector');
 
 	/**LOGGING: EVENT LISTENERS */
 
@@ -40,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keydown',
 		(evt) => {
-			simulation.controller.keyboard(evt.key, true);
+			simulation.controller.keyboard(evt.code, true);
+			console.log(evt.code);
 		},
 		false
 	);
@@ -48,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener(
 		'keyup',
 		(evt) => {
-			simulation.controller.keyboard(evt.key, false);
+			simulation.controller.keyboard(evt.code, false);
 		},
 		false
 	);
@@ -58,21 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		mouse = getMousePos(canvas, evt);
 		mousePos = new Vector2(mouse.x, mouse.y);
 
-		//console.log(mousePos)
+		// console.log(mousePos);
 	});
 
 	window.addEventListener('mousedown', (evt) => {
 		if (evt.button === 0) mouseDownLeft = true;
 		if (evt.button === 2) mouseDownRight = true;
 
-		//console.log(mouseDownLeft)
+		// console.log(mouseDownLeft)
 	});
 
 	window.addEventListener('mouseup', (evt) => {
 		if (evt.button === 0) mouseDownLeft = false;
 		if (evt.button === 2) mouseDownRight = false;
 
-		//console.log(mouseDownLeft)
+		// console.log(mouseDownLeft)
 	});
 });
 

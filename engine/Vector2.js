@@ -10,10 +10,16 @@ class Vector2 {
 	 * @constructor
 	 * @param {number} x - X position
 	 * @param {number} y - Y position
+	 * @default Constructor - Initalize to 0
 	 */
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
+	constructor(_x = 0.0, _y = 0.0) {
+		this.x = _x;
+		this.y = _y;
+	}
+
+	Invert() {
+		this.x = -this.x;
+		this.y = -this.y;
 	}
 
 	// Vector Normalization
@@ -21,8 +27,10 @@ class Vector2 {
 		length = this.Length();
 
 		// Normalizing the components
-		this.x /= length;
-		this.y /= length;
+		if (length > 0) {
+			this.x /= length;
+			this.y /= length;
+		}
 	}
 
 	/**
@@ -51,9 +59,13 @@ class Vector2 {
 		return new Vector2(this.y, -this.x);
 	}
 
-	// Calculating the Dot product
-	Dot(vec) {
-		return this.x * vec.x + this.y * vec.y;
+	/**
+	 * @description Calculates the dot product of this vector with passed vector.
+	 * @param {Vector2} _vec
+	 * @returns {number} Dot Product
+	 */
+	Dot(_vec) {
+		return this.x * _vec.x + this.y * _vec.y;
 	}
 
 	// Copy function
@@ -62,27 +74,67 @@ class Vector2 {
 	}
 
 	// Adding vectors
-	Add(vec) {
-		this.x += vec.x;
-		this.y += vec.y;
+	Add(_vec) {
+		this.x += _vec.x;
+		this.y += _vec.y;
+	}
+
+	Add_Cpy(_vec) {
+		return new Vector2(this.x + _vec.x, this.y + _vec.y);
 	}
 
 	// Subtracting vectors
-	Sub(vec) {
-		this.x -= vec.x;
-		this.y -= vec.y;
+	Sub(_vec) {
+		this.x -= _vec.x;
+		this.y -= _vec.y;
+	}
+
+	Sub_Cpy(_vec) {
+		return new Vector2(this.x - _vec.x, this.y - _vec.y);
 	}
 
 	// Scaling a vector
-	Scale(scalar) {
-		this.x *= scalar;
-		this.y *= scalar;
+	Scale(_scalar) {
+		this.x *= _scalar;
+		this.y *= _scalar;
 	}
 
-	// Cross product of vector
-	Cross(vec) {
+	// Scale then return a copy
+	Multiply_Cpy(_scalar) {
+		return new Vector2(this.x * _scalar, this.y * _scalar);
+	}
+
+	/**
+	 * @description Multiplies this vector, to passed vector
+	 * @param {Vector2} _vec
+	 * @returns {null}
+	 */
+	ComponentProductUpdate(_vec) {
+		this.x *= _vec.x;
+		this.y *= _vec.y;
+	}
+
+	/**
+	 * @description Scales a vector and adds it to this.
+	 * @param {Vector2} _vec | Vector
+	 * @param {number} _scalar | Scalar value
+	 * @returns {void}
+	 */
+	AddScaledVector(_vec, _scalar) {
+		this.x += _vec.x * _scalar;
+		this.y += _vec.y * _scalar;
+	}
+
+	/**
+	 * @description Computes the cross product of this and the passed vector.
+	 * Cross products are typically done on 3D vectors, so this is really just the determinant.
+	 * Det([a,b]) = a.x*b.y - b.x*a.y
+	 * @param {Vector2} _vec
+	 * @returns Cross product
+	 */
+	Cross(_vec) {
 		// This is needed for collision detection
-		return this.x * vec.y - this.y * vec.x;
+		return this.x * _vec.y - this.y * _vec.x;
 	}
 
 	// Logging the coordinates of the vector
@@ -106,4 +158,14 @@ function Sub(vecA, vecB) {
 // Scaling a vector
 function Scale(vecA, scale) {
 	return new Vector2(vecA.x * scale, vecA.y * scale);
+}
+
+/**
+ * @description Multiplies two vectors together.
+ * @param {Vector2} _vecA
+ * @param {Vector2} _vecB
+ * @returns {Vector2} New Vector2
+ */
+function ComponentProduct(_vecA, _vecB) {
+	return new Vector2(_vecA.x * _vecB.x, _vecA.y * _vecB.y);
 }
