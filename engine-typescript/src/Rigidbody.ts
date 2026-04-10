@@ -1,24 +1,38 @@
-import { Vector2 } from "@/Vector2";
+import { Vector2, Add, Sub, Scale } from "@/Vector2";
 import { Shape } from "@/shapes/Shape";
 import { Material } from "@/materials/Materials";
+import { CollisionGroups } from "@/optimizations/CollisionGroups";
+import type { CollisionMask } from "@/types/collisionGroups.type";
+import type { CollisionGroup } from "@/types/collisionGroups.type";
 
 class Rigidbody {
 
-    private shape : Shape;
-    private mass : number;
-    private isKinematic : boolean;
-    private invMass : number;
-    private forceAccumulator : Vector2;
-    private torqueAccumulator : Vector2;
-    private velocity : Vector2;
-    private angularVelocity : Vector2;
-    private material : Material;
-    private inertia : number;
-    private invInertia : number;
+    private shape: Shape;
+    private mass: number;
+    private isKinematic: boolean;
+    private invMass: number;
+    private forceAccumulator: Vector2;
+    private torqueAccumulator: number;
+    private velocity: Vector2;
+    private angularVelocity: number;
+    private material: Material;
+    private inertia: number;
+    private invInertia: number;
     
-    public collisionGroup : Coll
+    /**
+     * The collision mask for this rigidbody.
+     * 
+     * Determines which collision groups this body belongs to and can collide with.
+     */
+    public collisionGroup: CollisionMask;
 
-	constructor(shape, mass) {
+	/**
+	 * Create a rigidbody with a collision shape and mass.
+	 *
+	 * @param shape - The collision shape for this body.
+	 * @param mass - The mass in kilograms. Use 0 for static bodies.
+	 */
+	constructor(shape: Shape, mass: number) {
 		this.shape = shape;
 		this.mass = mass;
 		this.isKinematic = false;
@@ -50,22 +64,26 @@ class Rigidbody {
 		this.collisionGroup = CollisionGroups.GROUP0.id;
 	}
 
-	setCollisionGroup(group) {
+	/**
+	 * Set the collision group for this rigidbody.
+	 *
+	 * @param group - The collision group to assign.
+	 */
+	setCollisionGroup(group: CollisionGroup): void {
 		this.collisionGroup = group.id;
 	}
 
 	/**
+	 * Add a force that will be accumulated each frame.
 	 *
-	 * @param {Vector2} force - Force vector that will be applied
-	 * to the current force.
+	 * @param force - Force vector that will be applied to the current force.
 	 * Initially, the starting force is a zero vector.
-	 * @returns {void}
 	 */
-	addForce(force) {
+	addForce(force: Vector2): void {
 		this.forceAccumulator.Add(force);
 	}
 
-	addForceAtPoint(atPoint, force) {
+	addForceAtPoint(atPoint: Vector2, force: Vector2): void {
 		let direction = Sub(atPoint, this.shape.centroid); // Direction from point to centroid
 		this.forceAccumulator.Add(force);
 		this.torqueAccumulator += direction.Cross(force);
@@ -73,54 +91,55 @@ class Rigidbody {
 	}
 
 	/**
+	 * Add velocity to the rigidbody.
 	 *
-	 * @param {Vector2} velocity - Velocity vector that will be added
-	 * to current velocity.
-	 * @returns {void}
+	 * @param velocity - Velocity vector that will be added to current velocity.
 	 */
-	addVelocity(velocity) {
+	addVelocity(velocity: Vector2): void {
 		this.velocity.Add(velocity);
 	}
 
 	/**
+	 * Get the current velocity of this rigidbody.
 	 *
-	 * @returns {number} velocity
+	 * @returns The velocity vector.
 	 */
-	getVelocity() {
+	getVelocity(): Vector2 {
 		return this.velocity;
 	}
 
 	/**
-	 * @returns {number} angular velocity
+	 * Get the current angular velocity of this rigidbody.
+	 *
+	 * @returns The angular velocity.
 	 */
-	getAngularVelocity() {
+	getAngularVelocity(): number {
 		return this.angularVelocity;
 	}
 
 	/**
+	 * Set the velocity of this rigidbody.
 	 *
-	 * @param {Vector2} velocity - Velocity vector that will be set to
-	 * the current velocity.
-	 * @returns {void}
+	 * @param velocity - Velocity vector to set.
 	 */
-	setVelocity(velocity) {
+	setVelocity(velocity: Vector2): void {
 		this.velocity = velocity.Cpy();
 	}
 
-	update(deltaTime) {
+	update(deltaTime: number): void {
 		this.integrate(deltaTime);
 		// this.log();
 	}
 
 	/**
+	 * Integrate forces and velocities using the semi-implicit Euler method.
 	 *
-	 * @param {number} deltaTime
-	 * @description Converting the force from the force acummulator to
-	 * an acceleration then we convert the acceleration to a velocity then
-	 * we convert the velocity to a direction vector for movement.
-	 * See: Game Coding Complete (4th Edition) - Page 570
+	 * Converts forces to acceleration, then acceleration to velocity,
+	 * and velocity to position displacement. Includes velocity damping.
+	 *
+	 * @param deltaTime - Time step in seconds.
 	 */
-	integrate(deltaTime) {
+	integrate(deltaTime: number): void {
 		this.semiImplicitEuler(deltaTime);
 		// this.forwardEuler(deltaTime);
 		// this.midPointMethod(deltaTime);
@@ -137,10 +156,14 @@ class Rigidbody {
 	}
 
 	/**
+	 * Semi-implicit Euler numerical integration method.
 	 *
-	 * @param {number} deltaTime - Time step
+	 * Updates velocity first, then position. More stable than forward Euler.
+	 * See: Game Coding Complete (4th Edition) - Page 570
+	 *
+	 * @param deltaTime - Time step in seconds.
 	 */
-	semiImplicitEuler(deltaTime) {
+	semiImplicitEuler(deltaTime: number): void {
 		/**
 		 * @description Calculating the acceleration created by a force (forceAccumulator).
 		 * Acceleration = force * invMass (invMass = 1/mass) <=> force / mass
@@ -169,10 +192,13 @@ class Rigidbody {
 	}
 
 	/**
+	 * Forward Euler numerical integration method.
 	 *
-	 * @param {number} deltaTime - Time step
+	 * Updates position first, then velocity. Less stable than semi-implicit Euler.
+	 *
+	 * @param deltaTime - Time step in seconds.
 	 */
-	forwardEuler(deltaTime) {
+	forwardEuler(deltaTime: number): void {
 		let acceleration = Scale(this.forceAccumulator, this.invMass); // Calculated acceleration
 		let deltaPosition = Scale(this.velocity, deltaTime); // calculated new position
 		this.shape.move(deltaPosition); // Moved the shape to the new position
@@ -186,10 +212,11 @@ class Rigidbody {
 	}
 
 	/**
+	 * Mid-point numerical integration method.
 	 *
-	 * @param {number} deltaTime - Time step
+	 * @param deltaTime - Time step in seconds.
 	 */
-	midPointMethod(deltaTime) {
+	midPointMethod(deltaTime: number): void {
 		let acceleration = Scale(this.forceAccumulator, this.invMass);
 		let halfAcceleration = Scale(acceleration, 0.5);
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime));
@@ -205,11 +232,13 @@ class Rigidbody {
 	}
 
 	/**
-	 * @param {number} deltaTime - Time step
-	 * @description RK2 positioning approximation function. This
-	 * is more accurate than Forward Euler (FE) but less accurate than Rk4.
+	 * Runge-Kutta 2nd order numerical integration method.
+	 *
+	 * More accurate than Forward Euler but less accurate than RK4.
+	 *
+	 * @param deltaTime - Time step in seconds.
 	 */
-	rungeKutta2(deltaTime) {
+	rungeKutta2(deltaTime: number): void {
 		let k1, k2;
 
 		const computeAcceleration = (force, invMass) => Scale(force, invMass);
@@ -235,12 +264,13 @@ class Rigidbody {
 	}
 
 	/**
+	 * Runge-Kutta 4th order numerical integration method.
 	 *
-	 * @param {number} deltaTime - Time step
-	 * @description RK4 positioning approximation function. This
-	 * is a more accurate predictor of position and velocity than Euler's method.
+	 * The most accurate predictor of position and velocity compared to simpler methods.
+	 *
+	 * @param deltaTime - Time step in seconds.
 	 */
-	rungeKutta4(deltaTime) {
+	rungeKutta4(deltaTime: number): void {
 		let k1, k2, k3, k4;
 
 		const computeAcceleration = (force, invMass) => Scale(force, invMass);
@@ -282,11 +312,19 @@ class Rigidbody {
 		this.shape.rotate(deltaRotation);
 	}
 
-	getShape() {
+	/**
+	 * Get the shape of this rigidbody.
+	 *
+	 * @returns The collision shape.
+	 */
+	getShape(): Shape {
 		return this.shape;
 	}
 
-	log() {
+	/**
+	 * Log the current state to the console.
+	 */
+	log(): void {
 		console.log('Inertia: ' + this.inertia);
 		console.log(
 			`Force: x = ${this.forceAccumulator.x}, y = ${this.forceAccumulator.y}\nVelocity: x = ${this.velocity.x}, y = ${this.velocity.y}`

@@ -9,18 +9,18 @@ import { Grid } from "@/optimizations/grids/Grid";
 
 class Simulation {
 
-    private force : number;
-    private gravity : Vector2;
-    private worldSize : Vector2;
-    private rigidBodies : Array<Rigidbody>;
-    private staticBodies : Array<Staticbody>;
-    private particles : Array<Particle>
-    private joints : Array<Joint>
-    private grid : Grid;
+    private force: number;
+    private gravity: Vector2;
+    private worldSize: Vector2;
+    private rigidBodies: Array<Rigidbody>;
+    private staticBodies: Array<Staticbody>;
+    private particles: Array<Particle>
+    private joints: Array<Joint>
+    private grid: Grid;
 
-    public controller : Controller;
+    public controller: Controller;
 
-	constructor(_worldSize : Vector2, _force : number = 20000) {
+	constructor(_worldSize: Vector2, _force: number = 20000) {
 		/**
 		 * @todo Create a Builder pattern for initializing the simulation
 		 * @description There will be so many parameters to configure for the user
