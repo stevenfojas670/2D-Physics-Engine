@@ -1,4 +1,5 @@
 const layers = [
+	{ name: "ecs", files: ["ecs/**"] },
 	{ name: "math", files: ["Vector2.ts", "utils/MathHelper.ts"] },
 	{ name: "rendering", files: ["utils/DrawUtils.ts"] },
 	{ name: "input", files: ["Controller.ts"] },
@@ -21,11 +22,12 @@ const layers = [
 ]
 
 const allowedImports = {
+	ecs: ["ecs", "types"],
 	math: ["math", "types"],
-	physics: ["physics", "math", "types"],
-	rendering: ["rendering", "physics", "math", "types"],
+	physics: ["physics", "ecs", "math", "types"],
+	rendering: ["rendering", "physics", "ecs", "math", "types"],
 	input: ["input", "types"],
-	app: ["app", "physics", "rendering", "input", "math", "types"],
+	app: ["app", "ecs", "physics", "rendering", "input", "math", "types"],
 	types: ["types"],
 }
 

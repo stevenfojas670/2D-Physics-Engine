@@ -11,7 +11,7 @@
 ## Rules
 
 1. Do not write comments. Make the code explain itself through names and structure; lint rejects every comment.
-2. Before calling work done, run `npm run lint`, `npm run typecheck` and `npm run build` in `engine-typescript/`. All three must pass.
+2. Before calling work done, run `npm run lint`, `npm run typecheck`, `npm run build` and `npm run test` in `engine-typescript/`. All four must pass.
 3. When you add, remove or rename a file, or change what it does, update its folder's `README.md` in the same change. Lint checks the names; you are responsible for the descriptions.
 4. Respect the architecture layers in [`README.md`](README.md#architecture). Never add to the exceptions list in `engine-typescript/lint/layerMap.js` without the owner's approval.
 5. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before you branch, commit or open a pull request.

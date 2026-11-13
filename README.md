@@ -42,6 +42,8 @@ npm run dev
 | `npm run lint` | ESLint, Prettier check and the folder README check |
 | `npm run format` | Rewrites files with Prettier |
 | `npm run typecheck` | Type checks without building |
+| `npm run test` | Runs the Vitest tests in `tests/` |
+| `npm run bench` | Runs the Vitest benchmarks in `tests/` |
 
 The legacy engine still runs by opening `engine/index.html` with the VS Code Live Server extension.
 
@@ -70,18 +72,19 @@ These apply to `engine-typescript/` and are enforced by `npm run lint`. Inline `
 Every file in `engine-typescript/src/` belongs to one layer. A layer may import from its own layer and from the layers listed for it. The map lives in [`engine-typescript/lint/layerMap.js`](engine-typescript/lint/layerMap.js).
 
 ```
+ecs         ecs/                                        → ecs, types
 math        Vector2.ts, utils/MathHelper.ts            → math, types
-physics     RigidBody, StaticBody, Simulation,          → math, types
+physics     RigidBody, StaticBody, Simulation,          → ecs, math, types
             shapes/, collisionDetectionSystem/,
             joints/, materials/, particles/,
             optimizations/
-rendering   utils/DrawUtils.ts                          → physics, math, types
+rendering   utils/DrawUtils.ts                          → physics, ecs, math, types
 input       Controller.ts                               → types
 app         main.ts                                     → everything
 types       types/                                      → types; every layer may import types
 ```
 
-The math and physics layers may not use browser globals (`window`, `document`, `requestAnimationFrame`, `navigator`).
+The ecs, math and physics layers may not use browser globals (`window`, `document`, `requestAnimationFrame`, `navigator`).
 
 ### Known exceptions
 

@@ -45,6 +45,7 @@ From `engine-typescript/`, all of these must pass:
 npm run lint
 npm run typecheck
 npm run build
+npm run test
 ```
 
 `npm run lint` also fails if a folder README is missing a file or lists one that no longer exists. When you add, remove or rename a file, or change what a file does, update its folder's `README.md` in the same change. The check compares names only, so keeping descriptions accurate is on you and the reviewer.

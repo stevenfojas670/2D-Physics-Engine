@@ -6,7 +6,7 @@ import globals from "globals"
 import { plugin as local } from "./lint/plugin.js"
 import { layers } from "./lint/layerMap.js"
 
-const browserFreeLayers = ["math", "physics"]
+const browserFreeLayers = ["ecs", "math", "physics"]
 const browserFreeFiles = layers
 	.filter((layer) => browserFreeLayers.includes(layer.name))
 	.flatMap((layer) => layer.files.map((pattern) => `src/${pattern}`))
@@ -109,7 +109,12 @@ export default defineConfig(
 		},
 	},
 	{
-		files: ["*.{ts,js,mjs}", "scripts/**/*.{ts,js,mjs}", "lint/**/*.js"],
+		files: [
+			"*.{ts,js,mjs}",
+			"scripts/**/*.{ts,js,mjs}",
+			"lint/**/*.js",
+			"tests/**/*.ts",
+		],
 		languageOptions: {
 			globals: globals.node,
 		},

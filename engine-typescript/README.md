@@ -17,6 +17,8 @@ npm run dev
 | `npm run lint`      | ESLint, Prettier check and the folder README check |
 | `npm run format`    | Rewrites files with Prettier                       |
 | `npm run typecheck` | Type checks without building                       |
+| `npm run test`      | Runs the Vitest tests in `tests/`                  |
+| `npm run bench`     | Runs the Vitest benchmarks in `tests/`             |
 
 | File                | Purpose                                                           |
 | ------------------- | ----------------------------------------------------------------- |
@@ -28,7 +30,7 @@ npm run dev
 | `package-lock.json` | Locked dependency versions                                        |
 | `package.json`      | npm scripts and dependencies                                      |
 | `tsconfig.json`     | TypeScript compiler options and the `@/` to `src/` path alias     |
-| `vite.config.ts`    | Vite config that defines the `@/` alias                           |
+| `vite.config.ts`    | Vite and Vitest config: the `@/` alias and where tests live       |
 
 ## Folders
 
@@ -36,3 +38,4 @@ npm run dev
 - [`public/`](public/README.md) — Static files Vite serves as-is
 - [`scripts/`](scripts/README.md) — Node scripts used by npm scripts
 - [`src/`](src/README.md) — Engine source code
+- [`tests/`](tests/README.md) — Vitest tests and benchmarks

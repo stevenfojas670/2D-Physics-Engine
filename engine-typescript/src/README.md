@@ -14,6 +14,7 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 
 ## Folders
 
+- [`ecs/`](ecs/README.md) — Entity Component System core: entities, component stores, views, world and schedule
 - [`collisionDetectionSystem/`](collisionDetectionSystem/README.md) — Narrow-phase collision tests and collision response
 - [`joints/`](joints/README.md) — Constraints that connect two rigid bodies
 - [`materials/`](materials/README.md) — Surface properties of bodies

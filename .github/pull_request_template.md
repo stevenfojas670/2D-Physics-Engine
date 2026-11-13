@@ -21,7 +21,7 @@ Closes #
 ## Checklist
 
 - [ ] Branch is named `<type>/<kebab-case-description>` and targets `dev`
-- [ ] `npm run lint`, `npm run typecheck` and `npm run build` pass in `engine-typescript/`
+- [ ] `npm run lint`, `npm run typecheck`, `npm run build` and `npm run test` pass in `engine-typescript/`
 - [ ] Folder READMEs list every added, removed or renamed file, and descriptions still match what each changed file does
 - [ ] No exceptions added to `engine-typescript/lint/layerMap.js` (or explained below)
 - [ ] `engine/` is untouched, unless this PR is specifically about it

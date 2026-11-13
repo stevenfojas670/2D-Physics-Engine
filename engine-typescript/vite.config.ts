@@ -1,4 +1,4 @@
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 import path from "path"
 
 export default defineConfig({
@@ -6,5 +6,12 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "src"),
 		},
+	},
+	test: {
+		include: ["tests/**/*.test.ts"],
+		benchmark: {
+			include: ["tests/**/*.bench.ts"],
+		},
+		environment: "node",
 	},
 })
