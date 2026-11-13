@@ -8,6 +8,7 @@ The Entity Component System core: entities, component storage, views, the world 
 | `defineComponent.ts` | Declares a component as a name and a schema of typed fields, plus the column and value types |
 | `Entity.ts`          | The `Entity` ID type and the functions that pack and unpack its index and generation         |
 | `EntityRegistry.ts`  | Hands out entity IDs, recycles destroyed indices and tracks which IDs are still alive        |
+| `View.ts`            | Iterates the entities that have a set of components, passing each component's slot           |
 
 ## How it works
 
@@ -29,3 +30,18 @@ A `ComponentStore` is a **sparse set**: two arrays that point at each other.
 `has` and `slotOf` are one lookup in `sparse` plus a check that `dense` agrees, which also rejects stale generations. Adding appends at the end. Removing **swaps** the last slot into the hole, so the dense arrays never have gaps and removal is O(1). The price is that slots move, so code never keeps a slot across structural changes.
 
 The data is **struct of arrays**: one `Float64Array` holds every `x`, another every `y`, and so on, instead of one object per entity. Looping over a field walks memory in order and creates no garbage. Columns double in size when full, and the arrays are replaced when that happens, so systems always read them through `store.columns`.
+
+### Views
+
+A view answers "which entities have all of these components, and none of those?" A system builds its views once and reuses them every step:
+
+```ts
+const movers = world.view([Transform, Velocity], { without: [Particle] })
+movers.each((entity, transformSlot, velocitySlot) => { ... })
+```
+
+`each` picks the **smallest** included store as the driver, because every entity in the answer must be in it. It walks the driver's dense array **from the end to the start**, so if the callback removes the current entity, the entity swapped into its slot has already been visited. For each entity it looks up the slot in every other included store and skips the entity if one is missing or an excluded store has it. The callback gets one slot per component, **in the order the components were listed**, and the driver's slot is free because it is the loop counter.
+
+The view holds no entity list of its own (it is _uncached_), so it never goes stale: entities added or removed between steps simply show up or drop out. `each` allocates nothing. `find` is `each` that stops at the first entity the predicate accepts, and `contains` and `slot` answer one-off questions.
+
+Bigger engines add _groups_, which reorder stores so matching entities share the same slot everywhere and need no lookups. They keep the same `each` shape, so they could replace this later without changing systems.
