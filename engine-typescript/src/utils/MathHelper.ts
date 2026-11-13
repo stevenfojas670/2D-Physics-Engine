@@ -1,4 +1,4 @@
-import { Vector2, Sub } from "@/Vector2"
+import { Vector2, subtract } from "@/Vector2"
 
 /**
  * MathHelper - A utility class providing mathematical operations for physics engine calculations.
@@ -28,33 +28,31 @@ class MathHelper {
 	 */
 	static calcCentroid(vertices: Array<Vector2>): Vector2 {
 		// Calculate polygon area (needed for centroid formula)
-		const A = this.calcArea(vertices)
+		const area = this.calcArea(vertices)
 		const length = vertices.length
-		let Cx = 0
-		let Cy = 0
+		let cx = 0
+		let cy = 0
 
 		// Apply shoelace centroid formula for each edge
 		for (let i = 0; i < length; i++) {
-			const i_next = this.Index(i + 1, length)
+			const iNext = this.wrapIndex(i + 1, length)
 
 			// Centroid X-component: sum of (x_i + x_next) * cross_product / (6 * A)
-			Cx +=
-				(vertices[i].x + vertices[i_next].x) *
-				(vertices[i].x * vertices[i_next].y -
-					vertices[i_next].x * vertices[i].y)
+			cx +=
+				(vertices[i].x + vertices[iNext].x) *
+				(vertices[i].x * vertices[iNext].y - vertices[iNext].x * vertices[i].y)
 
 			// Centroid Y-component: sum of (y_i + y_next) * cross_product / (6 * A)
-			Cy +=
-				(vertices[i].y + vertices[i_next].y) *
-				(vertices[i].x * vertices[i_next].y -
-					vertices[i_next].x * vertices[i].y)
+			cy +=
+				(vertices[i].y + vertices[iNext].y) *
+				(vertices[i].x * vertices[iNext].y - vertices[iNext].x * vertices[i].y)
 		}
 
 		// Normalize by 6 * area to get final centroid coordinates
-		Cx = Cx / (6 * A)
-		Cy = Cy / (6 * A)
+		cx = cx / (6 * area)
+		cy = cy / (6 * area)
 
-		return new Vector2(Cx, Cy)
+		return new Vector2(cx, cy)
 	}
 
 	/**
@@ -73,19 +71,19 @@ class MathHelper {
 	 */
 	static calcArea(vertices: Array<Vector2>): number {
 		// Apply shoelace formula: sum of (x_i * y_next - x_next * y_i) / 2
-		let A = 0
+		let area = 0
 		const length = vertices.length
 
 		for (let i = 0; i < length; i++) {
-			const i_next = this.Index(i + 1, length)
+			const iNext = this.wrapIndex(i + 1, length)
 
 			// Add cross product term for each edge
-			A +=
-				vertices[i].x * vertices[i_next].y - vertices[i_next].x * vertices[i].y
+			area +=
+				vertices[i].x * vertices[iNext].y - vertices[iNext].x * vertices[i].y
 		}
 
 		// Divide by 2 to get final area (returns absolute value implicitly)
-		return A / 2
+		return area / 2
 	}
 
 	/**
@@ -104,7 +102,7 @@ class MathHelper {
 	 * MathHelper.Index(4, 4);  // Returns 0 (first element after last)
 	 * MathHelper.Index(-1, 4); // Returns 3 (wraps to the end)
 	 */
-	static Index(idx: number, arraySize: number): number {
+	static wrapIndex(idx: number, arraySize: number): number {
 		return (idx + arraySize) % arraySize
 	}
 
@@ -159,7 +157,7 @@ class MathHelper {
 		const rotated = new Vector2(0, 0)
 
 		// Step 1: Get vector from pivot to point (translate to origin)
-		const direction = Sub(toRotateVertice, point)
+		const direction = subtract(toRotateVertice, point)
 
 		// Step 2: Apply 2D rotation matrix:
 		// [cos(θ)  -sin(θ)] [x]
@@ -171,7 +169,7 @@ class MathHelper {
 			direction.x * Math.sin(radians) + direction.y * Math.cos(radians)
 
 		// Step 3: Translate back relative to pivot point
-		rotated.Add(point)
+		rotated.add(point)
 		return rotated
 	}
 
@@ -200,17 +198,17 @@ class MathHelper {
 		// Calculate outward normal for each edge
 		for (let i = 0; i < vertices.length; i++) {
 			// Get edge vector from current vertex to next vertex
-			const direction = Sub(
-				vertices[this.Index(i + 1, vertices.length)],
+			const direction = subtract(
+				vertices[this.wrapIndex(i + 1, vertices.length)],
 				vertices[i],
 			)
 
 			// Normalize the edge vector to unit length
-			direction.Normalize()
+			direction.normalize()
 
 			// Rotate 90° counter-clockwise to get perpendicular normal
 			// This gives us the outward-pointing normal for collision detection
-			normals.push(direction.GetNormal())
+			normals.push(direction.perpendicular())
 		}
 
 		return normals

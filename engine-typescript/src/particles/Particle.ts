@@ -1,5 +1,5 @@
 import type { Shape } from "@/shapes/Shape"
-import { Vector2, Scale } from "@/Vector2"
+import { Vector2, scale } from "@/Vector2"
 
 /**
  * A particle is the simplest object that can be simulated in the
@@ -14,16 +14,16 @@ class Particle {
 	private inverseMass: number
 	private forceAccumulator: Vector2
 
-	constructor(_shape: Shape, _mass: number = 0) {
+	constructor(shape: Shape, mass: number = 0) {
 		/**
 		 * The shape will contain the particle details
 		 */
-		this.shape = _shape
+		this.shape = shape
 
 		/**
 		 * Mass to be used for gravity calculations
 		 */
-		this.mass = _mass
+		this.mass = mass
 
 		/**
 		 * Linear velocity of the particle.
@@ -61,8 +61,8 @@ class Particle {
 		 * useful to have objects with infinite mass (immovable) than
 		 * zero mass (completely unstable in numerical simulation).
 		 */
-		if (_mass > 0) {
-			this.inverseMass = 1.0 / _mass
+		if (mass > 0) {
+			this.inverseMass = 1.0 / mass
 		} else {
 			this.inverseMass = 0
 		}
@@ -95,22 +95,22 @@ class Particle {
 		 * new_acceleration = current_acceleration + force * inverse mass
 		 */
 		const resultingAcc = this.acceleration
-		resultingAcc.AddScaledVector(this.forceAccumulator, this.inverseMass)
+		resultingAcc.addScaled(this.forceAccumulator, this.inverseMass)
 
 		/**
 		 * Updates the current velocity with the following formula:
 		 * new_velocity = current_velocity + acceleration * time
 		 */
-		this.velocity.AddScaledVector(resultingAcc, deltaTime)
+		this.velocity.addScaled(resultingAcc, deltaTime)
 
 		/**
 		 * Updates the current position with the following formula:
 		 * new_position = current_position + velocity * time
 		 */
-		this.shape.move(Scale(this.velocity, deltaTime))
+		this.shape.move(scale(this.velocity, deltaTime))
 
 		// Impose drag
-		this.velocity.Scale(this.damping)
+		this.velocity.scale(this.damping)
 
 		// Clear forces
 		this.clearAccumulator()
@@ -121,7 +121,7 @@ class Particle {
 	 * @param {Vector2} force
 	 */
 	addForce(force: Vector2): void {
-		this.forceAccumulator.Add(force)
+		this.forceAccumulator.add(force)
 	}
 
 	/**
@@ -130,10 +130,10 @@ class Particle {
 
 	/**
 	 * Sets the current mass.
-	 * @param {number} _mass - Desired mass
+	 * @param {number} mass - Desired mass
 	 */
-	set setMass(_mass: number) {
-		this.mass = _mass
+	set setMass(mass: number) {
+		this.mass = mass
 	}
 
 	/**
@@ -146,11 +146,11 @@ class Particle {
 
 	/**
 	 * Sets the current position.
-	 * @param {number} _x - Vector2.x position
-	 * @param {number} _y - Vector2.y position
+	 * @param {number} x - Vector2.x position
+	 * @param {number} y - Vector2.y position
 	 */
-	setPosition(_x: number, _y: number): void {
-		this.shape.setCentroid(new Vector2(_x, _y))
+	setPosition(x: number, y: number): void {
+		this.shape.setCentroid(new Vector2(x, y))
 	}
 
 	/**
@@ -163,12 +163,12 @@ class Particle {
 
 	/**
 	 * Sets the current velocity.
-	 * @param {number} _x - Vector2.x velocity
-	 * @param {number} _y - Vector2.y velocity
+	 * @param {number} x - Vector2.x velocity
+	 * @param {number} y - Vector2.y velocity
 	 */
-	setVelocity(_x: number, _y: number): void {
-		this.velocity.x = _x
-		this.velocity.y = _y
+	setVelocity(x: number, y: number): void {
+		this.velocity.x = x
+		this.velocity.y = y
 	}
 
 	/**
@@ -181,12 +181,12 @@ class Particle {
 
 	/**
 	 * Sets the current acceleration.
-	 * @param {number} _x - Vector2.x acceleration
-	 * @param {number} _y - Vector2.y acceleration
+	 * @param {number} x - Vector2.x acceleration
+	 * @param {number} y - Vector2.y acceleration
 	 */
-	setAcceleration(_x: number, _y: number): void {
-		this.acceleration.x = _x
-		this.acceleration.y = _y
+	setAcceleration(x: number, y: number): void {
+		this.acceleration.x = x
+		this.acceleration.y = y
 	}
 
 	/**
@@ -199,10 +199,10 @@ class Particle {
 
 	/**
 	 * Sets the current damping.
-	 * @param {number} _damping - Desired damping value
+	 * @param {number} damping - Desired damping value
 	 */
-	setDamping(_damping: number): void {
-		this.damping = _damping
+	setDamping(damping: number): void {
+		this.damping = damping
 	}
 
 	/**

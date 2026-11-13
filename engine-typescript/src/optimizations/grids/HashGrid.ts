@@ -1,4 +1,4 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import type { Vector2 } from "@/Vector2"
 import { Grid } from "./Grid"
 
@@ -12,7 +12,7 @@ class HashGrid extends Grid {
 	/**
 	 * Sparse storage of occupied hash buckets mapped to rigidbody lists.
 	 */
-	private hashMap: Map<number, Rigidbody[]>
+	private hashMap: Map<number, RigidBody[]>
 
 	/**
 	 * Modulus used to constrain hashed cell coordinates to a bounded key space.
@@ -105,7 +105,7 @@ class HashGrid extends Grid {
 	 * @param id - Hashed cell id.
 	 * @returns All rigidbodies stored in the bucket, or an empty array if none exist.
 	 */
-	getContentOfCell(id: number): Rigidbody[] {
+	getContentOfCell(id: number): RigidBody[] {
 		return this.hashMap.get(id) ?? []
 	}
 
@@ -128,9 +128,9 @@ class HashGrid extends Grid {
 	 * @param rigidBody - Rigidbody whose potential neighbors should be returned.
 	 * @returns Candidate nearby rigidbodies for broad-phase collision testing.
 	 */
-	getNeighborRigidBodies(rigIndex: number, rigidBody: Rigidbody): Rigidbody[] {
+	getNeighborRigidBodies(rigIndex: number, rigidBody: RigidBody): RigidBody[] {
 		const occupiedCells = this.rigidBodiesToCells[rigIndex]
-		const neighborRigidBodies: Rigidbody[] = []
+		const neighborRigidBodies: RigidBody[] = []
 
 		for (let i = 0; i < occupiedCells.length; i++) {
 			const cellHash = occupiedCells[i]

@@ -1,6 +1,6 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import { Vector2 } from "@/Vector2"
-import MathHelper from "@/utils/MathHelpers"
+import MathHelper from "@/utils/MathHelper"
 import { DrawUtils } from "@/utils/DrawUtils"
 import { Grid } from "./Grid"
 
@@ -15,7 +15,7 @@ class SpatialGrid extends Grid {
 	/**
 	 * Flattened 2D array of grid cells storing rigidbodies by cell index.
 	 */
-	private cells: Rigidbody[][]
+	private cells: RigidBody[][]
 
 	/**
 	 * Number of cells spanning the world on the x-axis.
@@ -122,7 +122,7 @@ class SpatialGrid extends Grid {
 	 * @param id - Flattened cell index.
 	 * @returns The cell contents, or an empty array if the id is out of range.
 	 */
-	getContentOfCell(id: number): Rigidbody[] {
+	getContentOfCell(id: number): RigidBody[] {
 		return this.cells[id] ?? []
 	}
 
@@ -145,9 +145,9 @@ class SpatialGrid extends Grid {
 	 * @param rigidBody - Rigidbody whose potential neighbors should be returned.
 	 * @returns Candidate nearby rigidbodies for broad-phase collision testing.
 	 */
-	getNeighborRigidBodies(rigIndex: number, rigidBody: Rigidbody): Rigidbody[] {
+	getNeighborRigidBodies(rigIndex: number, rigidBody: RigidBody): RigidBody[] {
 		const occupiedCells = this.rigidBodiesToCells[rigIndex]
-		const neighborRigidBodies: Rigidbody[] = []
+		const neighborRigidBodies: RigidBody[] = []
 
 		for (let i = 0; i < occupiedCells.length; i++) {
 			const occupiedCellIndex = occupiedCells[i]

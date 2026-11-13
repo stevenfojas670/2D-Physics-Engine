@@ -1,4 +1,4 @@
-import type { ControllerKeys } from "./types/controller/controller.type"
+import type { ControllerKeys } from "./types/controller/controller.types"
 
 /**
  * Handles keyboard input state for the simulation.

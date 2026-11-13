@@ -1,13 +1,13 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import { DrawUtils } from "@/utils/DrawUtils"
 
 /**
  * Stores the relationship between two rigidbodies joined at anchor points.
  */
 class JointConnection {
-	private rigidBodyA: Rigidbody
+	private rigidBodyA: RigidBody
 	private anchorAID: number
-	private rigidBodyB: Rigidbody
+	private rigidBodyB: RigidBody
 	private anchorBID: number
 	private color: string
 
@@ -18,9 +18,9 @@ class JointConnection {
 	 * @param anchorBID - Anchor id on the second body.
 	 */
 	constructor(
-		rigidBodyA: Rigidbody,
+		rigidBodyA: RigidBody,
 		anchorAID: number,
-		rigidBodyB: Rigidbody,
+		rigidBodyB: RigidBody,
 		anchorBID: number,
 	) {
 		this.rigidBodyA = rigidBodyA
@@ -47,14 +47,14 @@ class JointConnection {
 	/**
 	 * @returns First rigidbody in the connection.
 	 */
-	getRigidBodyA(): Rigidbody {
+	getRigidBodyA(): RigidBody {
 		return this.rigidBodyA
 	}
 
 	/**
 	 * @returns Second rigidbody in the connection.
 	 */
-	getRigidBodyB(): Rigidbody {
+	getRigidBodyB(): RigidBody {
 		return this.rigidBodyB
 	}
 

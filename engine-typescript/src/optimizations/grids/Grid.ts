@@ -1,4 +1,4 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import type { Vector2 } from "@/Vector2"
 
 /**
@@ -23,7 +23,7 @@ abstract class Grid {
 	 *
 	 * The grid reads from this list whenever it rebuilds its spatial index.
 	 */
-	protected rigidBodies!: Rigidbody[]
+	protected rigidBodies!: RigidBody[]
 
 	/**
 	 * Reverse lookup from rigidbody index to the grid cells it currently occupies.
@@ -47,7 +47,7 @@ abstract class Grid {
 	 * @param worldSize - Size of the simulated world.
 	 * @param rigidBodies - Mutable rigidbody list managed by the simulation.
 	 */
-	initialize(worldSize: Vector2, rigidBodies: Rigidbody[]): void {
+	initialize(worldSize: Vector2, rigidBodies: RigidBody[]): void {
 		this.worldSize = worldSize
 		this.rigidBodies = rigidBodies
 		this.resetBodyCellMap()
@@ -99,7 +99,7 @@ abstract class Grid {
 	 * @param id - Implementation-defined cell identifier.
 	 * @returns All rigidbodies stored in the requested cell.
 	 */
-	abstract getContentOfCell(id: number): Rigidbody[]
+	abstract getContentOfCell(id: number): RigidBody[]
 
 	/**
 	 * Convert a world-space position into an implementation-defined cell id.
@@ -121,8 +121,8 @@ abstract class Grid {
 	 */
 	abstract getNeighborRigidBodies(
 		rigIndex: number,
-		rigidBody: Rigidbody,
-	): Rigidbody[]
+		rigidBody: RigidBody,
+	): RigidBody[]
 
 	/**
 	 * Optional debug rendering hook for visualizing the grid.

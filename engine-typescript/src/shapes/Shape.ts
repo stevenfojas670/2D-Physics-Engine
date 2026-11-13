@@ -1,8 +1,8 @@
-import { Vector2, Sub, Add } from "@/Vector2"
+import { Vector2, subtract, add } from "@/Vector2"
 import { BoundingBox } from "@/optimizations/boundingVolumes/BoundingBox"
 import { BoundingVolume } from "@/optimizations/boundingVolumes/BoundingVolume"
 import { DrawUtils } from "@/utils/DrawUtils"
-import MathHelper from "@/utils/MathHelpers"
+import MathHelper from "@/utils/MathHelper"
 
 /**
  * @class Shape
@@ -92,7 +92,7 @@ abstract class Shape {
 	createAnchorPoint(localAnchorPos: Vector2): number {
 		this.anchorPoints.set(
 			this.anchorPoints.size,
-			Add(this.centroid, localAnchorPos),
+			add(this.centroid, localAnchorPos),
 		)
 		const id = this.anchorPoints.size - 1
 		console.log(`Created anchor with id [${id}]`)
@@ -112,8 +112,8 @@ abstract class Shape {
 		for (let i = 0; i < this.vertices.length; i++) {
 			const vertex = this.vertices[i]
 			const normal = this.normals[i]
-			const vertToPoint = Sub(pos, vertex)
-			const dot = vertToPoint.Dot(normal)
+			const vertToPoint = subtract(pos, vertex)
+			const dot = vertToPoint.dot(normal)
 			if (dot > 0) {
 				return false
 			} else {
@@ -192,15 +192,15 @@ abstract class Shape {
 	 */
 	move(delta: Vector2): void {
 		for (let i = 0; i < this.vertices.length; i++) {
-			this.vertices[i].Add(delta)
+			this.vertices[i].add(delta)
 		}
-		this.centroid.Add(delta)
+		this.centroid.add(delta)
 
-		this.boundingBox.topLeft.Add(delta)
-		this.boundingBox.bottomRight.Add(delta)
+		this.boundingBox.topLeft.add(delta)
+		this.boundingBox.bottomRight.add(delta)
 
 		for (const [key, anchorPos] of this.anchorPoints.entries()) {
-			this.anchorPoints.set(key, Add(anchorPos, delta))
+			this.anchorPoints.set(key, add(anchorPos, delta))
 		}
 	}
 

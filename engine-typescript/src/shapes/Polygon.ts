@@ -1,6 +1,6 @@
-import { Vector2, Add, Sub, Scale } from "@/Vector2"
+import { Vector2, add, subtract, scale } from "@/Vector2"
 import { Shape } from "./Shape"
-import MathHelper from "@/utils/MathHelpers"
+import MathHelper from "@/utils/MathHelper"
 import { DrawUtils } from "@/utils/DrawUtils"
 
 /**
@@ -41,14 +41,17 @@ class Polygon extends Shape {
 		const massPerTriangleFace = mass / this.vertices.length
 
 		for (let i = 0; i < this.vertices.length; i++) {
-			const centerToVertice0 = Sub(this.vertices[i], this.centroid)
-			const indexVertice1 = MathHelper.Index(i + 1, this.vertices.length)
-			const centerToVertice1 = Sub(this.vertices[indexVertice1], this.centroid)
+			const centerToVertice0 = subtract(this.vertices[i], this.centroid)
+			const indexVertice1 = MathHelper.wrapIndex(i + 1, this.vertices.length)
+			const centerToVertice1 = subtract(
+				this.vertices[indexVertice1],
+				this.centroid,
+			)
 			const inertiaTriangle =
 				(massPerTriangleFace *
-					(centerToVertice0.Length2() +
-						centerToVertice1.Length2() +
-						centerToVertice0.Dot(centerToVertice1))) /
+					(centerToVertice0.lengthSquared() +
+						centerToVertice1.lengthSquared() +
+						centerToVertice0.dot(centerToVertice1))) /
 				6
 			inertia += inertiaTriangle
 		}
@@ -72,16 +75,16 @@ class Polygon extends Shape {
 
 		// Drawing the normal vector
 		for (let i = 0; i < this.vertices.length; i++) {
-			const direction = Sub(
-				this.vertices[MathHelper.Index(i + 1, this.vertices.length)],
+			const direction = subtract(
+				this.vertices[MathHelper.wrapIndex(i + 1, this.vertices.length)],
 				this.vertices[i],
 			)
 			// This is the midpoint between vertice1 and vertice2
-			const center = Add(this.vertices[i], Scale(direction, 0.5))
+			const center = add(this.vertices[i], scale(direction, 0.5))
 
 			DrawUtils.drawLine(
 				center,
-				Add(center, Scale(this.normals[i], 15)),
+				add(center, scale(this.normals[i], 15)),
 				"black",
 			)
 		}

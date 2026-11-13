@@ -1,4 +1,4 @@
-import { Vector2, Sub } from "@/Vector2"
+import { Vector2, subtract } from "@/Vector2"
 import { Shape } from "./Shape"
 import { DrawUtils } from "@/utils/DrawUtils"
 
@@ -72,7 +72,7 @@ class Circle extends Shape {
 	 * @returns True if the point is inside the circle.
 	 */
 	isPointInside(position: Vector2): boolean {
-		const distanceToCenter = Sub(this.centroid, position).Length2()
+		const distanceToCenter = subtract(this.centroid, position).lengthSquared()
 		return this.radius * this.radius > distanceToCenter
 	}
 

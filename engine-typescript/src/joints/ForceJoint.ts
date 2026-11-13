@@ -1,4 +1,4 @@
-import { Scale, Sub } from "@/Vector2"
+import { scale, subtract } from "@/Vector2"
 import { Joint } from "./Joint"
 import type { JointConnection } from "./JointConnection"
 
@@ -24,9 +24,9 @@ class ForceJoint extends Joint {
 		const anchorAPos = this.getAnchorAPos()
 		const anchorBPos = this.getAnchorBPos()
 
-		const direction = Sub(anchorBPos, anchorAPos)
-		direction.Normalize()
-		this.rigA.addForceAtPoint(anchorBPos, Scale(direction, this.strength * 0.5))
+		const direction = subtract(anchorBPos, anchorAPos)
+		direction.normalize()
+		this.rigA.addForceAtPoint(anchorBPos, scale(direction, this.strength * 0.5))
 	}
 
 	/**
@@ -36,9 +36,9 @@ class ForceJoint extends Joint {
 		const anchorAPos = this.getAnchorAPos()
 		const anchorBPos = this.getAnchorBPos()
 
-		const direction = Sub(anchorAPos, anchorBPos)
-		direction.Normalize()
-		this.rigB.addForceAtPoint(anchorAPos, Scale(direction, this.strength * 0.5))
+		const direction = subtract(anchorAPos, anchorBPos)
+		direction.normalize()
+		this.rigB.addForceAtPoint(anchorAPos, scale(direction, this.strength * 0.5))
 	}
 }
 

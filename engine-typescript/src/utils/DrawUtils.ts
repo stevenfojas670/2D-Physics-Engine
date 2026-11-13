@@ -1,4 +1,4 @@
-import { Vector2, Add, Sub, Scale } from "@/Vector2"
+import { Vector2, add, subtract, scale } from "@/Vector2"
 
 /**
  * Utility helpers for drawing simple shapes and text to a canvas.
@@ -118,29 +118,29 @@ class DrawUtils {
 		this.drawLine(startPosition, arrowHeadPosition, color)
 
 		// Calculate the direction
-		const direction = Sub(arrowHeadPosition, startPosition)
-		direction.Normalize()
+		const direction = subtract(arrowHeadPosition, startPosition)
+		direction.normalize()
 
 		// Calculate the center of the arrow head
-		const arrowHeadCenter = Sub(arrowHeadPosition, Scale(direction, 10))
+		const arrowHeadCenter = subtract(arrowHeadPosition, scale(direction, 10))
 
 		// Getting the normalized direction of the left arrow head
-		const directionToLeftArrowHead = direction.GetNormal()
+		const directionToLeftArrowHead = direction.perpendicular()
 
 		// Scaling the left arrow head position, because it was normalized.
 		// We scale because the normalized position was only 1 unit over from
 		// the arrow head center.
-		const leftArrowHeadPosition = Add(
+		const leftArrowHeadPosition = add(
 			arrowHeadCenter,
-			Scale(directionToLeftArrowHead, 5),
+			scale(directionToLeftArrowHead, 5),
 		)
 		this.drawLine(leftArrowHeadPosition, arrowHeadPosition, color)
 
 		// The right arrow head is opposite of the left, so we make its direction opposite.
-		const directionToRightArrowHead = Scale(direction.GetNormal(), -1)
-		const rightArrowHeadPosition = Add(
+		const directionToRightArrowHead = scale(direction.perpendicular(), -1)
+		const rightArrowHeadPosition = add(
 			arrowHeadCenter,
-			Scale(directionToRightArrowHead, 5),
+			scale(directionToRightArrowHead, 5),
 		)
 		this.drawLine(rightArrowHeadPosition, arrowHeadPosition, color)
 	}

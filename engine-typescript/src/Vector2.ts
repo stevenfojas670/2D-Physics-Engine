@@ -17,9 +17,9 @@ class Vector2 {
 	 * @param x - The X component.
 	 * @param y - The Y component.
 	 */
-	constructor(_x: number = 0.0, _y: number = 0.0) {
-		this.x = _x
-		this.y = _y
+	constructor(x: number = 0.0, y: number = 0.0) {
+		this.x = x
+		this.y = y
 	}
 
 	/**
@@ -27,7 +27,7 @@ class Vector2 {
 	 *
 	 * This is equivalent to multiplying both components by -1.
 	 */
-	Invert(): void {
+	invert(): void {
 		this.x = -this.x
 		this.y = -this.y
 	}
@@ -37,8 +37,8 @@ class Vector2 {
 	 *
 	 * If the vector is zero length, it remains unchanged.
 	 */
-	Normalize(): void {
-		const length = this.Length()
+	normalize(): void {
+		const length = this.length()
 
 		if (length > 0) {
 			this.x /= length
@@ -51,7 +51,7 @@ class Vector2 {
 	 *
 	 * @returns The squared magnitude (x^2 + y^2).
 	 */
-	Length2(): number {
+	lengthSquared(): number {
 		return this.x * this.x + this.y * this.y
 	}
 
@@ -60,7 +60,7 @@ class Vector2 {
 	 *
 	 * @returns The length of the vector.
 	 */
-	Length(): number {
+	length(): number {
 		return Math.sqrt(this.x * this.x + this.y * this.y)
 	}
 
@@ -69,7 +69,7 @@ class Vector2 {
 	 *
 	 * @returns A new vector rotated 90 degrees clockwise.
 	 */
-	GetNormal(): Vector2 {
+	perpendicular(): Vector2 {
 		return new Vector2(this.y, -this.x)
 	}
 
@@ -79,7 +79,7 @@ class Vector2 {
 	 * @param vec - The vector to dot with.
 	 * @returns The dot product.
 	 */
-	Dot(vec: Vector2): number {
+	dot(vec: Vector2): number {
 		return this.x * vec.x + this.y * vec.y
 	}
 
@@ -88,7 +88,7 @@ class Vector2 {
 	 *
 	 * @returns A new vector with the same components.
 	 */
-	Cpy(): Vector2 {
+	copy(): Vector2 {
 		return new Vector2(this.x, this.y)
 	}
 
@@ -97,7 +97,7 @@ class Vector2 {
 	 *
 	 * @param vec - The vector to add.
 	 */
-	Add(vec: Vector2): void {
+	add(vec: Vector2): void {
 		this.x += vec.x
 		this.y += vec.y
 	}
@@ -108,7 +108,7 @@ class Vector2 {
 	 * @param vec - The vector to add.
 	 * @returns A new vector representing the sum.
 	 */
-	Add_Cpy(vec: Vector2): Vector2 {
+	plus(vec: Vector2): Vector2 {
 		return new Vector2(this.x + vec.x, this.y + vec.y)
 	}
 
@@ -117,7 +117,7 @@ class Vector2 {
 	 *
 	 * @param vec - The vector to subtract.
 	 */
-	Sub(vec: Vector2): void {
+	subtract(vec: Vector2): void {
 		this.x -= vec.x
 		this.y -= vec.y
 	}
@@ -128,7 +128,7 @@ class Vector2 {
 	 * @param vec - The vector to subtract.
 	 * @returns A new vector representing the difference.
 	 */
-	Sub_Cpy(vec: Vector2): Vector2 {
+	minus(vec: Vector2): Vector2 {
 		return new Vector2(this.x - vec.x, this.y - vec.y)
 	}
 
@@ -137,7 +137,7 @@ class Vector2 {
 	 *
 	 * @param scalar - The value to scale by.
 	 */
-	Scale(scalar: number): void {
+	scale(scalar: number): void {
 		this.x *= scalar
 		this.y *= scalar
 	}
@@ -148,7 +148,7 @@ class Vector2 {
 	 * @param scalar - The scale factor.
 	 * @returns A new scaled vector.
 	 */
-	Multiply_Cpy(scalar: number): Vector2 {
+	times(scalar: number): Vector2 {
 		return new Vector2(this.x * scalar, this.y * scalar)
 	}
 
@@ -157,7 +157,7 @@ class Vector2 {
 	 *
 	 * @param vec - The vector to multiply with.
 	 */
-	ComponentProductUpdate(vec: Vector2): void {
+	multiplyComponents(vec: Vector2): void {
 		this.x *= vec.x
 		this.y *= vec.y
 	}
@@ -168,7 +168,7 @@ class Vector2 {
 	 * @param vec - The vector to scale and add.
 	 * @param scalar - The scale factor.
 	 */
-	AddScaledVector(vec: Vector2, scalar: number): void {
+	addScaled(vec: Vector2, scalar: number): void {
 		this.x += vec.x * scalar
 		this.y += vec.y * scalar
 	}
@@ -179,14 +179,14 @@ class Vector2 {
 	 * @param vec - The other vector.
 	 * @returns The scalar cross product result.
 	 */
-	Cross(vec: Vector2): number {
+	cross(vec: Vector2): number {
 		return this.x * vec.y - this.y * vec.x
 	}
 
 	/**
 	 * Log the vector components to the console.
 	 */
-	Log(): void {
+	log(): void {
 		console.log(`x: ${this.x}, y: ${this.y}`)
 	}
 }
@@ -198,7 +198,7 @@ class Vector2 {
  * @param vecB - The second vector.
  * @returns The sum of both vectors.
  */
-function Add(vecA: Vector2, vecB: Vector2): Vector2 {
+function add(vecA: Vector2, vecB: Vector2): Vector2 {
 	return new Vector2(vecA.x + vecB.x, vecA.y + vecB.y)
 }
 
@@ -209,7 +209,7 @@ function Add(vecA: Vector2, vecB: Vector2): Vector2 {
  * @param vecB - The vector to subtract.
  * @returns The difference vector.
  */
-function Sub(vecA: Vector2, vecB: Vector2): Vector2 {
+function subtract(vecA: Vector2, vecB: Vector2): Vector2 {
 	return new Vector2(vecA.x - vecB.x, vecA.y - vecB.y)
 }
 
@@ -220,7 +220,7 @@ function Sub(vecA: Vector2, vecB: Vector2): Vector2 {
  * @param scale - The scale factor.
  * @returns The scaled vector.
  */
-function Scale(vecA: Vector2, scale: number): Vector2 {
+function scale(vecA: Vector2, scale: number): Vector2 {
 	return new Vector2(vecA.x * scale, vecA.y * scale)
 }
 
@@ -231,8 +231,8 @@ function Scale(vecA: Vector2, scale: number): Vector2 {
  * @param vecB - The second vector.
  * @returns The component-wise product.
  */
-function ComponentProduct(vecA: Vector2, vecB: Vector2): Vector2 {
+function componentProduct(vecA: Vector2, vecB: Vector2): Vector2 {
 	return new Vector2(vecA.x * vecB.x, vecA.y * vecB.y)
 }
 
-export { Vector2, Add, Sub, Scale, ComponentProduct }
+export { Vector2, add, subtract, scale, componentProduct }

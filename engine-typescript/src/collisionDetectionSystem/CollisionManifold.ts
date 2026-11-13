@@ -1,6 +1,6 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import { DrawUtils } from "@/utils/DrawUtils"
-import { Add, Scale, Sub, Vector2 } from "@/Vector2"
+import { add, scale, subtract, Vector2 } from "@/Vector2"
 
 /**
  * @abstract A collision manifold are contact points of a collision. When a
@@ -13,8 +13,8 @@ class CollisionManifold {
 	private depth: number
 	private normal: Vector2
 	private penetrationPoint: Vector2
-	private rigA: Rigidbody | null
-	private rigB: Rigidbody | null
+	private rigA: RigidBody | null
+	private rigB: RigidBody | null
 
 	constructor(depth: number, normal: Vector2, penetrationPoint: Vector2) {
 		this.depth = depth
@@ -39,11 +39,11 @@ class CollisionManifold {
 		if (this.rigA?.getKinematicFlag() && this.rigB?.getKinematicFlag()) return
 
 		// Calculate direction from penetration point to the center
-		const penetrationToCentroidA = Sub(
+		const penetrationToCentroidA = subtract(
 			this.penetrationPoint,
 			this.rigA!.getShape().getCentroid(),
 		)
-		const penetrationToCentroidB = Sub(
+		const penetrationToCentroidB = subtract(
 			this.penetrationPoint,
 			this.rigB!.getShape().getCentroid(),
 		)
@@ -64,11 +64,11 @@ class CollisionManifold {
 		)
 
 		// Linear velocity at penetration point with respect to the angular velocity.
-		const velA = Add(
+		const velA = add(
 			this.rigA!.getVelocity(),
 			angularVelocityPenetrationCentroidA,
 		)
-		const velB = Add(
+		const velB = add(
 			this.rigB!.getVelocity(),
 			angularVelocityPenetrationCentroidB,
 		)
@@ -83,8 +83,8 @@ class CollisionManifold {
 		// Calculate relative velocity
 		// relativeVelocity = v1 - v2
 		// k = [-(e+1) * relativeVelocity.Dot(normal)] / (1/m1 + 1/m2) * (normal * normal)
-		const relativeVelocity = Sub(velB, velA)
-		const relVelocityAlongNormal = relativeVelocity.Dot(this.normal)
+		const relativeVelocity = subtract(velB, velA)
+		const relVelocityAlongNormal = relativeVelocity.dot(this.normal)
 
 		if (relVelocityAlongNormal > 0) return
 
@@ -100,8 +100,8 @@ class CollisionManifold {
 			(this.rigA!.getMaterial().getRestitution() +
 				this.rigB!.getMaterial().getRestitution())
 
-		const pToCentroidCrossNormalA = penetrationToCentroidA.Cross(this.normal)
-		const pToCentroidCrossNormalB = penetrationToCentroidB.Cross(this.normal)
+		const pToCentroidCrossNormalA = penetrationToCentroidA.cross(this.normal)
+		const pToCentroidCrossNormalB = penetrationToCentroidB.cross(this.normal)
 
 		const rigAInvInertia = this.rigA!.getInverseInertia()
 		const rigBInvInertia = this.rigB!.getInverseInertia()
@@ -113,17 +113,20 @@ class CollisionManifold {
 		let linearImpulse = -(e + 1) * relVelocityAlongNormal
 		linearImpulse /=
 			(this.rigA!.getInverseMass() + this.rigB!.getInverseMass() + crossNSum) *
-			this.normal.Dot(this.normal)
+			this.normal.dot(this.normal)
 
 		// Calculate the post-impulse velocity
 		// v1` = v1 + kn / m1
 		// v2` = v2 - kn / m2
-		const kn = Scale(this.normal, linearImpulse)
+		const kn = scale(this.normal, linearImpulse)
 		this.rigA!.setVelocity(
-			Sub(this.rigA!.getVelocity(), Scale(kn, this.rigA!.getInverseMass())),
+			subtract(
+				this.rigA!.getVelocity(),
+				scale(kn, this.rigA!.getInverseMass()),
+			),
 		)
 		this.rigB?.setVelocity(
-			Add(this.rigB.getVelocity(), Scale(kn, this.rigB.getInverseMass())),
+			add(this.rigB.getVelocity(), scale(kn, this.rigB.getInverseMass())),
 		)
 
 		this.rigA!.setAngularVelocity(
@@ -141,12 +144,12 @@ class CollisionManifold {
 		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
 		 * Chapter 12.2.2 Frictional Forces
 		 */
-		const velocityInNormalDirection = Scale(
+		const velocityInNormalDirection = scale(
 			this.normal,
-			relativeVelocity.Dot(this.normal),
+			relativeVelocity.dot(this.normal),
 		)
-		let tangent = Sub(relativeVelocity, velocityInNormalDirection)
-		tangent = Scale(tangent, -1)
+		let tangent = subtract(relativeVelocity, velocityInNormalDirection)
+		tangent = scale(tangent, -1)
 
 		const friction = Math.min(
 			this.rigA!.getMaterial().getFriction(),
@@ -154,43 +157,43 @@ class CollisionManifold {
 		)
 
 		if (tangent.x > 0.00001 || tangent.y > 0.00001) {
-			tangent.Normalize()
+			tangent.normalize()
 			DrawUtils.drawArrow(
 				this.rigA!.getShape().getCentroid(),
-				Add(this.rigA!.getShape().getCentroid(), Scale(tangent, 40)),
+				add(this.rigA!.getShape().getCentroid(), scale(tangent, 40)),
 				"blue",
 			)
 		}
 
-		const pToCentroidCrossTangentA = penetrationToCentroidA.Cross(tangent)
-		const pToCentroidCrossTangentB = penetrationToCentroidB.Cross(tangent)
+		const pToCentroidCrossTangentA = penetrationToCentroidA.cross(tangent)
+		const pToCentroidCrossTangentB = penetrationToCentroidB.cross(tangent)
 
 		const crossSumTangent =
 			pToCentroidCrossTangentA * pToCentroidCrossTangentA * rigAInvInertia +
 			pToCentroidCrossTangentB * pToCentroidCrossTangentB * rigBInvInertia
 
-		let frictionalImpulse = -(e + 1) * relativeVelocity.Dot(tangent) * friction
+		let frictionalImpulse = -(e + 1) * relativeVelocity.dot(tangent) * friction
 		frictionalImpulse /=
 			(this.rigA!.getInverseMass() +
 				this.rigB!.getInverseMass() +
 				crossSumTangent) *
-			this.normal.Dot(this.normal)
+			this.normal.dot(this.normal)
 
 		if (frictionalImpulse > linearImpulse) {
 			frictionalImpulse = linearImpulse
 		}
 
-		const frictionalImpulseVector = Scale(tangent, frictionalImpulse)
+		const frictionalImpulseVector = scale(tangent, frictionalImpulse)
 		this.rigA!.setVelocity(
-			Sub(
+			subtract(
 				this.rigA!.getVelocity(),
-				Scale(frictionalImpulseVector, this.rigA!.getInverseMass()),
+				scale(frictionalImpulseVector, this.rigA!.getInverseMass()),
 			),
 		)
 		this.rigB!.setVelocity(
-			Add(
+			add(
 				this.rigB!.getVelocity(),
-				Scale(frictionalImpulseVector, this.rigB!.getInverseMass()),
+				scale(frictionalImpulseVector, this.rigB!.getInverseMass()),
 			),
 		)
 		this.rigA!.setAngularVelocity(
@@ -214,9 +217,9 @@ class CollisionManifold {
 			(this.depth /
 				(this.rigA!.getInverseMass() + this.rigB!.getInverseMass())) *
 			correctionPercentage
-		const correctionVec = Scale(this.normal, amountToCorrect)
-		const rigAMovement = Scale(correctionVec, this.rigA!.getInverseMass() * -1)
-		const rigBMovement = Scale(correctionVec, this.rigB!.getInverseMass())
+		const correctionVec = scale(this.normal, amountToCorrect)
+		const rigAMovement = scale(correctionVec, this.rigA!.getInverseMass() * -1)
+		const rigBMovement = scale(correctionVec, this.rigB!.getInverseMass())
 
 		if (!this.rigA?.getKinematicFlag()) {
 			this.rigA!.getShape().move(rigAMovement)
@@ -227,11 +230,11 @@ class CollisionManifold {
 		}
 	}
 
-	setRigidbodyA(rig: Rigidbody): void {
+	setRigidbodyA(rig: RigidBody): void {
 		this.rigA = rig
 	}
 
-	setRigidbodyB(rig: Rigidbody): void {
+	setRigidbodyB(rig: RigidBody): void {
 		this.rigB = rig
 	}
 
@@ -248,9 +251,9 @@ class CollisionManifold {
 	}
 
 	draw(): void {
-		const startPoint = Add(
+		const startPoint = add(
 			this.penetrationPoint,
-			Scale(this.normal, this.depth * -1),
+			scale(this.normal, this.depth * -1),
 		)
 
 		DrawUtils.drawArrow(startPoint, this.penetrationPoint, "gray")

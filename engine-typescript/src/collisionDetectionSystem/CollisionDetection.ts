@@ -1,9 +1,9 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import { Circle } from "@/shapes/Circle"
 import { Polygon } from "@/shapes/Polygon"
-import { Add, Scale, Sub, Vector2 } from "@/Vector2"
+import { add, scale, subtract, Vector2 } from "@/Vector2"
 import { CollisionManifold } from "./CollisionManifold"
-import MathHelper from "@/utils/MathHelpers"
+import MathHelper from "@/utils/MathHelper"
 
 /**
  *
@@ -16,8 +16,8 @@ class CollisionDetection {
 	 * @returns {CollisionManifold} collisionManifold
 	 */
 	static checkCollisions(
-		rigA: Rigidbody,
-		rigB: Rigidbody,
+		rigA: RigidBody,
+		rigB: RigidBody,
 	): CollisionManifold | null {
 		let collisionManifold = null
 		const shapeA = rigA.getShape()
@@ -53,10 +53,10 @@ class CollisionDetection {
 		const centroidB = shapeCircleB.getCentroid()
 
 		// Get direction from one circle to another
-		const direction = Sub(centroidB, centroidA)
+		const direction = subtract(centroidB, centroidA)
 
 		// Get distance between centroids
-		const dist = direction.Length2()
+		const dist = direction.lengthSquared()
 
 		// Get radius of circles and calculate the sum of the circles
 		// rSquare = (a.radius + b.radius)^2
@@ -64,12 +64,12 @@ class CollisionDetection {
 		const rSquare = rSum * rSum
 
 		if (dist < rSquare) {
-			const directionLength = direction.Length()
-			const penetrationNormal = Scale(direction, 1 / directionLength)
+			const directionLength = direction.length()
+			const penetrationNormal = scale(direction, 1 / directionLength)
 			const penetrationDepth = directionLength - rSum
-			const penetrationPoint = Add(
+			const penetrationPoint = add(
 				centroidA,
-				Scale(penetrationNormal, shapeCircleA.getRadius()),
+				scale(penetrationNormal, shapeCircleA.getRadius()),
 			)
 
 			return new CollisionManifold(
@@ -96,10 +96,10 @@ class CollisionDetection {
 		const centroidB = shapeCircleB.getCentroid()
 
 		// Get direction from one circle to another
-		const direction = Sub(centroidA, centroidB)
+		const direction = subtract(centroidA, centroidB)
 
 		// Get distance between centroids
-		const dist = direction.Length()
+		const dist = direction.length()
 
 		// Get radius of circles
 		const radiusA = shapeCircleA.getRadius()
@@ -109,12 +109,12 @@ class CollisionDetection {
 		const rSquare = rSum * rSum
 
 		if (dist < rSquare) {
-			const directionLength = direction.Length()
-			const penetrationNormal = Scale(direction, 1 / directionLength)
+			const directionLength = direction.length()
+			const penetrationNormal = scale(direction, 1 / directionLength)
 			const penetrationDepth = directionLength - rSum
-			const penetrationPoint = Add(
+			const penetrationPoint = add(
 				centroidA,
-				Scale(penetrationNormal, shapeCircleA.getRadius()),
+				scale(penetrationNormal, shapeCircleA.getRadius()),
 			)
 
 			return new CollisionManifold(
@@ -157,7 +157,7 @@ class CollisionDetection {
 			// @question Why do I scale by -1 here?
 			resultingContact = new CollisionManifold(
 				contactPolyB.getDepth(),
-				Scale(contactPolyB.getNormal(), -1),
+				scale(contactPolyB.getNormal(), -1),
 				contactPolyB.getPenetrationPoint(),
 			)
 		}
@@ -230,9 +230,10 @@ class CollisionDetection {
 		let supportPoint = null
 
 		for (let i = 0; i < otherPolygonVertices.length; i++) {
-			const penetrationDepth = Sub(otherPolygonVertices[i], pointOnEdge).Dot(
-				Scale(normalOnEdge, -1),
-			)
+			const penetrationDepth = subtract(
+				otherPolygonVertices[i],
+				pointOnEdge,
+			).dot(scale(normalOnEdge, -1))
 
 			if (penetrationDepth > largestPenetrationDepth) {
 				largestPenetrationDepth = penetrationDepth
@@ -282,15 +283,15 @@ class CollisionDetection {
 			const currVertex = polygonVertices[i]
 			const currNormal = polygonNormals[i]
 			const nextVertex =
-				polygonVertices[MathHelper.Index(i + 1, verticesLength)]
+				polygonVertices[MathHelper.wrapIndex(i + 1, verticesLength)]
 
-			const dirToNext = Sub(nextVertex, currVertex)
-			const dirToNextLength = dirToNext.Length()
-			dirToNext.Normalize()
+			const dirToNext = subtract(nextVertex, currVertex)
+			const dirToNextLength = dirToNext.length()
+			dirToNext.normalize()
 
-			const vertToCircle = Sub(circleCentroid, currVertex)
-			const circleProjectDirToNextProjection = vertToCircle.Dot(dirToNext)
-			const circleDirToNormalProjection = vertToCircle.Dot(currNormal) // Extra for continuous collision thing
+			const vertToCircle = subtract(circleCentroid, currVertex)
+			const circleProjectDirToNextProjection = vertToCircle.dot(dirToNext)
+			const circleDirToNormalProjection = vertToCircle.dot(currNormal) // Extra for continuous collision thing
 
 			if (
 				circleProjectDirToNextProjection > 0 &&
@@ -309,18 +310,18 @@ class CollisionDetection {
 
 		// Checking for collision
 		const circleRadius = shapeCircle.getRadius()
-		const vertexToCircle = Sub(circleCentroid, nearestEdgeVertex!)
-		const projectionToEdgeNormal = vertexToCircle.Dot(nearestEdgeNormal)
+		const vertexToCircle = subtract(circleCentroid, nearestEdgeVertex!)
+		const projectionToEdgeNormal = vertexToCircle.dot(nearestEdgeNormal)
 		const penetrationDepth = projectionToEdgeNormal - circleRadius
 
 		if (penetrationDepth < 0) {
 			// collision
-			const scaledNormal = Scale(nearestEdgeNormal, circleRadius * -1)
-			const penetrationPoint = Add(circleCentroid, scaledNormal)
+			const scaledNormal = scale(nearestEdgeNormal, circleRadius * -1)
+			const penetrationPoint = add(circleCentroid, scaledNormal)
 
 			return new CollisionManifold(
 				penetrationDepth * -1,
-				Scale(nearestEdgeNormal, -1),
+				scale(nearestEdgeNormal, -1),
 				penetrationPoint,
 			)
 		}
@@ -346,16 +347,16 @@ class CollisionDetection {
 		const circleCentroid = shapeCircle.getCentroid()
 		for (let i = 0; i < verticesLength; i++) {
 			const currVertex = vertices[i]
-			const dirToCentroidCircle = Sub(currVertex, circleCentroid)
+			const dirToCentroidCircle = subtract(currVertex, circleCentroid)
 
-			if (dirToCentroidCircle.Length2() < circleRadius * circleRadius) {
+			if (dirToCentroidCircle.lengthSquared() < circleRadius * circleRadius) {
 				// collision
-				const penetrationDepth = circleRadius - dirToCentroidCircle.Length()
-				dirToCentroidCircle.Normalize()
+				const penetrationDepth = circleRadius - dirToCentroidCircle.length()
+				dirToCentroidCircle.normalize()
 
 				return new CollisionManifold(
 					penetrationDepth,
-					Scale(dirToCentroidCircle, 1),
+					scale(dirToCentroidCircle, 1),
 					currVertex,
 				)
 			}
