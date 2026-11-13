@@ -60,6 +60,42 @@ const layersRule = {
 			return {}
 		}
 		const importerLayer = layerOf(importer)
+		function checkSource(node) {
+			if (!importerLayer || !node.source) {
+				return
+			}
+			if (node.source.type !== "Literal") {
+				return
+			}
+			const target = resolveImport(
+				node.source.value,
+				path.dirname(context.filename),
+			)
+			if (!target) {
+				return
+			}
+			const targetLayer = layerOf(target)
+			if (!targetLayer) {
+				context.report({
+					node,
+					messageId: "unassigned",
+					data: { file: target },
+				})
+				return
+			}
+			const allowed = allowedImports[importerLayer].includes(targetLayer)
+			if (!allowed && !isException(importer, target)) {
+				context.report({
+					node,
+					messageId: "forbidden",
+					data: {
+						fromLayer: importerLayer,
+						toLayer: targetLayer,
+						to: target,
+					},
+				})
+			}
+		}
 		return {
 			Program(node) {
 				if (!importerLayer) {
@@ -70,39 +106,10 @@ const layersRule = {
 					})
 				}
 			},
-			ImportDeclaration(node) {
-				if (!importerLayer) {
-					return
-				}
-				const target = resolveImport(
-					node.source.value,
-					path.dirname(context.filename),
-				)
-				if (!target) {
-					return
-				}
-				const targetLayer = layerOf(target)
-				if (!targetLayer) {
-					context.report({
-						node,
-						messageId: "unassigned",
-						data: { file: target },
-					})
-					return
-				}
-				const allowed = allowedImports[importerLayer].includes(targetLayer)
-				if (!allowed && !isException(importer, target)) {
-					context.report({
-						node,
-						messageId: "forbidden",
-						data: {
-							fromLayer: importerLayer,
-							toLayer: targetLayer,
-							to: target,
-						},
-					})
-				}
-			},
+			ImportDeclaration: checkSource,
+			ExportNamedDeclaration: checkSource,
+			ExportAllDeclaration: checkSource,
+			ImportExpression: checkSource,
 		}
 	},
 }
