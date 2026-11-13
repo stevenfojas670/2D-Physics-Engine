@@ -8,10 +8,6 @@ class Joint {
 	private anchorAID: number
 	private anchorBID: number
 
-	/**
-	 *
-	 * @param {JointConnection} jointConnection
-	 */
 	constructor(jointConnection: JointConnection) {
 		this.jointConnection = jointConnection
 		this.rigA = this.jointConnection.getRigidBodyA()

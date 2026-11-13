@@ -2,18 +2,10 @@ import { Joint } from "./Joint"
 import type { JointConnection } from "./JointConnection"
 import { subtract, scale } from "@/Vector2"
 
-/**
- * Spring joint that applies Hooke-like forces between two anchor points.
- */
 class SpringJoint extends Joint {
 	private springConstant: number
 	private restLength: number
 
-	/**
-	 * @param connection - Anchor connection shared by the joint endpoints.
-	 * @param springConstant - Strength of the spring response.
-	 * @param restLength - Distance at which the spring is at equilibrium.
-	 */
 	constructor(
 		connection: JointConnection,
 		springConstant: number,
@@ -25,9 +17,6 @@ class SpringJoint extends Joint {
 		this.restLength = restLength
 	}
 
-	/**
-	 * Apply spring force from body A toward body B.
-	 */
 	updateConnectionA(): void {
 		const anchorAPos = this.getAnchorAPos()
 		const anchorBPos = this.getAnchorBPos()
@@ -51,9 +40,6 @@ class SpringJoint extends Joint {
 		}
 	}
 
-	/**
-	 * Apply spring force from body B toward body A.
-	 */
 	updateConnectionB() {
 		const anchorAPos = this.getAnchorAPos()
 		const anchorBPos = this.getAnchorBPos()

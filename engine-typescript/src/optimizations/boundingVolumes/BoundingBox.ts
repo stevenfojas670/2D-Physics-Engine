@@ -1,13 +1,6 @@
 import { BoundingVolume } from "./BoundingVolume"
 import { Vector2 } from "@/Vector2"
 
-/**
- * @class BoundingBox
- * @classdesc Implements AABB bounding boxes using the Top Left and Bottom Right (min-max).
- * The bounding box calculations are implemented on Shape.js
- * If the bounding box needs to be drawn, you draw it from Shape.js
- * @property {} vertices - Array of shape vertices (Vector2)
- */
 class BoundingBox extends BoundingVolume {
 	public topLeft: Vector2
 	public bottomRight: Vector2
@@ -19,7 +12,6 @@ class BoundingBox extends BoundingVolume {
 		this.isColliding = false
 	}
 
-	/*This is used to check if the bounding box is intersecting with other bounding boxes*/
 	intersect(otherBoundingBox: BoundingBox): boolean {
 		const leftX = this.topLeft.x
 		const rightX = this.bottomRight.x

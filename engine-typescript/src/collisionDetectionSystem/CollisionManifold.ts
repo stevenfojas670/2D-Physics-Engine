@@ -2,13 +2,6 @@ import type { RigidBody } from "@/RigidBody"
 import { DrawUtils } from "@/utils/DrawUtils"
 import { add, scale, subtract, Vector2 } from "@/Vector2"
 
-/**
- * @abstract A collision manifold are contact points of a collision. When a
- * collision occurs, it must be resolved. We resolve a collision so that
- * two vectors don't occupy the same space. When resolving the collision we
- * want to ensure that the physics is preserved and the objects move in an
- * expected way.
- */
 class CollisionManifold {
 	private depth: number
 	private normal: Vector2
@@ -24,21 +17,9 @@ class CollisionManifold {
 		this.rigB = null
 	}
 
-	/**
-	 * @description Performs Angular Velocity, Linear Impulse, Frictional Force
-	 * calculations.
-	 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
-	 * Chapter 12 Mechanics 2: Linear and Rotational Dynamics
-	 * @returns {void} Resolves collisions
-	 */
 	resolveCollision(): void {
-		/**
-		 * Preventing division by 0, since mass will be 0 if isKinematic is true.
-		 * @see RigidBody class constructor
-		 */
 		if (this.rigA?.getKinematicFlag() && this.rigB?.getKinematicFlag()) return
 
-		// Calculate direction from penetration point to the center
 		const penetrationToCentroidA = subtract(
 			this.penetrationPoint,
 			this.rigA!.getShape().getCentroid(),
@@ -48,11 +29,6 @@ class CollisionManifold {
 			this.rigB!.getShape().getCentroid(),
 		)
 
-		/**
-		 * Angular Velocity
-		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
-		 * Chapter 12.5 Rotational Dynamics
-		 */
 		const angularVelocityPenetrationCentroidA = new Vector2(
 			-1 * this.rigA!.getAngularVelocity() * penetrationToCentroidA.y,
 			this.rigA!.getAngularVelocity() * penetrationToCentroidA.x,
@@ -63,7 +39,6 @@ class CollisionManifold {
 			this.rigB!.getAngularVelocity() * penetrationToCentroidB.x,
 		)
 
-		// Linear velocity at penetration point with respect to the angular velocity.
 		const velA = add(
 			this.rigA!.getVelocity(),
 			angularVelocityPenetrationCentroidA,
@@ -73,26 +48,11 @@ class CollisionManifold {
 			angularVelocityPenetrationCentroidB,
 		)
 
-		/**
-		 * Linear Impulse
-		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
-		 * Chapter 12.4.2 General Collision Response
-		 */
-		// Calculate impulse multiplier
-
-		// Calculate relative velocity
-		// relativeVelocity = v1 - v2
-		// k = [-(e+1) * relativeVelocity.Dot(normal)] / (1/m1 + 1/m2) * (normal * normal)
 		const relativeVelocity = subtract(velB, velA)
 		const relVelocityAlongNormal = relativeVelocity.dot(this.normal)
 
 		if (relVelocityAlongNormal > 0) return
 
-		/**
-		 * Calculating the Restitution Coefficient
-		 * This is really the bounciness of the material
-		 * @see Material class
-		 */
 		const e =
 			(2 *
 				this.rigA!.getMaterial().getRestitution() *
@@ -115,9 +75,6 @@ class CollisionManifold {
 			(this.rigA!.getInverseMass() + this.rigB!.getInverseMass() + crossNSum) *
 			this.normal.dot(this.normal)
 
-		// Calculate the post-impulse velocity
-		// v1` = v1 + kn / m1
-		// v2` = v2 - kn / m2
 		const kn = scale(this.normal, linearImpulse)
 		this.rigA!.setVelocity(
 			subtract(
@@ -139,11 +96,6 @@ class CollisionManifold {
 				pToCentroidCrossNormalB * linearImpulse * rigBInvInertia,
 		)
 
-		/**
-		 * Frictional Impulses
-		 * @source 3D Math Primer for Graphics and Game Development 2nd Edition
-		 * Chapter 12.2.2 Frictional Forces
-		 */
 		const velocityInNormalDirection = scale(
 			this.normal,
 			relativeVelocity.dot(this.normal),
@@ -207,11 +159,7 @@ class CollisionManifold {
 		)
 	}
 
-	/**
-	 * @todo Learn more about positional correction.
-	 */
 	positionalCorrection(): void {
-		// Objects will be pushed out by x%
 		const correctionPercentage = 0.9
 		const amountToCorrect =
 			(this.depth /

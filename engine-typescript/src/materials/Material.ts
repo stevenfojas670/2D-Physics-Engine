@@ -1,6 +1,3 @@
-/**
- * @property
- */
 class Material {
 	private restitution: number
 	private friction: number

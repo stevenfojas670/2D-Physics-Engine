@@ -4,12 +4,6 @@ import { Vector2 } from "@/Vector2"
 import { Simulation } from "@/Simulation"
 import { DrawUtils } from "@/utils/DrawUtils"
 
-/**
- * Main browser entry point for the physics-engine demo.
- *
- * This file wires the canvas, input listeners, rendering helpers, and the
- * simulation loop together.
- */
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement
 const ctx = canvas.getContext("2d")!
 
@@ -27,13 +21,6 @@ resizeCanvas()
 const simulation = new Simulation(new Vector2(canvas.width, canvas.height))
 
 document.addEventListener("DOMContentLoaded", () => {
-	/**
-	 * Convert browser mouse coordinates into canvas-local coordinates.
-	 *
-	 * @param canvas - Canvas receiving the mouse event.
-	 * @param evt - Browser mouse event.
-	 * @returns Mouse position relative to the canvas.
-	 */
 	function getMousePos(canvas: HTMLCanvasElement, evt: MouseEvent) {
 		const rect = canvas.getBoundingClientRect()
 		return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }
@@ -68,11 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 mainLoop()
 
-/**
- * Advance and draw the current simulation frame.
- *
- * @param deltaTime - Elapsed time since the previous frame in seconds.
- */
 function updateSimulation(deltaTime: number) {
 	clear()
 	const fpsText = `${Math.round(1.0 / deltaTime)} FPS`
@@ -81,9 +63,6 @@ function updateSimulation(deltaTime: number) {
 	simulation.draw(ctx)
 }
 
-/**
- * Browser animation loop.
- */
 function mainLoop() {
 	window.requestAnimationFrame(mainLoop)
 	currentTime = performance.now()
@@ -92,17 +71,11 @@ function mainLoop() {
 	lastTime = currentTime
 }
 
-/**
- * Clear the canvas before rendering the next frame.
- */
 function clear() {
 	ctx.fillStyle = "rgb(240, 240, 240)"
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
-/**
- * Resize the canvas drawing surface to occupy 75% of the browser viewport.
- */
 function resizeCanvas() {
 	canvas.width = Math.max(1, Math.floor(window.innerWidth * 0.75))
 	canvas.height = Math.max(1, Math.floor(window.innerHeight * 0.75))

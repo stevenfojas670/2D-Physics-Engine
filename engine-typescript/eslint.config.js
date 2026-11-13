@@ -21,6 +21,7 @@ export default defineConfig(
 		plugins: { local },
 		rules: {
 			"local/filename-matches-export": "error",
+			"local/no-comments": "error",
 			"no-restricted-syntax": [
 				"error",
 				{

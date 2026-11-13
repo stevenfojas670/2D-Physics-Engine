@@ -41,12 +41,6 @@ class Simulation {
 		gridKind: GridKind = "hash",
 		cellSize: number = 20,
 	) {
-		/**
-		 * @todo Create a Builder pattern for initializing the simulation
-		 * @description There will be so many parameters to configure for the user
-		 */
-
-		// Player movement
 		this.force = force
 		this.moveSpeed = 5
 		this.normalizedSpeed = this.moveSpeed * this.force
@@ -77,10 +71,8 @@ class Simulation {
 		const staticRectangle = new StaticBody(recA)
 		this.staticBodies.push(staticRectangle)
 
-		// This means circleRigA cannot collide with circleRigB
 		polygonKinematic.setCollisionGroup(CollisionGroups.GROUP1)
 
-		// Setting names of the collision groups
 		CollisionGroups.GROUP1.name = "Kinematic Objects"
 		CollisionGroups.GROUP2.name = "Static Objects"
 
@@ -90,11 +82,6 @@ class Simulation {
 		)
 	}
 
-	/**
-	 * Build the four world-boundary rigidbodies for the current world size.
-	 *
-	 * @returns Boundary rigidbodies ordered as top, bottom, left, right.
-	 */
 	private createBoundaryBodies(): RigidBody[] {
 		const boundaryThickness = Simulation.boundaryThickness
 		const halfThickness = boundaryThickness / 2
@@ -135,17 +122,10 @@ class Simulation {
 		]
 	}
 
-	/**
-	 * @summary Rigidbodies can only collide with other objects within the
-	 * same Collision Group. Different groups will result in anything other than 0.
-	 * @param {*} rigi | Rigidbody to check collision mask
-	 * @returns
-	 */
 	canCollide(groupAId: number, groupBId: number): boolean {
 		return (CollisionMatrix[groupAId] & groupBId) != 0
 	}
 
-	// HELPER METHODS ----START----
 	enableCollisionBetweenGroups(
 		groupA: CollisionGroup,
 		groupB: CollisionGroup,
@@ -161,7 +141,6 @@ class Simulation {
 		CollisionMatrix[groupA.id] &= ~groupB.id
 		CollisionMatrix[groupB.id] &= ~groupA.id
 	}
-	// HELPER METHODS ----END----
 
 	createStressTestPyramid(boxSize: number, iterations: number) {
 		const topOffset = this.worldSize.y - iterations * boxSize
@@ -184,11 +163,6 @@ class Simulation {
 		this.rigidBodies.push(...this.createBoundaryBodies())
 	}
 
-	/**
-	 * Resize the simulation world and rebuild its boundary colliders.
-	 *
-	 * @param worldSize - New world dimensions in pixels.
-	 */
 	resizeWorld(worldSize: Vector2): void {
 		this.worldSize = worldSize
 
@@ -244,7 +218,6 @@ class Simulation {
 				if (mouseInside && this.selectedRigidBody === null) {
 					this.selectedRigidBody = nearBodies[i]
 					this.selectedPosition = mousePos.copy()
-					// to local position
 					const localPos = subtract(
 						mousePos,
 						nearBodies[i].getShape().getCentroid(),
@@ -292,36 +265,22 @@ class Simulation {
 
 	update(deltaTime: number, mousePos: Vector2, mouseDownLeft: boolean): void {
 		this.handleMouseObjectInteraction(mousePos, mouseDownLeft)
-		// this.handleJoints();
 
-		/**
-		 * Updating RigidBody motion
-		 */
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime)
 			this.rigidBodies[i].getShape().boundingBox.collisionState = false
 
-			// F = m * a
 			this.rigidBodies[i].addForce(
 				scale(this.gravity, this.rigidBodies[i].getMass()),
 			)
-
-			// this.rigidBodies[i].log();
 		}
 
-		/**
-		 * Updating Particle motion
-		 */
 		for (let i = 0; i < this.particles.length; i++) {
 			this.particles[i].update(deltaTime)
 		}
 
 		this.grid.refreshGrid()
 
-		/**
-		 * Performing Collision Detection and Response on RigidBodies
-		 */
-		// The higher iteration limit, the more stable
 		const iterationLimit = 25
 		for (
 			let solverIterations = 0;
@@ -335,7 +294,6 @@ class Simulation {
 				for (let j = 0; j < neighborRigidBodies.length; j++) {
 					const rigB = neighborRigidBodies[j]
 
-					// Collision Checks
 					if (
 						this.canCollide(rigA.getCollisionGroup(), rigB.getCollisionGroup())
 					) {
@@ -356,7 +314,6 @@ class Simulation {
 						)
 
 						if (collisionManifold != null) {
-							// collisionManifold.draw();
 							collisionManifold.positionalCorrection()
 							collisionManifold.resolveCollision()
 						}
@@ -365,14 +322,9 @@ class Simulation {
 			}
 		}
 
-		// Handling movement
 		this.pollMovement()
 	}
 
-	/**
-	 * Draws all objects.
-	 * @param {} ctx - Canvas context for rendering onto the HTML Canvas
-	 */
 	draw(ctx: CanvasRenderingContext2D): void {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].getShape().draw(ctx)
@@ -381,23 +333,9 @@ class Simulation {
 		for (let i = 0; i < this.staticBodies.length; i++) {
 			this.staticBodies[i].getShape().draw(ctx)
 		}
-
-		// for (let i = 0; i < this.particles.length; i++) {
-		// 	this.particles[i].getShape().draw(ctx);
-		// }
-
-		// this.grid.draw();
 	}
 
-	/**
-	 *
-	 * @todo Implement function to allow for assigning to shapes to be controllable.
-	 */
-
 	pollMovement(): void {
-		// this.controller.log();
-
-		// Moving shape one
 		if (this.controller.keys.KeyD) {
 			this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0))
 		}
@@ -415,18 +353,10 @@ class Simulation {
 		}
 	}
 
-	/**
-	 *
-	 * @param {number} speed - Desired movement speed
-	 */
 	setMoveSpeed(speed: number): void {
 		this.moveSpeed = speed
 	}
 
-	/**
-	 *
-	 * @returns {number} moveSpeed - The current movement speed value.
-	 */
 	getMoveSpeed(): number {
 		return this.moveSpeed
 	}
