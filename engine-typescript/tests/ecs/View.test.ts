@@ -15,7 +15,8 @@ function entity(index: number): Entity {
 
 function visited(view: View<readonly [{ a: "f64" }, { b: "f64" }]>) {
 	const seen: Entity[] = []
-	view.each((current) => {
+	view.each((aSlot, bSlot, current) => {
+		expect(Math.min(aSlot, bSlot)).toBeGreaterThanOrEqual(0)
 		seen.push(current)
 	})
 	return seen.sort((left, right) => left - right)
@@ -54,7 +55,7 @@ describe("View", () => {
 		storeA.add(entity(4), { a: 7 })
 		storeB.add(entity(4), { b: 9 })
 		const values: number[] = []
-		new View([storeB, storeA], []).each((current, bSlot, aSlot) => {
+		new View([storeB, storeA], []).each((bSlot, aSlot, current) => {
 			expect(current).toBe(entity(4))
 			values.push(storeB.columns.b[bSlot], storeA.columns.a[aSlot])
 		})
@@ -86,7 +87,8 @@ describe("View", () => {
 			storeB.add(entity(index))
 		}
 		let visits = 0
-		new View([storeA, storeB], []).each((current) => {
+		new View([storeA, storeB], []).each((aSlot, bSlot, current) => {
+			expect(Math.min(aSlot, bSlot)).toBeGreaterThanOrEqual(0)
 			visits++
 			storeA.remove(current)
 			storeB.remove(current)
@@ -125,7 +127,7 @@ describe("View", () => {
 			storeA.add(entity(index), { a: index })
 		}
 		let calls = 0
-		const found = new View([storeA], []).find((current, aSlot) => {
+		const found = new View([storeA], []).find((aSlot, current) => {
 			calls++
 			return current >= 0 && storeA.columns.a[aSlot] === 6
 		})
@@ -150,6 +152,20 @@ describe("View", () => {
 		expect(view.contains(entity(0))).toBe(false)
 		expect(view.slot(entity(1), B)).toBe(storeB.slotOf(entity(1)))
 		expect(view.size()).toBe(1)
+	})
+
+	test("passes the entity after the slots for every arity", () => {
+		const stores = [0, 1, 2, 3, 4, 5].map(
+			(index) => new ComponentStore(defineComponent(`Arity${index}`, {})),
+		)
+		for (const store of stores) {
+			store.add(entity(3))
+		}
+		for (let arity = 1; arity <= 6; arity++) {
+			const view = new View(stores.slice(0, arity), [])
+			const found = view.find((...values) => values[arity] === entity(3))
+			expect(found).toBe(entity(3))
+		}
 	})
 
 	test("throws for more than six components", () => {

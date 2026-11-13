@@ -6,27 +6,19 @@ describe("Schedule", () => {
 	test("runs systems in insertion order with deltaTime", () => {
 		const log: string[] = []
 		const schedule = new Schedule()
-			.add((world, deltaTime) => {
-				expect(world).toBeInstanceOf(World)
-				log.push(`a${deltaTime}`)
-			})
-			.add((world, deltaTime) => {
-				expect(world).toBeInstanceOf(World)
-				log.push(`b${deltaTime}`)
-			})
+			.add((deltaTime) => log.push(`a${deltaTime}`))
+			.add((deltaTime) => log.push(`b${deltaTime}`))
 		schedule.run(new World(), 0.5)
 		expect(log).toEqual(["a0.5", "b0.5"])
 	})
 
 	test("deferred commands run after the system, before the next one", () => {
+		const world = new World()
 		const log: string[] = []
 		const schedule = new Schedule()
-			.add((world) => world.defer(() => log.push("x")))
-			.add((world) => {
-				expect(world.isAlive(-1)).toBe(false)
-				log.push(`saw ${log.length}`)
-			})
-		schedule.run(new World(), 0)
+			.add(() => world.defer(() => log.push("x")))
+			.add(() => log.push(`saw ${log.length}`))
+		schedule.run(world, 0)
 		expect(log).toEqual(["x", "saw 1"])
 	})
 })

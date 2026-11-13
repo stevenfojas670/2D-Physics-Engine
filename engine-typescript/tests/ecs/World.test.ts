@@ -49,9 +49,12 @@ describe("World", () => {
 		world.add(frozen, Position)
 		world.add(frozen, Frozen)
 		const seen: number[] = []
-		world.view([Position], { without: [Frozen] }).each((entity) => {
-			seen.push(entity)
-		})
+		world
+			.view([Position], { without: [Frozen] })
+			.each((positionSlot, entity) => {
+				expect(positionSlot).toBeGreaterThanOrEqual(0)
+				seen.push(entity)
+			})
 		expect(seen).toEqual([moving])
 	})
 

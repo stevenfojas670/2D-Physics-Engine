@@ -10,7 +10,7 @@ Rebuild `engine-typescript/` around an Entity Component System (ECS). Claude wri
 
 Why the owner wants it, in their words:
 
-- **Performance.** The target is simulations with *thousands* of entities. ("Millions" was an exaggeration.)
+- **Performance.** The target is simulations with _thousands_ of entities. ("Millions" was an exaggeration.)
 - **Learning how an ECS works.** The owner reads and reviews the code and reads books on the side.
 - **Cleaner code** than today's `Simulation` god-class.
 - **A solid base** for later work: AI-controlled agents (scripted, or evolved by a genetic algorithm), a user versus many AI, all-AI simulations, an editor and user customisation.
@@ -63,11 +63,11 @@ This spec covers **project 1 of 3**:
 
 ## Approaches considered
 
-| Approach | Trade-off |
-|---|---|
-| **A. Fixed-capacity arrays indexed by entity ID** (bitECS style) | The simplest and very fast. But it has a hard entity cap, wastes memory on components few entities have, and teaches the least about how ECSs are usually built. |
-| **B. Sparse sets** (EnTT style) — **chosen** | Each component keeps a packed array of only the entities that have it. Adding and removing components is O(1), which suits an editor and a genetic algorithm that spawn and kill agents constantly. There is no hard cap. It is moderate to write, and skypjack's *ECS back and forth* series documents it. Multi-component views do a lookup per extra component, which is fine at thousands. |
-| **C. Archetypes** (Bevy, Unity DOTS, flecs) | The fastest iteration. But adding or removing a component moves the entity between tables. It is the most code and the hardest to debug while learning. |
+| Approach                                                         | Trade-off                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A. Fixed-capacity arrays indexed by entity ID** (bitECS style) | The simplest and very fast. But it has a hard entity cap, wastes memory on components few entities have, and teaches the least about how ECSs are usually built.                                                                                                                                                                                                                               |
+| **B. Sparse sets** (EnTT style) — **chosen**                     | Each component keeps a packed array of only the entities that have it. Adding and removing components is O(1), which suits an editor and a genetic algorithm that spawn and kill agents constantly. There is no hard cap. It is moderate to write, and skypjack's _ECS back and forth_ series documents it. Multi-component views do a lookup per extra component, which is fine at thousands. |
+| **C. Archetypes** (Bevy, Unity DOTS, flecs)                      | The fastest iteration. But adding or removing a component moves the entity between tables. It is the most code and the hardest to debug while learning.                                                                                                                                                                                                                                        |
 
 The owner chose **B**.
 
@@ -85,6 +85,7 @@ The owner's learning goal shapes how it's written:
   - ordering in `Schedule`.
 
   Prefer plain loops and explicit names over clever generics.
+
 - **`src/ecs/README.md` carries a short "How it works" section** after its file table. Code comments are banned, so this README is where the explanation goes. It covers:
   - how an entity ID packs index and generation, and why generations catch stale IDs;
   - how `sparse` and `dense` map to each other and why removal swaps;
@@ -92,7 +93,8 @@ The owner's learning goal shapes how it's written:
   - how a view picks the smallest store as its driver and passes slots in component order;
   - why structural changes are deferred.
 
-  It cites skypjack's *ECS back and forth* series for further reading.
+  It cites skypjack's _ECS back and forth_ series for further reading.
+
 - **The core lands as small, reviewable commits.** One concept per commit, with its tests.
 
 ## Architecture
@@ -173,16 +175,18 @@ Systems read and write columns by slot. They get slots from **views** (below), n
 
 ### Views
 
+> **Execution note (Task 10):** the callback receives the slots first and the entity **last** — `(transformSlot, velocitySlot, entity)` — and a system is `(deltaTime) => void`, bound to its world by its factory. Both changes exist because `noUnusedParameters` is on and lint forbids `_`-prefixed names, so a leading parameter a system ignores would not compile.
+
 Querying uses EnTT-style **non-owning, uncached views**. A system builds its views once and reuses them every step:
 
 ```ts
-const transforms = world.store(Transform)
-const velocities = world.store(Velocity)
-const movers = world.view([Transform, Velocity], { without: [Particle] })
+const transforms = world.store(Transform);
+const velocities = world.store(Velocity);
+const movers = world.view([Transform, Velocity], { without: [Particle] });
 
-movers.each((entity, transformSlot, velocitySlot) => {
-	transforms.x[transformSlot] += velocities.x[velocitySlot] * deltaTime
-})
+movers.each((transformSlot, velocitySlot, entity) => {
+  transforms.x[transformSlot] += velocities.x[velocitySlot] * deltaTime;
+});
 ```
 
 - **What a view holds:** direct references to its stores (the included and the excluded ones), resolved once when it is built. It holds no entity list of its own, so it never goes stale. Entities added or removed between steps show up or drop out on their own.
@@ -204,13 +208,13 @@ movers.each((entity, transformSlot, velocitySlot) => {
 
 Trade-offs considered against the first draft's `world.query()` + `slotOf` design:
 
-| | Query + `slotOf` | View (chosen) |
-|---|---|---|
-| Lookups per entity, two components | 3 | 1 |
-| Store resolution | Every call | Once |
-| Looping | Iterator: harder to keep fast and allocation-free | Callback: simple and fast, but no `break`, so `find` covers that |
-| Readability | Explicit lookups | Positional slots, guarded by the naming rule |
-| Path to groups | All systems change | Contained in the view |
+|                                    | Query + `slotOf`                                  | View (chosen)                                                    |
+| ---------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------- |
+| Lookups per entity, two components | 3                                                 | 1                                                                |
+| Store resolution                   | Every call                                        | Once                                                             |
+| Looping                            | Iterator: harder to keep fast and allocation-free | Callback: simple and fast, but no `break`, so `find` covers that |
+| Readability                        | Explicit lookups                                  | Positional slots, guarded by the naming rule                     |
+| Path to groups                     | All systems change                                | Contained in the view                                            |
 
 ### `World`
 
@@ -227,25 +231,25 @@ An ordered list of systems. A system is a plain function `(world: World, deltaTi
 
 All numeric fields are `f64` unless stated. "Per step" values keep today's semantics.
 
-| Component | Fields | Replaces |
-|---|---|---|
-| `Transform` | `x`, `y` (centroid), `angle` (radians) | Vertex positions baked into `Shape` |
-| `Velocity` | `x`, `y`, `angular` | `RigidBody.velocity`, `angularVelocity` |
-| `ForceAccumulator` | `x`, `y`, `torque` | `forceAccumulator`, `torqueAccumulator` |
-| `Mass` | `mass`, `inverseMass`, `inertia`, `inverseInertia` | `RigidBody` mass fields. `inverseMass` of 0 means immovable, replacing `isKinematic`. |
-| `Material` | `restitution`, `friction` | `Material` class (defaults 0.5 and 0.1) |
-| `Collider` | `kind` (`u8`: circle or polygon), `radius`, `localVertices` (ref: `Float64Array` of x,y pairs around the centroid), `worldVertices` (ref), `worldNormals` (ref), `minX`, `minY`, `maxX`, `maxY`, `touching` (`u8`) | `Shape`, `Circle`, `Polygon`, `BoundingBox` |
-| `CollisionGroup` | `group` (`u32` bitmask) | `RigidBody.collisionGroup`, `StaticBody.collisionGroup` |
-| `LinearDamping` | `linear`, `angular` (multiplier per step, default 0.999) | The hard-coded 0.999 in `RigidBody.integrate` |
-| `Sleep` | `linearThreshold`, `angularThreshold` (default 0.01) | `RigidBody` sleep thresholds |
-| `Particle` | tag | `Particle` class (it has no rotation and no inertia) |
-| `Acceleration` | `x`, `y` | `Particle.acceleration` (constant base acceleration) |
-| `ParticleDamping` | `perSecond` (default 1, no damping) | `Particle.damping`, semantics from PR #11 |
-| `SpringJoint` | `entityA`, `entityB` (`u32`), `anchorAX`, `anchorAY`, `anchorBX`, `anchorBY` (local to each body), `springConstant`, `restLength`, `stretchState` (`u8`, for colour) | `SpringJoint`, `JointConnection`, shape anchor IDs |
-| `ForceJoint` | `entityA`, `entityB`, the four local anchors, `strength` | `ForceJoint` |
-| `Renderable` | `color` (ref string, default `"black"`) | `Shape.color` |
-| `PlayerControlled` | tag | The hard-coded `rigidBodies[4]` in `pollMovement` |
-| `MovementIntent` | `x`, `y` (desired direction, each −1..1), `jump` (`u8`) | Direct `addForce` calls in `pollMovement` |
+| Component          | Fields                                                                                                                                                                                                             | Replaces                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `Transform`        | `x`, `y` (centroid), `angle` (radians)                                                                                                                                                                             | Vertex positions baked into `Shape`                                                   |
+| `Velocity`         | `x`, `y`, `angular`                                                                                                                                                                                                | `RigidBody.velocity`, `angularVelocity`                                               |
+| `ForceAccumulator` | `x`, `y`, `torque`                                                                                                                                                                                                 | `forceAccumulator`, `torqueAccumulator`                                               |
+| `Mass`             | `mass`, `inverseMass`, `inertia`, `inverseInertia`                                                                                                                                                                 | `RigidBody` mass fields. `inverseMass` of 0 means immovable, replacing `isKinematic`. |
+| `Material`         | `restitution`, `friction`                                                                                                                                                                                          | `Material` class (defaults 0.5 and 0.1)                                               |
+| `Collider`         | `kind` (`u8`: circle or polygon), `radius`, `localVertices` (ref: `Float64Array` of x,y pairs around the centroid), `worldVertices` (ref), `worldNormals` (ref), `minX`, `minY`, `maxX`, `maxY`, `touching` (`u8`) | `Shape`, `Circle`, `Polygon`, `BoundingBox`                                           |
+| `CollisionGroup`   | `group` (`u32` bitmask)                                                                                                                                                                                            | `RigidBody.collisionGroup`, `StaticBody.collisionGroup`                               |
+| `LinearDamping`    | `linear`, `angular` (multiplier per step, default 0.999)                                                                                                                                                           | The hard-coded 0.999 in `RigidBody.integrate`                                         |
+| `Sleep`            | `linearThreshold`, `angularThreshold` (default 0.01)                                                                                                                                                               | `RigidBody` sleep thresholds                                                          |
+| `Particle`         | tag                                                                                                                                                                                                                | `Particle` class (it has no rotation and no inertia)                                  |
+| `Acceleration`     | `x`, `y`                                                                                                                                                                                                           | `Particle.acceleration` (constant base acceleration)                                  |
+| `ParticleDamping`  | `perSecond` (default 1, no damping)                                                                                                                                                                                | `Particle.damping`, semantics from PR #11                                             |
+| `SpringJoint`      | `entityA`, `entityB` (`u32`), `anchorAX`, `anchorAY`, `anchorBX`, `anchorBY` (local to each body), `springConstant`, `restLength`, `stretchState` (`u8`, for colour)                                               | `SpringJoint`, `JointConnection`, shape anchor IDs                                    |
+| `ForceJoint`       | `entityA`, `entityB`, the four local anchors, `strength`                                                                                                                                                           | `ForceJoint`                                                                          |
+| `Renderable`       | `color` (ref string, default `"black"`)                                                                                                                                                                            | `Shape.color`                                                                         |
+| `PlayerControlled` | tag                                                                                                                                                                                                                | The hard-coded `rigidBodies[4]` in `pollMovement`                                     |
+| `MovementIntent`   | `x`, `y` (desired direction, each −1..1), `jump` (`u8`)                                                                                                                                                            | Direct `addForce` calls in `pollMovement`                                             |
 
 Anchors are stored **in the body's local frame**, so they follow the body through `Transform` with no anchor bookkeeping. This removes the anchor map from `Shape`.
 
@@ -255,24 +259,24 @@ Static bodies are entities with `Transform`, `Collider`, `CollisionGroup`, `Rend
 
 ### Update schedule (in order)
 
-| # | System | Layer | Does |
-|---|---|---|---|
-| 1 | `PlayerInputSystem` | app | Reads the `Controller` keys resource. Writes `MovementIntent` on `PlayerControlled` entities. |
-| 2 | `MouseDragSystem` | app | On press, picks the entity under the mouse using the grid resource and point-in-collider. Stores the entity and a local anchor in the mouse-drag resource. While held, adds force `mouse − anchorWorld` at the anchor (force plus torque). On release, clears. |
-| 3 | `IntentForceSystem` | physics | Converts `MovementIntent` into force with today's numbers: `moveSpeed × force` = 5 × 100 on each axis; `jump` adds an extra upward force × 10. |
-| 4 | `GravitySystem` | physics | Adds `gravity × mass` to every entity with `ForceAccumulator` and non-zero `inverseMass`. Gravity resource defaults to (0, 200). |
-| 5 | `JointForceSystem` | physics | Spring and force joints add force at their anchors. The force-halving rule is the same as today: full force if the other body is immovable. Updates `stretchState`. Skips joints whose bodies are no longer alive. |
-| 6 | `RigidBodyIntegrationSystem` | physics | Semi-implicit Euler on `Transform` and `Velocity` from `ForceAccumulator` and `Mass`. Then damping per step, then sleep thresholds, then it clears the accumulator. Skips `Particle`. |
-| 7 | `ParticleIntegrationSystem` | physics | The PR #11 semantics: base `Acceleration` plus force × inverse mass, damping by `perSecond ^ deltaTime`, and the accumulator cleared. |
-| 8 | `ColliderTransformSystem` | physics | Recomputes `worldVertices`, `worldNormals` and the AABB from `localVertices` and `Transform`. It only recomputes normals when the angle changed. Clears `touching`. |
-| 9 | `BroadPhaseSystem` | physics | Refreshes the grid resource with every collider's AABB. Produces a **deduplicated** list of unordered candidate pairs that pass the collision matrix and AABB overlap. |
-| 10 | `CollisionSolverSystem` | physics | 25 iterations. Each iteration, for each candidate pair: run the narrow phase, then apply positional correction (90%) and impulse resolution with restitution and friction, exactly as today. Records contacts and friction tangents into the contacts resource for debug drawing. |
+| #   | System                       | Layer   | Does                                                                                                                                                                                                                                                                              |
+| --- | ---------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `PlayerInputSystem`          | app     | Reads the `Controller` keys resource. Writes `MovementIntent` on `PlayerControlled` entities.                                                                                                                                                                                     |
+| 2   | `MouseDragSystem`            | app     | On press, picks the entity under the mouse using the grid resource and point-in-collider. Stores the entity and a local anchor in the mouse-drag resource. While held, adds force `mouse − anchorWorld` at the anchor (force plus torque). On release, clears.                    |
+| 3   | `IntentForceSystem`          | physics | Converts `MovementIntent` into force with today's numbers: `moveSpeed × force` = 5 × 100 on each axis; `jump` adds an extra upward force × 10.                                                                                                                                    |
+| 4   | `GravitySystem`              | physics | Adds `gravity × mass` to every entity with `ForceAccumulator` and non-zero `inverseMass`. Gravity resource defaults to (0, 200).                                                                                                                                                  |
+| 5   | `JointForceSystem`           | physics | Spring and force joints add force at their anchors. The force-halving rule is the same as today: full force if the other body is immovable. Updates `stretchState`. Skips joints whose bodies are no longer alive.                                                                |
+| 6   | `RigidBodyIntegrationSystem` | physics | Semi-implicit Euler on `Transform` and `Velocity` from `ForceAccumulator` and `Mass`. Then damping per step, then sleep thresholds, then it clears the accumulator. Skips `Particle`.                                                                                             |
+| 7   | `ParticleIntegrationSystem`  | physics | The PR #11 semantics: base `Acceleration` plus force × inverse mass, damping by `perSecond ^ deltaTime`, and the accumulator cleared.                                                                                                                                             |
+| 8   | `ColliderTransformSystem`    | physics | Recomputes `worldVertices`, `worldNormals` and the AABB from `localVertices` and `Transform`. It only recomputes normals when the angle changed. Clears `touching`.                                                                                                               |
+| 9   | `BroadPhaseSystem`           | physics | Refreshes the grid resource with every collider's AABB. Produces a **deduplicated** list of unordered candidate pairs that pass the collision matrix and AABB overlap.                                                                                                            |
+| 10  | `CollisionSolverSystem`      | physics | 25 iterations. Each iteration, for each candidate pair: run the narrow phase, then apply positional correction (90%) and impulse resolution with restitution and friction, exactly as today. Records contacts and friction tangents into the contacts resource for debug drawing. |
 
 `touching` keeps today's meaning: the broad phase sets it on both colliders when their AABBs overlap and the collision matrix allows the pair. A narrow-phase hit isn't required.
 
 Particles have no `Collider` in project 1. They don't collide, which matches today, where particles are never added to the grid. They may have a `Renderable`, and `ColliderRenderSystem` doesn't draw them; a particle renderer belongs with the particle-system goal. The rigid-body integration, broad phase and solver views exclude `Particle`.
 
-Ordering note: today gravity and keyboard forces are added *after* integration, so they apply one step later than mouse forces. The ECS applies all forces before integration. The one-step shift is invisible in the demo and is accepted.
+Ordering note: today gravity and keyboard forces are added _after_ integration, so they apply one step later than mouse forces. The ECS applies all forces before integration. The one-step shift is invisible in the demo and is accepted.
 
 Pairs note: today each pair is resolved from both sides, and more than once when the bodies share several grid cells. The ECS resolves each unordered pair once per iteration. Stacking may feel slightly stiffer. That is accepted, as long as the demo still looks and feels the same.
 
@@ -280,12 +284,12 @@ The other two grid kinds keep working: the hash grid and the spatial grid. Both 
 
 ### Render schedule
 
-| System | Layer | Draws |
-|---|---|---|
-| `ColliderRenderSystem` | rendering | Collider outlines (polygon edges, circle stroke with radius line), centroid points, in `Renderable.color` |
-| `DebugDrawSystem` | rendering | Driven by a debug-options resource whose defaults match today's screen. **On:** polygon normals, AABBs coloured by `touching`, friction tangent arrows, mouse-drag line and anchor. **Off, but available:** contact points and normals, which today's code has but never calls, and grid cells, which today's default hash grid never draws. |
-| `JointRenderSystem` | rendering | Joint lines coloured by `stretchState` (blue, red or orange as today) |
-| `FpsSystem` (or kept in `main.ts`) | rendering/app | FPS text |
+| System                             | Layer         | Draws                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ColliderRenderSystem`             | rendering     | Collider outlines (polygon edges, circle stroke with radius line), centroid points, in `Renderable.color`                                                                                                                                                                                                                                    |
+| `DebugDrawSystem`                  | rendering     | Driven by a debug-options resource whose defaults match today's screen. **On:** polygon normals, AABBs coloured by `touching`, friction tangent arrows, mouse-drag line and anchor. **Off, but available:** contact points and normals, which today's code has but never calls, and grid cells, which today's default hash grid never draws. |
+| `JointRenderSystem`                | rendering     | Joint lines coloured by `stretchState` (blue, red or orange as today)                                                                                                                                                                                                                                                                        |
+| `FpsSystem` (or kept in `main.ts`) | rendering/app | FPS text                                                                                                                                                                                                                                                                                                                                     |
 
 `DrawUtils` stops being a static singleton holding `ctx`. Rendering systems get the context through a resource set by `main.ts`. This keeps physics free of the canvas for good.
 
@@ -343,6 +347,7 @@ It rebuilds today's `Simulation` constructor as entities:
   - adds a way to build the benchmark scene instead of the demo.
 
   `feature/ecs` never touches the old classes for this.
+
 - **Render timing.** Rendering needs a real canvas, so it's measured in the browser:
   - Opening the dev server with `?scene=benchmark` loads the benchmark scene instead of the demo.
   - After a warm-up, it measures the average **update** time and **render** time separately, using `performance.now()` around each schedule over a fixed number of frames.
@@ -350,6 +355,7 @@ It rebuilds today's `Simulation` constructor as entities:
   - It records the draw-call count per frame by counting batch flushes.
 
   The throwaway baseline branch measures the old engine's `Simulation.update` and `Simulation.draw` the same way, with logging removed. Real drawing stays on in the baseline, because that's what's being compared.
+
 - All numbers are recorded in the pull request, with the machine and the browser or Node version:
   - physics step (headless), old and new;
   - update and render per frame (browser), old and new;

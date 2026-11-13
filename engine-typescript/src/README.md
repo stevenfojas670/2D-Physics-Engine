@@ -23,5 +23,6 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 - [`particles/`](particles/README.md) — Point-mass particles
 - [`resources/`](resources/README.md) — Per-world shared values used by the physics systems
 - [`shapes/`](shapes/README.md) — Geometry of bodies
+- [`systems/`](systems/README.md) — Physics systems that run each step
 - [`types/`](types/README.md) — Shared type aliases
 - [`utils/`](utils/README.md) — Math helpers and canvas drawing helpers

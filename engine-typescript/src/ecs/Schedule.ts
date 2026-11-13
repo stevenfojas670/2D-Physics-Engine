@@ -1,6 +1,6 @@
 import type { World } from "./World"
 
-type System = (world: World, deltaTime: number) => void
+type System = (deltaTime: number) => void
 
 class Schedule {
 	private readonly systems: System[]
@@ -16,7 +16,7 @@ class Schedule {
 
 	run(world: World, deltaTime: number): void {
 		for (const system of this.systems) {
-			system(world, deltaTime)
+			system(deltaTime)
 			world.flushDeferred()
 		}
 	}

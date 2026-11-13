@@ -40,10 +40,10 @@ A view answers "which entities have all of these components, and none of those?"
 
 ```ts
 const movers = world.view([Transform, Velocity], { without: [Particle] })
-movers.each((entity, transformSlot, velocitySlot) => { ... })
+movers.each((transformSlot, velocitySlot, entity) => { ... })
 ```
 
-`each` picks the **smallest** included store as the driver, because every entity in the answer must be in it. It walks the driver's dense array **from the end to the start**, so if the callback removes the current entity, the entity swapped into its slot has already been visited. For each entity it looks up the slot in every other included store and skips the entity if one is missing or an excluded store has it. The callback gets one slot per component, **in the order the components were listed**, and the driver's slot is free because it is the loop counter.
+`each` picks the **smallest** included store as the driver, because every entity in the answer must be in it. It walks the driver's dense array **from the end to the start**, so if the callback removes the current entity, the entity swapped into its slot has already been visited. For each entity it looks up the slot in every other included store and skips the entity if one is missing or an excluded store has it. The callback gets one slot per component, **in the order the components were listed**, followed by the entity; the driver's slot is free because it is the loop counter. The entity comes last because most systems never need it and can simply leave it off, which TypeScript's unused-parameter check requires.
 
 The view holds no entity list of its own (it is _uncached_), so it never goes stale: entities added or removed between steps simply show up or drop out. `each` allocates nothing. `find` is `each` that stops at the first entity the predicate accepts, and `contains` and `slot` answer one-off questions.
 
@@ -57,7 +57,7 @@ Bigger engines add _groups_, which reorder stores so matching entities share the
 
 ### Schedule and deferred commands
 
-A system is a function `(world, deltaTime) => void`. Systems are built by factories (`createGravitySystem(world)`) that make their views and callbacks once, so running a system each step allocates nothing.
+A system is a function `(deltaTime) => void`. Systems are built by factories (`createGravitySystem(world)`) that capture their world and make their views and callbacks once, so running a system each step allocates nothing.
 
 `Schedule` is an ordered list of systems, and `run` calls them in order. A system in the middle of `each` must not add or remove components on _other_ entities, because that moves slots in the stores the view is walking. Instead it calls `world.defer(command)`. After each system finishes, the schedule calls `world.flushDeferred()`, which runs the queued commands in order, including any queued while flushing. The order is fixed and written in one place, so every run of the simulation is deterministic.
 

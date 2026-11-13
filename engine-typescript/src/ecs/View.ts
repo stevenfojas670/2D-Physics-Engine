@@ -12,19 +12,10 @@ type StoresOf<S extends readonly Schema[]> = {
 type Slots<S extends readonly Schema[]> = { [K in keyof S]: number }
 
 type ViewCallback<S extends readonly Schema[], R> = (
-	entity: Entity,
-	...slots: Slots<S>
+	...slotsThenEntity: [...Slots<S>, Entity]
 ) => R
 
-type SixSlotCallback<R> = (
-	entity: Entity,
-	slot0: number,
-	slot1: number,
-	slot2: number,
-	slot3: number,
-	slot4: number,
-	slot5: number,
-) => R
+type PositionalCallback<R> = (...values: number[]) => R
 
 class View<const S extends readonly Schema[]> {
 	private readonly included: readonly ComponentStore<Schema>[]
@@ -46,31 +37,29 @@ class View<const S extends readonly Schema[]> {
 	}
 
 	each(callback: ViewCallback<S, void>): void {
-		const call = callback as unknown as SixSlotCallback<void>
+		const call = callback as unknown as PositionalCallback<void>
 		const driverIndex = this.smallestStoreIndex()
 		const driver = this.included[driverIndex]
-		const slots = this.slots
 		for (let slot = driver.size - 1; slot >= 0; slot--) {
 			if (slot >= driver.size) {
 				continue
 			}
 			const entity = driver.entityAt(slot)
 			if (this.gatherSlots(entity, driverIndex, slot)) {
-				call(entity, slots[0], slots[1], slots[2], slots[3], slots[4], slots[5])
+				this.invoke(call, entity)
 			}
 		}
 	}
 
 	find(predicate: ViewCallback<S, boolean>): Entity | undefined {
-		const call = predicate as unknown as SixSlotCallback<boolean>
+		const call = predicate as unknown as PositionalCallback<boolean>
 		const driverIndex = this.smallestStoreIndex()
 		const driver = this.included[driverIndex]
-		const slots = this.slots
 		for (let slot = driver.size - 1; slot >= 0; slot--) {
 			const entity = driver.entityAt(slot)
 			if (
 				this.gatherSlots(entity, driverIndex, slot) &&
-				call(entity, slots[0], slots[1], slots[2], slots[3], slots[4], slots[5])
+				this.invoke(call, entity)
 			) {
 				return entity
 			}
@@ -98,6 +87,32 @@ class View<const S extends readonly Schema[]> {
 
 	size(): number {
 		return this.included[this.smallestStoreIndex()].size
+	}
+
+	private invoke<R>(call: PositionalCallback<R>, entity: Entity): R {
+		const slots = this.slots
+		switch (this.included.length) {
+			case 1:
+				return call(slots[0], entity)
+			case 2:
+				return call(slots[0], slots[1], entity)
+			case 3:
+				return call(slots[0], slots[1], slots[2], entity)
+			case 4:
+				return call(slots[0], slots[1], slots[2], slots[3], entity)
+			case 5:
+				return call(slots[0], slots[1], slots[2], slots[3], slots[4], entity)
+			default:
+				return call(
+					slots[0],
+					slots[1],
+					slots[2],
+					slots[3],
+					slots[4],
+					slots[5],
+					entity,
+				)
+		}
 	}
 
 	private smallestStoreIndex(): number {

@@ -10,6 +10,7 @@ const layers = [
 		files: [
 			"components/**",
 			"resources/**",
+			"systems/**",
 			"RigidBody.ts",
 			"StaticBody.ts",
 			"Simulation.ts",
