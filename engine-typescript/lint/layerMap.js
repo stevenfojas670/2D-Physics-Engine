@@ -1,7 +1,7 @@
 const layers = [
 	{ name: "ecs", files: ["ecs/**"] },
 	{ name: "math", files: ["Vector2.ts", "utils/MathHelper.ts"] },
-	{ name: "rendering", files: ["utils/DrawUtils.ts"] },
+	{ name: "rendering", files: ["utils/DrawUtils.ts", "rendering/**"] },
 	{ name: "input", files: ["Controller.ts"] },
 	{ name: "app", files: ["main.ts"] },
 	{ name: "types", files: ["types/**"] },

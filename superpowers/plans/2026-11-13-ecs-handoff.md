@@ -5,10 +5,10 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `feat: add broad-phase and collision solver systems (#10)` (Task 12). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–12. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, and every physics system in the update schedule (forces, joints, integration, collider transform, broad phase, solver) are built.
-- **Next:** Task 13 (batched rendering), then Tasks 14–17.
-- **Checks:** all four green after Task 12, 14 test files, 112 tests.
+- **Last task commit:** `feat: add batched render systems (#10)` (Task 13). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–13. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, every physics system in the update schedule (forces, joints, integration, collider transform, broad phase, solver), and the batched render systems are built.
+- **Next:** Task 14 (app systems, scenes, schedules and the headless benchmark), then Tasks 15–17.
+- **Checks:** all four green after Task 13, 15 test files, 119 tests.
 - **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
@@ -41,6 +41,10 @@ One slip on the way: commit `fecb817` (Task 8) went in with lint failing because
 - **Broad phase:** `BroadPhaseGrid` is an **abstract class**, not an interface, in `optimizations/broadPhase/BroadPhaseGrid.ts`. It has `resize`, `insert`, `entitiesInCell`, `cellAt`, `cellsOf`, `clear` and an optional `forEachCellRect`. `HashGrid`, `SpatialGrid` and `createBroadPhaseGrid(kind, cellSize)` sit beside it.
 - **Candidate pairs:** the class `CandidatePairs` (`count`, `entityA(pair)`, `entityB(pair)`, `clear`, `push`) and `CandidatePairsResource` are in `resources/CandidatePairs.ts`, not `BroadPhaseSystem.ts` (one-class-per-file rule). `createBroadPhaseSystem(world)` sets that resource when it is built. It needs `BroadPhaseResource` and `CollisionSettingsResource` set before it runs; the solver needs `ContactsResource`. Only entities with both `Collider` and `CollisionGroup` (and no `Particle`) enter the grid.
 - **Systems** live in `src/systems/`: `createIntentForceSystem`, `createGravitySystem`, `createJointForceSystem`, `createBroadPhaseSystem`, `createCollisionSolverSystem`, `createRigidBodyIntegrationSystem`, `createParticleIntegrationSystem` and `createColliderTransformSystem`.
+- **Rendering** in `src/rendering/`:
+  - `DrawBatches` with `line`, `rect`, `arrow`, `fillCircle`, `strokeCircle`, `clear` and `flush(ctx: BatchCanvas): number`. `BatchCanvas` is a `Pick` of `CanvasRenderingContext2D`, so tests pass a fake.
+  - `RenderContextResource` (`{ ctx, batches, drawCalls }`) and `DebugOptionsResource` with `createDebugOptions()`.
+  - `createColliderRenderSystem`, `createJointRenderSystem`, `createDebugDrawSystem` and `createDrawFlushSystem`. The debug system draws friction and contacts only if `ContactsResource` is set, the mouse drag only if `MouseDragResource` is set, and grid cells only if `BroadPhaseResource` is set.
 - **Joint helpers** in `joints/jointForces.ts`: `StretchState`, `anchorWorldPosition(transformColumns, slot, localX, localY, out)` and `addForceAtPoint(transformStore, forceStore, entity, pointX, pointY, forceX, forceY)`. `addForceAtPoint` takes the two stores, not `BodyColumns`, and does nothing if the entity lacks either. A joint body with no `Mass` counts as immovable for the force-halving rule.
 
 ## 4. Deviations and decisions

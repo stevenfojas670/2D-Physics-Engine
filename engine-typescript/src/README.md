@@ -21,6 +21,7 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 - [`materials/`](materials/README.md) — Surface properties of bodies
 - [`optimizations/`](optimizations/README.md) — Collision filtering, broad-phase grids and bounding volumes
 - [`particles/`](particles/README.md) — Point-mass particles
+- [`rendering/`](rendering/README.md) — Render systems that batch Canvas 2D drawing
 - [`resources/`](resources/README.md) — Per-world shared values used by the physics systems
 - [`shapes/`](shapes/README.md) — Geometry of bodies
 - [`systems/`](systems/README.md) — Physics systems that run each step
