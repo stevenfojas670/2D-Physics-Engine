@@ -278,10 +278,6 @@ git commit -m "docs: add documentation and lint spec and plan"
 - [ ] **Step 5:** Check every relative link in the four files. Each target must exist (`ls` each one).
 - [ ] **Step 6:** Commit as `docs: add agents, contributing, and root readme`.
 
-## Execution
-
-Recommended: **subagent-driven**, one fresh implementer and one reviewer per task. Tasks 3 to 6 rewrite most files in `src/`, so a silent behaviour change (Review Focus 2 to 4) is the costliest mistake, and a per-task reviewer is the best place to catch it. The alternative is native: I do every task myself, with one whole-branch review at the end.
-
 ### Task 10: Final verification
 
 - [ ] **Step 1:** In `engine-typescript/`, run `npm ci && npm run lint && npm run typecheck && npm run build`. Expected: all exit 0.
@@ -289,3 +285,7 @@ Recommended: **subagent-driven**, one fresh implementer and one reviewer per tas
 - [ ] **Step 3:** Run `grep -rnE "^\s*(//|/\*|\*)" engine-typescript/src`. Expected: no output.
 - [ ] **Step 4:** Start `npm run dev`. If a browser tool is available, load the page and confirm the canvas renders with no console errors.
 - [ ] **Step 5:** Hand off to the owner for the manual behaviour check from the spec's Verification section. Also ask for OK to push `dev` (two commits ahead of `origin/dev`), and then the docs branch, before opening the PR into `dev`.
+
+## Execution
+
+Recommended: **subagent-driven**, one fresh implementer and one reviewer per task. Tasks 3 to 6 rewrite most files in `src/`, so a silent behaviour change (Review Focus 2 to 4) is the costliest mistake, and a per-task reviewer is the best place to catch it. The alternative is native: I do every task myself, with one whole-branch review at the end.
