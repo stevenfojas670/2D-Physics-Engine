@@ -60,6 +60,11 @@ class World {
 		component: ComponentDefinition<S>,
 		values?: Partial<FieldValues<S>>,
 	): number {
+		if (!this.registry.isAlive(entity)) {
+			throw new Error(
+				`Cannot add ${component.name} to entity ${entity}: it is not alive`,
+			)
+		}
 		return this.store(component).add(entity, values)
 	}
 

@@ -41,6 +41,22 @@ describe("World", () => {
 		expect(world.has(entity, Position)).toBe(false)
 	})
 
+	test("add through a stale entity throws and leaves the reused index intact", () => {
+		const world = new World()
+		const stale = world.createEntity()
+		world.add(stale, Position)
+		world.destroyEntity(stale)
+		const live = world.createEntity()
+		world.add(live, Position, { x: 7 })
+		expect(() => world.add(stale, Position)).toThrow(/not alive/)
+		world.remove(stale, Position)
+		expect(world.has(live, Position)).toBe(true)
+		expect(world.store(Position).size).toBe(1)
+		expect(
+			world.store(Position).columns.x[world.store(Position).slotOf(live)],
+		).toBe(7)
+	})
+
 	test("view without excludes components", () => {
 		const world = new World()
 		const moving = world.createEntity()

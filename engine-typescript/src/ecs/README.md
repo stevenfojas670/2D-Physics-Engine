@@ -19,7 +19,7 @@ The Entity Component System core: entities, component storage, views, the world 
 
 An entity is just a number. Its low 20 bits are an **index** (a slot number, so up to about one million live entities) and its high 12 bits are a **generation**.
 
-When an entity is destroyed, its index goes on a free list and the registry bumps that index's generation. The next `create()` reuses the index with the new generation. Anything still holding the old ID, such as a joint or a genetic algorithm's list of agents, now holds a number whose generation no longer matches, so `isAlive` reports it as dead instead of silently pointing at the new entity. After 4,096 reuses of one index the generation wraps back to 0.
+When an entity is destroyed, its index goes on a free list and the registry bumps that index's generation. The next `create()` reuses the index with the new generation. Anything still holding the old ID, such as a joint or a genetic algorithm's list of agents, now holds a number whose generation no longer matches, so `isAlive` reports it as dead instead of silently pointing at the new entity. `World.add` throws for a dead ID, so a stale handle cannot write over the entity that reused its index. After 4,096 reuses of one index the generation wraps back to 0.
 
 ### Components and the sparse set
 
