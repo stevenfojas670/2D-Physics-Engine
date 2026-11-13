@@ -18,7 +18,7 @@ import { DrawUtils } from "@/utils/DrawUtils"
 import { CollisionDetection } from "@/collisionDetectionSystem/CollisionDetection"
 
 class Simulation {
-	private static readonly boundaryThickness = 50
+	private static readonly BOUNDARY_THICKNESS = 50
 	private force: number
 	private gravity: Vector2
 	private worldSize: Vector2
@@ -83,7 +83,7 @@ class Simulation {
 	}
 
 	private createBoundaryBodies(): RigidBody[] {
-		const boundaryThickness = Simulation.boundaryThickness
+		const boundaryThickness = Simulation.BOUNDARY_THICKNESS
 		const halfThickness = boundaryThickness / 2
 
 		return [

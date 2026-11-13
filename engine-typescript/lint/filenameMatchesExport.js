@@ -1,5 +1,7 @@
 import path from "node:path"
 
+const projectRoot = path.resolve(import.meta.dirname, "..")
+
 function collectClassNames(program) {
 	const names = new Set()
 	for (const node of program.body) {
@@ -69,7 +71,7 @@ const filenameMatchesExport = {
 	},
 	create(context) {
 		const relative = path
-			.relative(context.cwd, context.filename)
+			.relative(projectRoot, context.filename)
 			.split(path.sep)
 			.join("/")
 		if (!relative.startsWith("src/")) {

@@ -56,7 +56,7 @@ These apply to `engine-typescript/` and are enforced by `npm run lint`. Inline `
 3. **Naming:**
    * Classes and types are PascalCase.
    * Methods, functions, variables and parameters are camelCase, with no leading underscores.
-   * Global constants may be UPPER_CASE.
+   * Global constants and `static readonly` class properties may be UPPER_CASE.
    * A file that exports one class is named after it.
    * Files in `src/types/` end in `.types.ts`.
 4. **Imports:** use the `@/` alias (which points at `src/`) across folders. `./` is only for files in the same folder, and `../` is not allowed.

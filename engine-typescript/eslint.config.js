@@ -4,6 +4,12 @@ import tseslint from "typescript-eslint"
 import prettier from "eslint-config-prettier"
 import globals from "globals"
 import { plugin as local } from "./lint/plugin.js"
+import { layers } from "./lint/layerMap.js"
+
+const browserFreeLayers = ["math", "physics"]
+const browserFreeFiles = layers
+	.filter((layer) => browserFreeLayers.includes(layer.name))
+	.flatMap((layer) => layer.files.map((pattern) => `src/${pattern}`))
 
 export default defineConfig(
 	{
@@ -46,6 +52,11 @@ export default defineConfig(
 					format: ["camelCase", "UPPER_CASE", "PascalCase"],
 				},
 				{
+					selector: "classProperty",
+					modifiers: ["static", "readonly"],
+					format: ["camelCase", "UPPER_CASE"],
+				},
+				{
 					selector: "enumMember",
 					format: ["PascalCase", "UPPER_CASE"],
 				},
@@ -86,19 +97,7 @@ export default defineConfig(
 		},
 	},
 	{
-		files: [
-			"src/Vector2.ts",
-			"src/utils/MathHelper.ts",
-			"src/RigidBody.ts",
-			"src/StaticBody.ts",
-			"src/Simulation.ts",
-			"src/shapes/**",
-			"src/collisionDetectionSystem/**",
-			"src/joints/**",
-			"src/materials/**",
-			"src/particles/**",
-			"src/optimizations/**",
-		],
+		files: browserFreeFiles,
 		rules: {
 			"no-restricted-globals": [
 				"error",
