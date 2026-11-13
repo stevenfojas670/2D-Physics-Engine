@@ -2,13 +2,16 @@
 
 The Entity Component System core: entities, component storage, views, the world and the schedule. It knows nothing about physics. Layer: ecs.
 
-| File                 | Purpose                                                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------- |
-| `ComponentStore.ts`  | The sparse set for one component: a packed entity list plus one typed-array column per field |
-| `defineComponent.ts` | Declares a component as a name and a schema of typed fields, plus the column and value types |
-| `Entity.ts`          | The `Entity` ID type and the functions that pack and unpack its index and generation         |
-| `EntityRegistry.ts`  | Hands out entity IDs, recycles destroyed indices and tracks which IDs are still alive        |
-| `View.ts`            | Iterates the entities that have a set of components, passing each component's slot           |
+| File                 | Purpose                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `ComponentStore.ts`  | The sparse set for one component: a packed entity list plus one typed-array column per field    |
+| `defineResource.ts`  | Declares a typed key for a per-world singleton value (a resource)                               |
+| `defineComponent.ts` | Declares a component as a name and a schema of typed fields, plus the column and value types    |
+| `Entity.ts`          | The `Entity` ID type and the functions that pack and unpack its index and generation            |
+| `EntityRegistry.ts`  | Hands out entity IDs, recycles destroyed indices and tracks which IDs are still alive           |
+| `Schedule.ts`        | An ordered list of systems; runs them and applies deferred changes after each                   |
+| `View.ts`            | Iterates the entities that have a set of components, passing each component's slot              |
+| `World.ts`           | Owns the entity registry, one store per component, the resources and the deferred-command queue |
 
 ## How it works
 
@@ -45,3 +48,19 @@ movers.each((entity, transformSlot, velocitySlot) => { ... })
 The view holds no entity list of its own (it is _uncached_), so it never goes stale: entities added or removed between steps simply show up or drop out. `each` allocates nothing. `find` is `each` that stops at the first entity the predicate accepts, and `contains` and `slot` answer one-off questions.
 
 Bigger engines add _groups_, which reorder stores so matching entities share the same slot everywhere and need no lookups. They keep the same `each` shape, so they could replace this later without changing systems.
+
+### World and resources
+
+`World` ties the pieces together. It owns one `EntityRegistry` and one `ComponentStore` per component definition, created the first time anything asks for it, including when a view is built, so a view made before any entity has the component still sees it later. `destroyEntity` removes the entity from every store before freeing its ID.
+
+**Resources** are per-world singletons: gravity, the collision settings, the broad-phase grid, the canvas context. Each has a typed key made by `defineResource<T>(name)`; `world.resource(key)` reads it and throws `Missing resource <name>` if nothing set it. Keeping them in the world, not in module globals, is what lets two worlds run side by side.
+
+### Schedule and deferred commands
+
+A system is a function `(world, deltaTime) => void`. Systems are built by factories (`createGravitySystem(world)`) that make their views and callbacks once, so running a system each step allocates nothing.
+
+`Schedule` is an ordered list of systems, and `run` calls them in order. A system in the middle of `each` must not add or remove components on _other_ entities, because that moves slots in the stores the view is walking. Instead it calls `world.defer(command)`. After each system finishes, the schedule calls `world.flushDeferred()`, which runs the queued commands in order, including any queued while flushing. The order is fixed and written in one place, so every run of the simulation is deterministic.
+
+### Further reading
+
+Michele Caini's (skypjack) _ECS back and forth_ series explains sparse sets, views and groups in depth; this core follows its design.

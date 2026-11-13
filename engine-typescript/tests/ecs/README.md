@@ -6,4 +6,6 @@ Tests for the ECS core in `src/ecs/`.
 | ------------------------ | -------------------------------------------------------------------------------------- |
 | `ComponentStore.test.ts` | Adding, overwriting, swap-removal, stale IDs, growth and clearing in the sparse set    |
 | `EntityRegistry.test.ts` | Entity ID packing, unique IDs, index reuse with generations, wraparound                |
+| `Schedule.test.ts`       | System order, deltaTime, and deferred commands flushed between systems                 |
 | `View.test.ts`           | Inclusion, exclusion, slot order, driver choice, safe removal mid-loop, `find`, limits |
+| `World.test.ts`          | Separate worlds, destroy, views with exclusions, resources, deferred commands          |
