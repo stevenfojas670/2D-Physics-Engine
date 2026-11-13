@@ -66,7 +66,7 @@ This spec covers **project 1 of 3**:
 | Approach | Trade-off |
 |---|---|
 | **A. Fixed-capacity arrays indexed by entity ID** (bitECS style) | The simplest and very fast. But it has a hard entity cap, wastes memory on components few entities have, and teaches the least about how ECSs are usually built. |
-| **B. Sparse sets** (EnTT style) — **chosen** | Each component keeps a packed array of only the entities that have it. Adding and removing components is O(1), which suits an editor and a genetic algorithm that spawn and kill agents constantly. There is no hard cap. It is moderate to write, and skypjack's *ECS back and forth* series documents it. Multi-component queries do a lookup per extra component, which is fine at thousands. |
+| **B. Sparse sets** (EnTT style) — **chosen** | Each component keeps a packed array of only the entities that have it. Adding and removing components is O(1), which suits an editor and a genetic algorithm that spawn and kill agents constantly. There is no hard cap. It is moderate to write, and skypjack's *ECS back and forth* series documents it. Multi-component views do a lookup per extra component, which is fine at thousands. |
 | **C. Archetypes** (Bevy, Unity DOTS, flecs) | The fastest iteration. But adding or removing a component moves the entity between tables. It is the most code and the hardest to debug while learning. |
 
 The owner chose **B**.
@@ -80,7 +80,7 @@ The owner's learning goal shapes how it's written:
 - **The core stays small and readable.** Each idea lives in its own file:
   - entity IDs in `EntityRegistry`;
   - the sparse set in `ComponentStore`;
-  - iteration in `Query`;
+  - iteration in `View`;
   - wiring in `World`;
   - ordering in `Schedule`.
 
@@ -89,7 +89,7 @@ The owner's learning goal shapes how it's written:
   - how an entity ID packs index and generation, and why generations catch stale IDs;
   - how `sparse` and `dense` map to each other and why removal swaps;
   - why columns are struct-of-arrays;
-  - how a query picks the smallest store;
+  - how a view picks the smallest store as its driver and passes slots in component order;
   - why structural changes are deferred.
 
   It cites skypjack's *ECS back and forth* series for further reading.
@@ -121,7 +121,7 @@ Components live in the physics layer because physics owns their meaning. Renderi
 
 ```
 src/
-  ecs/                    EntityRegistry, ComponentStore, Query, World, Schedule, defineComponent, defineResource
+  ecs/                    EntityRegistry, ComponentStore, View, World, Schedule, defineComponent, defineResource
   components/             One file per component definition
   systems/                Physics systems, one file each
   shapes/                 Pure geometry functions: building collider data, inertia, world-space transforms
@@ -169,33 +169,55 @@ One per component per world:
 - `add(entity)` appends and returns the slot. `remove(entity)` swap-removes (moves the last slot into the hole) in O(1). `has(entity)`, `slotOf(entity)` and `size`.
 - Columns grow by doubling. Systems must re-read a column reference after any operation that can grow it (see deferred commands).
 
-Systems read and write by slot:
+Systems read and write columns by slot. They get slots from **views** (below), not by calling `slotOf` per entity.
+
+### Views
+
+Querying uses EnTT-style **non-owning, uncached views**. A system builds its views once and reuses them every step:
 
 ```ts
 const transforms = world.store(Transform)
 const velocities = world.store(Velocity)
-for (const entity of world.query(Transform, Velocity)) {
-	const t = transforms.slotOf(entity)
-	const v = velocities.slotOf(entity)
-	transforms.x[t] += velocities.x[v] * deltaTime
-}
+const movers = world.view([Transform, Velocity], { without: [Particle] })
+
+movers.each((entity, transformSlot, velocitySlot) => {
+	transforms.x[transformSlot] += velocities.x[velocitySlot] * deltaTime
+})
 ```
 
-This explicit slot lookup is the honest cost of sparse sets, and it's kept visible on purpose. A typed, allocation-free accessor may be added if it costs nothing in the hot path. That is the builder's call, measured with the benchmark.
+- **What a view holds:** direct references to its stores (the included and the excluded ones), resolved once when it is built. It holds no entity list of its own, so it never goes stale. Entities added or removed between steps show up or drop out on their own.
+- **`each(callback)`:**
+  - On every call, it picks the **smallest** included store as the driver.
+  - It walks the driver's dense entities **from the end to the start**, so destroying the current entity mid-loop is safe.
+  - For each entity, it reads the sparse slot from every other included store, skipping the entity if any is missing. It also skips the entity if any excluded store has it.
+  - It calls `callback(entity, ...slots)` with one slot per included component, **in the order the components were listed**. The driver's slot is the loop index, so it costs no lookup.
+- **Typing:** TypeScript tuple types give the callback exactly one numeric slot parameter per included component. This is the one place in the core that uses non-trivial generics. Keep it to that one type.
+- **Other methods:**
+  - `contains(entity)`;
+  - `slot(entity, Component)` for one-off lookups, such as a joint reading its two bodies;
+  - `size()`, which is the driver's size and an upper bound;
+  - `find(predicate)`, which returns the first matching entity or none, for loops that need to stop early, such as mouse picking.
+- **No allocation** per `each` call or per entity. The callback is the system's own function, created once with the view, not a new closure every step.
+- **Naming rule for callbacks:** slot parameters are named after their component (`transformSlot`, `velocitySlot`). Slots arrive by position, and the names are the guard against mixing them up.
+- **Columns are read through the store** (`transforms.x[...]`), never cached as a local array across a step, because growth replaces the arrays.
+- **Out of scope:** cached views, which keep their own entity list updated on every add and remove, and groups, which reorder stores so matches share slots. Groups keep the same `each` shape, so if the benchmark ever calls for them (project 3), systems don't change.
 
-### Queries
+Trade-offs considered against the first draft's `world.query()` + `slotOf` design:
 
-- `world.query(...components)` iterates entities that have **all** the given components. An optional `without` list excludes entities that have any of the listed components.
-- Implementation: pick the smallest store, walk its dense entity list **from the end to the start**, and check `has` on the others. Walking backwards makes it safe to destroy the *current* entity mid-iteration.
-- Queries must not allocate per step. Reuse an iterator or callback form. The exact form is the builder's call.
-- Query caching is out of scope until the benchmark shows a need.
+| | Query + `slotOf` | View (chosen) |
+|---|---|---|
+| Lookups per entity, two components | 3 | 1 |
+| Store resolution | Every call | Once |
+| Looping | Iterator: harder to keep fast and allocation-free | Callback: simple and fast, but no `break`, so `find` covers that |
+| Readability | Explicit lookups | Positional slots, guarded by the naming rule |
+| Path to groups | All systems change | Contained in the view |
 
 ### `World`
 
 - Owns the `EntityRegistry`, one `ComponentStore` per component definition (created lazily on first use), and a resource table.
-- `createEntity()`, `destroyEntity(entity)` (removes it from every store), `add(entity, Component, values?)`, `remove(entity, Component)`, `has`, `store(Component)`, `query(...)`.
+- `createEntity()`, `destroyEntity(entity)` (removes it from every store), `add(entity, Component, values?)`, `remove(entity, Component)`, `has`, `store(Component)`, `view(components, { without })`.
 - **Resources** are per-world singletons, defined with `defineResource<T>(name)` and accessed with `world.resource(Key)` and `world.setResource(Key, value)`. Gravity, the collision matrix, the broad-phase grid, the world size, the contact list, debug-draw options, controller keys and the mouse state are all resources.
-- **Deferred commands:** `world.defer(command)` queues structural changes (create, destroy, add, remove on other entities) made while a query is iterating. The `Schedule` flushes them after each system.
+- **Deferred commands:** `world.defer(command)` queues structural changes (create, destroy, add, remove on other entities) made while a view is iterating. The `Schedule` flushes them after each system.
 
 ### `Schedule`
 
@@ -248,7 +270,7 @@ Static bodies are entities with `Transform`, `Collider`, `CollisionGroup`, `Rend
 
 `touching` keeps today's meaning: the broad phase sets it on both colliders when their AABBs overlap and the collision matrix allows the pair. A narrow-phase hit isn't required.
 
-Particles have no `Collider` in project 1. They don't collide, which matches today, where particles are never added to the grid. They may have a `Renderable`, and `ColliderRenderSystem` doesn't draw them; a particle renderer belongs with the particle-system goal. The rigid-body integration, broad phase and solver queries exclude `Particle`.
+Particles have no `Collider` in project 1. They don't collide, which matches today, where particles are never added to the grid. They may have a `Renderable`, and `ColliderRenderSystem` doesn't draw them; a particle renderer belongs with the particle-system goal. The rigid-body integration, broad phase and solver views exclude `Particle`.
 
 Ordering note: today gravity and keyboard forces are added *after* integration, so they apply one step later than mouse forces. The ECS applies all forces before integration. The one-step shift is invisible in the demo and is accepted.
 
@@ -317,7 +339,14 @@ It rebuilds today's `Simulation` constructor as entities:
 - **ECS core tests**, written before each piece (test-first):
   - Entity IDs are unique while alive. Destroyed indices are reused with a bumped generation. Stale IDs report not alive. Generations wrap.
   - Store: add, remove, has and slot. Swap-remove keeps the other entities' data intact. Columns grow past their initial capacity without losing data.
-  - Query: includes and excludes correctly. Iterating from the smallest store gives the same results. Destroying the current entity during iteration is safe. `without` works.
+  - View:
+    - includes and excludes correctly, and `without` works;
+    - gives the same results whichever store is smallest;
+    - passes slots in the order the components were listed, and they point at the right data;
+    - destroying the current entity during `each` is safe;
+    - sees entities added or removed between calls;
+    - `find` stops at the first match;
+    - `each` allocates nothing. Unit tests can't measure this reliably, so code review and a flat heap during the benchmark check it.
   - World: stores and resources are independent between two worlds. Destroy removes the entity from every store. Deferred commands apply after the system.
 - **Physics tests:**
   - Integration: a free body under gravity matches semi-implicit Euler by hand. Damping and sleep behave as today. Immovable bodies don't move.
@@ -356,7 +385,6 @@ Every commit passes lint, typecheck, build and test.
 
 ## Left to the builder
 
-- The exact query iteration form (callback, reused iterator, or a for-of over a cached array), as long as it doesn't allocate per step.
 - Initial store capacity and the growth details.
 - Whether `ref` columns hold per-entity `Float64Array`s or offsets into one shared vertex pool.
 - File names inside each folder, within the naming rules.
