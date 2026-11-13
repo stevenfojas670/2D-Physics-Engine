@@ -5,10 +5,10 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `feat: add joint force system (#10)` (Task 11). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–11. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, the force, integration and collider-transform systems, and the joint force system are built.
-- **Next:** Task 12 (broad-phase and collision-solver systems), then Tasks 13–17.
-- **Checks:** all four green after Task 11, 13 test files, 103 tests.
+- **Last task commit:** `feat: add broad-phase and collision solver systems (#10)` (Task 12). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–12. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, and every physics system in the update schedule (forces, joints, integration, collider transform, broad phase, solver) are built.
+- **Next:** Task 13 (batched rendering), then Tasks 14–17.
+- **Checks:** all four green after Task 12, 14 test files, 112 tests.
 - **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
@@ -39,7 +39,8 @@ One slip on the way: commit `fecb817` (Task 8) went in with lint failing because
 - **Narrow phase:** `Contact` (with `set(depth, nx, ny, px, py)`) is in `collisionDetectionSystem/Contact.ts`. `testCollision(colliders, slotA, slotB, centerAX, centerAY, centerBX, centerBY, out): boolean` is in `narrowPhase.ts`. The normal points from A to B.
 - **Contact resolution:** the class `BodyColumns(world)` is in `collisionDetectionSystem/BodyColumns.ts`, with `transforms`, `velocities`, `masses`, `materials` and `colliders` stores. `correctPositions(bodies, a, b, contact)` and `resolveImpulse(bodies, a, b, contact, friction: ContactLog | null)` are in `contactResolution.ts`.
 - **Broad phase:** `BroadPhaseGrid` is an **abstract class**, not an interface, in `optimizations/broadPhase/BroadPhaseGrid.ts`. It has `resize`, `insert`, `entitiesInCell`, `cellAt`, `cellsOf`, `clear` and an optional `forEachCellRect`. `HashGrid`, `SpatialGrid` and `createBroadPhaseGrid(kind, cellSize)` sit beside it.
-- **Systems** live in `src/systems/`: `createIntentForceSystem`, `createGravitySystem`, `createJointForceSystem`, `createRigidBodyIntegrationSystem`, `createParticleIntegrationSystem` and `createColliderTransformSystem`.
+- **Candidate pairs:** the class `CandidatePairs` (`count`, `entityA(pair)`, `entityB(pair)`, `clear`, `push`) and `CandidatePairsResource` are in `resources/CandidatePairs.ts`, not `BroadPhaseSystem.ts` (one-class-per-file rule). `createBroadPhaseSystem(world)` sets that resource when it is built. It needs `BroadPhaseResource` and `CollisionSettingsResource` set before it runs; the solver needs `ContactsResource`. Only entities with both `Collider` and `CollisionGroup` (and no `Particle`) enter the grid.
+- **Systems** live in `src/systems/`: `createIntentForceSystem`, `createGravitySystem`, `createJointForceSystem`, `createBroadPhaseSystem`, `createCollisionSolverSystem`, `createRigidBodyIntegrationSystem`, `createParticleIntegrationSystem` and `createColliderTransformSystem`.
 - **Joint helpers** in `joints/jointForces.ts`: `StretchState`, `anchorWorldPosition(transformColumns, slot, localX, localY, out)` and `addForceAtPoint(transformStore, forceStore, entity, pointX, pointY, forceX, forceY)`. `addForceAtPoint` takes the two stores, not `BodyColumns`, and does nothing if the entity lacks either. A joint body with no `Mass` counts as immovable for the force-halving rule.
 
 ## 4. Deviations and decisions
@@ -53,6 +54,8 @@ All of these are also in the ledger (`.superpowers/sdd/2026-11-13-ecs/progress.m
 - **`COLLIDER_SCHEMA` is a shared const value.** Rectangles carry their size, so `shapeInertia` takes no extra option.
 - **Plan arithmetic fix:** in the Task 7 circle-on-box-top test, the depth is 6, not 4.
 - **`addForceAtPoint` (Task 11):** the pre-flight ruled that it takes the Transform and ForceAccumulator stores directly, because `BodyColumns` has no force store.
+- **Broad-phase dedup stamp (Task 12):** the plan's stamp (A's index + 1) survives across steps, so the next step would skip every pair. The stamp is a running counter instead; a test pins pairs being found on the next step.
+- **Contacts and friction arrows are recorded on the first solver iteration (Task 12),** not the last. By the 25th iteration, the 90% positional correction has pushed resting bodies to exactly touching, so strict AABB overlap fails and nothing would be recorded. Arrows then would almost never show.
 - **Task 13** builds its 2,000-body test scene with `spawnRigidBody` in a loop, because `buildBenchmarkScene` arrives in Task 14.
 
 ## 5. Open flags for the PR
