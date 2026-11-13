@@ -158,7 +158,7 @@ git commit -m "docs: add documentation and lint spec and plan"
   - `^\.\./`, message "use the @/ alias"
   - `^\./.+/`, message "./ is only for same-folder imports; use @/"
 
-  Configure `no-restricted-syntax` on `ExportDefaultDeclaration`, with an override that turns it off for `vite.config.ts`.
+  Configure `no-restricted-syntax` on `ExportDefaultDeclaration`, with an override that turns it off for `vite.config.ts` and `eslint.config.js` (both tools require a default export).
 - [ ] **Step 2:** Run `npm run lint`. Expected: FAIL in `Simulation.ts` (the `./shapes/...` imports), `StaticBody.ts`, `Controller.ts` and `MathHelper.ts`.
 - [ ] **Step 3:** Remove `MathHelper`'s default export. Change its importers to `import { MathHelper } from "@/utils/MathHelper"`. Convert the flagged imports to `@/`.
 - [ ] **Step 4:** Run `npm run lint && npm run build`. Expected: both exit 0.
