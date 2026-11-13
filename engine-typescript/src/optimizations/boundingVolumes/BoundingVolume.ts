@@ -5,20 +5,10 @@ abstract class BoundingVolume {
 		this.isColliding = false
 	}
 
-	/**
-	 * Gets whether this bounding volume is currently flagged as colliding.
-	 *
-	 * @returns True when the volume is marked as overlapping another volume.
-	 */
 	get collisionState(): boolean {
 		return this.isColliding
 	}
 
-	/**
-	 * Sets whether this bounding volume is currently flagged as colliding.
-	 *
-	 * @param isColliding - New collision-state flag.
-	 */
 	set collisionState(isColliding: boolean) {
 		this.isColliding = isColliding
 	}

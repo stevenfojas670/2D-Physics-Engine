@@ -1,6 +1,3 @@
-/**
- * Supported keyboard inputs for simulation controls.
- */
 export type ControllerKeys = {
 	KeyW: boolean
 	KeyA: boolean

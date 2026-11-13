@@ -1,17 +1,13 @@
-import type { Rigidbody } from "@/Rigidbody"
+import type { RigidBody } from "@/RigidBody"
 import { JointConnection } from "./JointConnection"
 
 class Joint {
 	protected jointConnection: JointConnection
-	protected rigA: Rigidbody
-	protected rigB: Rigidbody
+	protected rigA: RigidBody
+	protected rigB: RigidBody
 	private anchorAID: number
 	private anchorBID: number
 
-	/**
-	 *
-	 * @param {JointConnection} jointConnection
-	 */
 	constructor(jointConnection: JointConnection) {
 		this.jointConnection = jointConnection
 		this.rigA = this.jointConnection.getRigidBodyA()

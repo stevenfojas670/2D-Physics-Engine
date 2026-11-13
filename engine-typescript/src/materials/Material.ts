@@ -1,6 +1,3 @@
-/**
- * @property
- */
 class Material {
 	private restitution: number
 	private friction: number
@@ -10,7 +7,7 @@ class Material {
 		this.friction = 0.1
 	}
 
-	setRestituion(res: number): void {
+	setRestitution(res: number): void {
 		this.restitution = res
 	}
 

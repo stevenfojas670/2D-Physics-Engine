@@ -1,7 +1,7 @@
-import { Vector2, Scale, Sub } from "@/Vector2"
+import { Vector2, scale, subtract } from "@/Vector2"
 import { Controller } from "@/Controller"
-import { Rigidbody } from "@/Rigidbody"
-import { StaticBody } from "@/Staticbody"
+import { RigidBody } from "@/RigidBody"
+import { StaticBody } from "@/StaticBody"
 import { Particle } from "@/particles/Particle"
 import { Joint } from "@/joints/Joint"
 import { Grid } from "@/optimizations/grids/Grid"
@@ -10,49 +10,43 @@ import type { GridKind } from "@/types/grid/grid.types"
 import {
 	CollisionGroups,
 	CollisionMatrix,
-} from "./optimizations/CollisionGroups"
-import { Rectangle } from "./shapes/Rectangle"
-import type { CollisionGroup } from "./types/collisionGroups/collisionGroups.type"
-import { Circle } from "./shapes/Circle"
-import { DrawUtils } from "./utils/DrawUtils"
-import { CollisionDetection } from "./collisionDetectionSystem/CollisionDetection"
+} from "@/optimizations/CollisionGroups"
+import { Rectangle } from "@/shapes/Rectangle"
+import type { CollisionGroup } from "@/types/collisionGroups/collisionGroups.types"
+import { Circle } from "@/shapes/Circle"
+import { DrawUtils } from "@/utils/DrawUtils"
+import { CollisionDetection } from "@/collisionDetectionSystem/CollisionDetection"
 
 class Simulation {
 	private static readonly BOUNDARY_THICKNESS = 50
 	private force: number
 	private gravity: Vector2
 	private worldSize: Vector2
-	private rigidBodies: Array<Rigidbody>
+	private rigidBodies: Array<RigidBody>
 	private staticBodies: Array<StaticBody>
 	private particles: Array<Particle>
 	private joints: Array<Joint>
 	private grid: Grid
 	private normalizedSpeed: number
 	private moveSpeed: number
-	private selectedRigidBody: Rigidbody | null
+	private selectedRigidBody: RigidBody | null
 	private selectedPosition: Vector2 | null
 	private selectedAnchorId: number | null
 
 	public controller: Controller
 
 	constructor(
-		_worldSize: Vector2,
-		_force: number = 100,
-		_gridKind: GridKind = "hash",
-		_cellSize: number = 20,
+		worldSize: Vector2,
+		force: number = 100,
+		gridKind: GridKind = "hash",
+		cellSize: number = 20,
 	) {
-		/**
-		 * @todo Create a Builder pattern for initializing the simulation
-		 * @description There will be so many parameters to configure for the user
-		 */
-
-		// Player movement
-		this.force = _force
+		this.force = force
 		this.moveSpeed = 5
 		this.normalizedSpeed = this.moveSpeed * this.force
 		this.gravity = new Vector2(0, 200)
 		this.controller = new Controller()
-		this.worldSize = _worldSize
+		this.worldSize = worldSize
 		this.rigidBodies = []
 		this.staticBodies = []
 		this.particles = []
@@ -61,26 +55,24 @@ class Simulation {
 		this.selectedPosition = null
 		this.selectedAnchorId = null
 
-		this.grid = createGrid(_gridKind, _cellSize)
+		this.grid = createGrid(gridKind, cellSize)
 		this.grid.initialize(this.worldSize, this.rigidBodies)
 
 		this.createBoundary()
-		let Polygon = new Rectangle(new Vector2(300, 420), 40, 40)
-		let PolygonKinematic = new Rigidbody(Polygon, 1)
-		this.rigidBodies.push(PolygonKinematic)
+		const polygon = new Rectangle(new Vector2(300, 420), 40, 40)
+		const polygonKinematic = new RigidBody(polygon, 1)
+		this.rigidBodies.push(polygonKinematic)
 
-		let staticPolygon = new Rectangle(new Vector2(300, 300), 100, 400)
-		let staticBody = new Rigidbody(staticPolygon, 0)
+		const staticPolygon = new Rectangle(new Vector2(300, 300), 100, 400)
+		const staticBody = new RigidBody(staticPolygon, 0)
 		this.rigidBodies.push(staticBody)
 
-		let recA = new Rectangle(new Vector2(200, 200), 50, 100)
-		let staticRectangle = new StaticBody(recA)
+		const recA = new Rectangle(new Vector2(200, 200), 50, 100)
+		const staticRectangle = new StaticBody(recA)
 		this.staticBodies.push(staticRectangle)
 
-		// This means circleRigA cannot collide with circleRigB
-		PolygonKinematic.setCollisionGroup(CollisionGroups.GROUP1)
+		polygonKinematic.setCollisionGroup(CollisionGroups.GROUP1)
 
-		// Setting names of the collision groups
 		CollisionGroups.GROUP1.name = "Kinematic Objects"
 		CollisionGroups.GROUP2.name = "Static Objects"
 
@@ -90,17 +82,12 @@ class Simulation {
 		)
 	}
 
-	/**
-	 * Build the four world-boundary rigidbodies for the current world size.
-	 *
-	 * @returns Boundary rigidbodies ordered as top, bottom, left, right.
-	 */
-	private createBoundaryBodies(): Rigidbody[] {
+	private createBoundaryBodies(): RigidBody[] {
 		const boundaryThickness = Simulation.BOUNDARY_THICKNESS
 		const halfThickness = boundaryThickness / 2
 
 		return [
-			new Rigidbody(
+			new RigidBody(
 				new Rectangle(
 					new Vector2(this.worldSize.x / 2, -halfThickness),
 					this.worldSize.x,
@@ -108,7 +95,7 @@ class Simulation {
 				),
 				0,
 			),
-			new Rigidbody(
+			new RigidBody(
 				new Rectangle(
 					new Vector2(this.worldSize.x / 2, this.worldSize.y + halfThickness),
 					this.worldSize.x,
@@ -116,7 +103,7 @@ class Simulation {
 				),
 				0,
 			),
-			new Rigidbody(
+			new RigidBody(
 				new Rectangle(
 					new Vector2(-halfThickness, this.worldSize.y / 2),
 					boundaryThickness,
@@ -124,7 +111,7 @@ class Simulation {
 				),
 				0,
 			),
-			new Rigidbody(
+			new RigidBody(
 				new Rectangle(
 					new Vector2(this.worldSize.x + halfThickness, this.worldSize.y / 2),
 					boundaryThickness,
@@ -135,17 +122,10 @@ class Simulation {
 		]
 	}
 
-	/**
-	 * @summary Rigidbodies can only collide with other objects within the
-	 * same Collision Group. Different groups will result in anything other than 0.
-	 * @param {*} rigi | Rigidbody to check collision mask
-	 * @returns
-	 */
-	canCollide(groupA_id: number, groupB_id: number): boolean {
-		return (CollisionMatrix[groupA_id] & groupB_id) != 0
+	canCollide(groupAId: number, groupBId: number): boolean {
+		return (CollisionMatrix[groupAId] & groupBId) != 0
 	}
 
-	// HELPER METHODS ----START----
 	enableCollisionBetweenGroups(
 		groupA: CollisionGroup,
 		groupB: CollisionGroup,
@@ -161,19 +141,16 @@ class Simulation {
 		CollisionMatrix[groupA.id] &= ~groupB.id
 		CollisionMatrix[groupB.id] &= ~groupA.id
 	}
-	// HELPER METHODS ----END----
 
-	createStressTestPyramid(_boxSize: number, _iterations: number) {
-		let boxSize = _boxSize
-		let iterations = _iterations
-		let topOffset = this.worldSize.y - iterations * boxSize
+	createStressTestPyramid(boxSize: number, iterations: number) {
+		const topOffset = this.worldSize.y - iterations * boxSize
 
 		for (let i = 0; i < iterations; i++) {
 			for (let j = iterations; j >= iterations - i; j--) {
-				let x = boxSize * i + j * (boxSize / 2)
-				let y = boxSize * j
+				const x = boxSize * i + j * (boxSize / 2)
+				const y = boxSize * j
 				this.rigidBodies.push(
-					new Rigidbody(
+					new RigidBody(
 						new Circle(new Vector2(x, y + topOffset), boxSize / 2),
 						1,
 					),
@@ -186,11 +163,6 @@ class Simulation {
 		this.rigidBodies.push(...this.createBoundaryBodies())
 	}
 
-	/**
-	 * Resize the simulation world and rebuild its boundary colliders.
-	 *
-	 * @param worldSize - New world dimensions in pixels.
-	 */
 	resizeWorld(worldSize: Vector2): void {
 		this.worldSize = worldSize
 
@@ -206,13 +178,13 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies)
 	}
 
-	SpawnObject(_object: string, _mousePosition: Vector2): void {
-		switch (_object) {
+	spawnObject(object: string, mousePosition: Vector2): void {
+		switch (object) {
 			case "Rectangle":
 				this.rigidBodies.push(
-					new Rigidbody(
+					new RigidBody(
 						new Rectangle(
-							new Vector2(_mousePosition.x, _mousePosition.y),
+							new Vector2(mousePosition.x, mousePosition.y),
 							100,
 							50,
 						),
@@ -224,8 +196,8 @@ class Simulation {
 				break
 			case "Circle":
 				this.rigidBodies.push(
-					new Rigidbody(
-						new Circle(new Vector2(_mousePosition.x, _mousePosition.y), 50),
+					new RigidBody(
+						new Circle(new Vector2(mousePosition.x, mousePosition.y), 50),
 						10,
 					),
 				)
@@ -238,16 +210,18 @@ class Simulation {
 		mouseDownLeft: boolean,
 	): void {
 		if (mouseDownLeft) {
-			let id = this.grid.getGridIdFromPosition(mousePos)
-			let nearBodies = this.grid.getContentOfCell(id)
+			const id = this.grid.getGridIdFromPosition(mousePos)
+			const nearBodies = this.grid.getContentOfCell(id)
 			for (let i = 0; i < nearBodies.length; i++) {
-				let mouseInside = nearBodies[i].getShape().isPointInside(mousePos)
+				const mouseInside = nearBodies[i].getShape().isPointInside(mousePos)
 
 				if (mouseInside && this.selectedRigidBody === null) {
 					this.selectedRigidBody = nearBodies[i]
-					this.selectedPosition = mousePos.Cpy()
-					// to local position
-					let localPos = Sub(mousePos, nearBodies[i].getShape().getCentroid())
+					this.selectedPosition = mousePos.copy()
+					const localPos = subtract(
+						mousePos,
+						nearBodies[i].getShape().getCentroid(),
+					)
 
 					this.selectedAnchorId = nearBodies[i]
 						.getShape()
@@ -269,13 +243,13 @@ class Simulation {
 			this.selectedPosition !== null &&
 			this.selectedAnchorId !== null
 		) {
-			let anchorPos = this.selectedRigidBody
+			const anchorPos = this.selectedRigidBody
 				.getShape()
 				.getAnchorPos(this.selectedAnchorId)
 			if (anchorPos === undefined) {
 				return
 			}
-			let force = Sub(mousePos, anchorPos)
+			const force = subtract(mousePos, anchorPos)
 			this.selectedRigidBody.addForceAtPoint(anchorPos, force)
 			DrawUtils.drawLine(anchorPos, mousePos, "black")
 		}
@@ -291,54 +265,39 @@ class Simulation {
 
 	update(deltaTime: number, mousePos: Vector2, mouseDownLeft: boolean): void {
 		this.handleMouseObjectInteraction(mousePos, mouseDownLeft)
-		// this.handleJoints();
 
-		/**
-		 * Updating RigidBody motion
-		 */
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].update(deltaTime)
 			this.rigidBodies[i].getShape().boundingBox.collisionState = false
 
-			// F = m * a
 			this.rigidBodies[i].addForce(
-				Scale(this.gravity, this.rigidBodies[i].getMass()),
+				scale(this.gravity, this.rigidBodies[i].getMass()),
 			)
-
-			// this.rigidBodies[i].log();
 		}
 
-		/**
-		 * Updating Particle motion
-		 */
 		for (let i = 0; i < this.particles.length; i++) {
 			this.particles[i].update(deltaTime)
 		}
 
 		this.grid.refreshGrid()
 
-		/**
-		 * Performing Collision Detection and Response on RigidBodies
-		 */
-		// The higher iteration limit, the more stable
-		let iterationLimit = 25
+		const iterationLimit = 25
 		for (
 			let solverIterations = 0;
 			solverIterations < iterationLimit;
 			solverIterations++
 		) {
 			for (let i = 0; i < this.rigidBodies.length; i++) {
-				let rigA = this.rigidBodies[i]
-				let neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA)
+				const rigA = this.rigidBodies[i]
+				const neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA)
 
 				for (let j = 0; j < neighborRigidBodies.length; j++) {
-					let rigB = neighborRigidBodies[j]
+					const rigB = neighborRigidBodies[j]
 
-					// Collision Checks
 					if (
 						this.canCollide(rigA.getCollisionGroup(), rigB.getCollisionGroup())
 					) {
-						let isCollidingWithBoundingBox = rigA
+						const isCollidingWithBoundingBox = rigA
 							.getShape()
 							.boundingBox.intersect(rigB.getShape().boundingBox)
 
@@ -349,13 +308,12 @@ class Simulation {
 						rigB.getShape().boundingBox.collisionState =
 							isCollidingWithBoundingBox
 
-						let collisionManifold = CollisionDetection.checkCollisions(
+						const collisionManifold = CollisionDetection.checkCollisions(
 							rigA,
 							rigB,
 						)
 
 						if (collisionManifold != null) {
-							// collisionManifold.draw();
 							collisionManifold.positionalCorrection()
 							collisionManifold.resolveCollision()
 						}
@@ -364,14 +322,9 @@ class Simulation {
 			}
 		}
 
-		// Handling movement
 		this.pollMovement()
 	}
 
-	/**
-	 * Draws all objects.
-	 * @param {} ctx - Canvas context for rendering onto the HTML Canvas
-	 */
 	draw(ctx: CanvasRenderingContext2D): void {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
 			this.rigidBodies[i].getShape().draw(ctx)
@@ -380,25 +333,9 @@ class Simulation {
 		for (let i = 0; i < this.staticBodies.length; i++) {
 			this.staticBodies[i].getShape().draw(ctx)
 		}
-
-		// for (let i = 0; i < this.particles.length; i++) {
-		// 	this.particles[i].getShape().draw(ctx);
-		// }
-
-		// this.grid.draw();
 	}
 
-	/**
-	 *
-	 * @todo Implement function to allow for assigning to shapes to be controllable.
-	 */
-
 	pollMovement(): void {
-		// this.controller.log();
-
-		let length = this.rigidBodies.length
-
-		// Moving shape one
 		if (this.controller.keys.KeyD) {
 			this.rigidBodies[4].addForce(new Vector2(this.normalizedSpeed, 0))
 		}
@@ -416,18 +353,10 @@ class Simulation {
 		}
 	}
 
-	/**
-	 *
-	 * @param {number} speed - Desired movement speed
-	 */
 	setMoveSpeed(speed: number): void {
 		this.moveSpeed = speed
 	}
 
-	/**
-	 *
-	 * @returns {number} moveSpeed - The current movement speed value.
-	 */
 	getMoveSpeed(): number {
 		return this.moveSpeed
 	}
