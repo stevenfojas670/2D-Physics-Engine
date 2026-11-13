@@ -103,6 +103,7 @@ Removing these is the goal of the next refactor. The list should only shrink.
 
 | Path | Contents |
 |---|---|
+| [`.github/`](.github/pull_request_template.md) | Pull request template and issue templates (bug report, feature request) |
 | [`AGENTS.md`](AGENTS.md) | Rules for AI agents working in this repo |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branches, commits and pull requests |
 | [`engine-typescript/`](engine-typescript/README.md) | The active engine; every folder has a README mapping its files |

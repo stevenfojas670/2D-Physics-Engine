@@ -31,7 +31,13 @@ fix: clamp restitution between 0 and 1
 docs: add folder readmes
 ```
 
+## Issues
+
+Open issues with the **Bug report** or **Feature request** template in `.github/ISSUE_TEMPLATE/`.
+
 ## Before opening a pull request
+
+The pull request template (`.github/pull_request_template.md`) repeats this checklist.
 
 From `engine-typescript/`, all of these must pass:
 
