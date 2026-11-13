@@ -4,6 +4,7 @@ Per-world singleton values (resources) the physics systems share. Each file defi
 
 | File                   | Purpose                                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| `BroadPhase.ts`        | Resource key for the world's broad-phase grid                                                   |
 | `CollisionSettings.ts` | The collision matrix and group names for one world, with enable, disable and can-collide checks |
 | `ContactLog.ts`        | Contacts and friction arrows recorded by the solver each step, for debug drawing                |
 | `Gravity.ts`           | Gravity acceleration, default (0, 200)                                                          |
