@@ -82,6 +82,31 @@ export default defineConfig(
 					],
 				},
 			],
+			"local/layers": "error",
+		},
+	},
+	{
+		files: [
+			"src/Vector2.ts",
+			"src/utils/MathHelper.ts",
+			"src/RigidBody.ts",
+			"src/StaticBody.ts",
+			"src/Simulation.ts",
+			"src/shapes/**",
+			"src/collisionDetectionSystem/**",
+			"src/joints/**",
+			"src/materials/**",
+			"src/particles/**",
+			"src/optimizations/**",
+		],
+		rules: {
+			"no-restricted-globals": [
+				"error",
+				"window",
+				"document",
+				"requestAnimationFrame",
+				"navigator",
+			],
 		},
 	},
 	{
