@@ -1,7 +1,7 @@
 const layers = [
 	{ name: "ecs", files: ["ecs/**"] },
 	{ name: "math", files: ["Vector2.ts", "utils/MathHelper.ts"] },
-	{ name: "rendering", files: ["utils/DrawUtils.ts", "rendering/**"] },
+	{ name: "rendering", files: ["rendering/**"] },
 	{ name: "input", files: ["Controller.ts"] },
 	{ name: "app", files: ["main.ts", "app/**"] },
 	{ name: "types", files: ["types/**"] },
@@ -11,14 +11,10 @@ const layers = [
 			"components/**",
 			"resources/**",
 			"systems/**",
-			"RigidBody.ts",
-			"StaticBody.ts",
-			"Simulation.ts",
 			"shapes/**",
 			"collisionDetectionSystem/**",
 			"joints/**",
 			"materials/**",
-			"particles/**",
 			"optimizations/**",
 		],
 	},
@@ -34,18 +30,6 @@ const allowedImports = {
 	types: ["types"],
 }
 
-const exceptions = [
-	{ from: "shapes/Shape.ts", to: "utils/DrawUtils.ts" },
-	{ from: "shapes/Circle.ts", to: "utils/DrawUtils.ts" },
-	{ from: "shapes/Polygon.ts", to: "utils/DrawUtils.ts" },
-	{
-		from: "collisionDetectionSystem/CollisionManifold.ts",
-		to: "utils/DrawUtils.ts",
-	},
-	{ from: "joints/JointConnection.ts", to: "utils/DrawUtils.ts" },
-	{ from: "optimizations/grids/SpatialGrid.ts", to: "utils/DrawUtils.ts" },
-	{ from: "Simulation.ts", to: "utils/DrawUtils.ts" },
-	{ from: "Simulation.ts", to: "Controller.ts" },
-]
+const exceptions = []
 
 export { layers, allowedImports, exceptions }

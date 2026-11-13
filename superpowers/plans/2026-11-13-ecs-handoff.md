@@ -5,16 +5,15 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `feat: run the demo on the ecs (#10)` (Task 16). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–16, except two browser steps that need the owner. `main.ts` now runs the ECS.
+- **Last task commit:** `refactor: remove the pre-ecs engine and layer exceptions (#10)` (Task 17). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–17 Step 5. The old engine is deleted and the layer `exceptions` list is empty. The owner said to go ahead with Task 17 before the hand check.
 - **Waiting on the owner:**
   - **Task 15 Step 4:** in the worktree `.claude/worktrees/ecs-baseline/engine-typescript`, run `npm run dev -- --port 5174` and open `?scene=benchmark`. After 360 frames, the old engine's update and render ms show on screen and in the console.
   - **Task 16 Step 3:** run `npm run dev` on `feature/ecs` and compare it with the old engine side by side, using the plan's checklist. Then open `?scene=benchmark` and read off update ms, render ms and draw calls.
-- **Next:** Task 17 (delete the old engine, push, open the PR), only after the hand check passes.
-- **Checks:** all four green after Task 16, 16 test files, 128 tests.
+- **Next:** Task 17 Step 6 (push and open the PR into `dev`), then the final whole-branch review. Step 7 (remove the baseline worktree) waits until the owner has the browser numbers.
+- **Checks:** all four green after Task 17, 16 test files, 128 tests. The ECS bench mean after Task 17 is 173.84 ms per step.
 - **Headless bench, 2,000 bodies (Node v24.14.1, Vitest 5.1.0, Windows 11):** the old engine takes 844.64 ms per step and the ECS 262.86 ms, about 3.2× faster. Vitest warns that its module export getters add overhead to the ECS hot loops, so the ECS number is pessimistic. The numbers are in `.superpowers/sdd/2026-11-13-ecs/baseline.md`.
 - **Throwaway branch:** `test/ecs-baseline-benchmark` (commit `06e5baa`) is local only and is never pushed or merged.
-- **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
 
@@ -70,6 +69,8 @@ All of these are also in the ledger (`.superpowers/sdd/2026-11-13-ecs/progress.m
 - **`addForceAtPoint` (Task 11):** the pre-flight ruled that it takes the Transform and ForceAccumulator stores directly, because `BodyColumns` has no force store.
 - **Broad-phase dedup stamp (Task 12):** the plan's stamp (A's index + 1) survives across steps, so the next step would skip every pair. The stamp is a running counter instead; a test pins pairs being found on the next step.
 - **Contacts and friction arrows are recorded on the first solver iteration (Task 12),** not the last. By the 25th iteration, the 90% positional correction has pushed resting bodies to exactly touching, so strict AABB overlap fails and nothing would be recorded. Arrows then would almost never show.
+- **Task 17 layer map:** `resources/**` stays in the physics layer (the spec's table omits it, but the folder exists), and the rendering layer is just `rendering/**` because `utils/DrawUtils.ts` is deleted.
+- **Task 17 before the hand check:** the owner told me to continue, so the old engine was deleted before the browser parity check. The PR says the check is still open.
 - **Task 13** builds its 2,000-body test scene with `spawnRigidBody` in a loop, because `buildBenchmarkScene` arrives in Task 14.
 
 ## 5. Open flags for the PR
@@ -86,7 +87,7 @@ All of these are also in the ledger (`.superpowers/sdd/2026-11-13-ecs/progress.m
 - **Prettier scope:** run `npx prettier --write` only on the files you changed. Running it over `../superpowers` reformats unrelated older docs.
 - **Columns:** systems capture `world.store(X).columns` once. That object is stable, and its arrays are replaced inside it on growth, so always index through it and never cache `columns.x` itself.
 - **Tests and `noUnusedParameters`:** tests are type-checked with it on. A view callback that only needs the entity must still use the slot parameters, or use `find((...values) => …)`.
-- **Untouched until Task 17:** the old engine files (`RigidBody.ts`, `Simulation.ts`, `shapes/Shape.ts` and the rest).
+- **Old engine:** deleted in Task 17. It survives on `dev` and in the baseline worktree for comparison.
 - **Untracked `.claude/`:** it sits at the repo root and holds worktrees. Don't commit it.
 
 ## 7. Resume prompt
