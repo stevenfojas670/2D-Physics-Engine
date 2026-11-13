@@ -4,6 +4,7 @@ Narrow-phase collision detection and collision response. Layer: physics.
 
 | File                    | Purpose                                                                                                                             |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `BodyColumns.ts`        | Bundles the transform, velocity, mass, material and collider stores that contact resolution reads and writes                        |
 | `CollisionDetection.ts` | Tests circle–circle, polygon–polygon (separating axis with support points) and circle–polygon pairs, and returns a contact manifold |
 | `CollisionManifold.ts`  | Contact data for one collision: resolves it with impulses and friction, corrects overlap, and draws the contact                     |
 | `Contact.ts`            | Reusable scratch result of a collision test: depth, normal from A to B, and contact point                                           |
