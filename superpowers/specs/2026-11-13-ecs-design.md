@@ -27,7 +27,7 @@ This spec covers **project 1 of 3**:
 - `RigidBody`, `StaticBody`, `Simulation` and `Particle` are gone. All state lives in components; all behaviour lives in systems.
 - The exceptions list in `engine-typescript/lint/layerMap.js` is **empty**. Physics no longer imports `DrawUtils` or `Controller`.
 - The ECS core has unit tests, and the physics systems have tests that pin the behaviour this spec describes.
-- A benchmark scene with 2,000 bodies records the physics step time on the old engine and on the ECS. The ECS is no slower, and both numbers go in the pull request.
+- A benchmark scene with 2,000 bodies records the physics step time, and the per-frame update and render times, on the old engine and on the ECS. Physics is no slower, rendering is clearly faster because draw calls are batched, and all numbers go in the pull request.
 
 ## Goals
 
@@ -41,7 +41,7 @@ This spec covers **project 1 of 3**:
 ## Non-goals
 
 - AI, agents and genetic algorithms (project 2).
-- A WebGL or WebGPU renderer, fixed timestep, fast-forward mode, Web Workers (project 3). Canvas 2D handles a few thousand shapes.
+- A WebGL or WebGPU renderer, fixed timestep, fast-forward mode, Web Workers (project 3). This project stays on the Canvas 2D API but batches its draw calls (see Batched drawing). It also records render timings, so the renderer project starts from real numbers.
 - Archetype storage. Sparse sets were chosen. The `World` interface must not leak storage details, so archetypes could replace them later without changing systems.
 - New physics: no new integrators, shapes, joints, buoyancy or ragdolls.
 - Changes to `engine/`.
@@ -289,6 +289,19 @@ The other two grid kinds keep working: the hash grid and the spatial grid. Both 
 
 `DrawUtils` stops being a static singleton holding `ctx`. Rendering systems get the context through a resource set by `main.ts`. This keeps physics free of the canvas for good.
 
+### Batched drawing
+
+Today every `DrawUtils` call does its own `beginPath()` and `stroke()` or `fill()`. One box with debug drawing costs about 10 draw calls, so 2,000 bodies cost over 20,000 per frame. The render systems batch instead:
+
+- Each frame, the render systems add their geometry to **batches keyed by colour and kind**: stroked lines, filled points and stroked circles. A batch is one `Path2D`, or one open path, per key. Drawing appends `moveTo`/`lineTo`/`arc` to the batch for that colour.
+- After all render systems run, a final **flush** sets `strokeStyle`/`fillStyle` once per batch and calls `stroke()` or `fill()` once per batch. A frame becomes a handful of draw calls, roughly one per colour per kind, no matter how many bodies there are.
+- The batch store is a rendering resource. It's reused every frame (cleared, not reallocated), and no per-body objects are created. The flush is the last system in the render schedule.
+- Arrowheads, normals, AABBs, centroids, joint lines and the mouse-drag line all go through batches. Text (the FPS counter) is drawn directly, because it's one call.
+- **Draw order:** within one frame, batches flush in a fixed order (fills, then strokes, in a fixed colour order). Overlapping shapes may layer differently than today's draw-as-you-go. That's accepted: everything is outlines on a flat background.
+- `DrawUtils` becomes the batching helper: append-to-batch functions plus the flush, taking the batch resource rather than a static `ctx`.
+
+How batches are stored (`Path2D` objects or raw coordinate arrays traced at flush) is the builder's call, picked with the render benchmark below.
+
 ## Shapes and collision as functions
 
 - `shapes/` exports pure functions: `createRectangleCollider(width, height)`, `createCircleCollider(radius)`, `createPolygonCollider(localVertices)`, `polygonInertia(mass, localVertices)`, `circleInertia(mass, radius)`, `transformVertices(...)`, `computeNormals(...)`, `computeBounds(...)`, `isPointInsideCollider(...)`. Inertia formulas are unchanged.
@@ -330,7 +343,19 @@ It rebuilds today's `Simulation` constructor as entities:
   - adds a way to build the benchmark scene instead of the demo.
 
   `feature/ecs` never touches the old classes for this.
-- Both numbers, plus the machine and browser or Node version, are recorded in the pull request. Goal: the ECS is no slower. Most of the step cost is expected in the 25-iteration solver, so big speed-ups belong to project 3.
+- **Render timing.** Rendering needs a real canvas, so it's measured in the browser:
+  - Opening the dev server with `?scene=benchmark` loads the benchmark scene instead of the demo.
+  - After a warm-up, it measures the average **update** time and **render** time separately, using `performance.now()` around each schedule over a fixed number of frames.
+  - It shows both on screen next to the FPS counter.
+  - It records the draw-call count per frame by counting batch flushes.
+
+  The throwaway baseline branch measures the old engine's `Simulation.update` and `Simulation.draw` the same way, with logging removed. Real drawing stays on in the baseline, because that's what's being compared.
+- All numbers are recorded in the pull request, with the machine and the browser or Node version:
+  - physics step (headless), old and new;
+  - update and render per frame (browser), old and new;
+  - draw calls per frame, new only.
+
+  Goals: physics is no slower, and render is clearly faster because of batching. Most of the remaining step cost is expected in the 25-iteration solver. Big physics speed-ups, and moving off the Canvas 2D API to WebGL or WebGPU, belong to project 3, which starts from these render numbers.
 
 ## Testing
 
@@ -382,6 +407,7 @@ Every commit passes lint, typecheck, build and test.
 - **Particles don't collide and aren't drawn** in project 1, as today.
 - **The old-engine benchmark** runs on a throwaway, never-merged branch that strips logging and stubs drawing.
 - **The explanation of the core lives in `src/ecs/README.md`,** because code comments are banned.
+- **Batched drawing may layer overlapping outlines differently** from today, because batches flush in a fixed order.
 
 ## Left to the builder
 
