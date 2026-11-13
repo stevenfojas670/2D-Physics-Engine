@@ -1,82 +1,147 @@
 import "@/style.css"
 
-import { Vector2 } from "@/Vector2"
-import { Simulation } from "@/Simulation"
-import { DrawUtils } from "@/utils/DrawUtils"
+import { Controller } from "@/Controller"
+import { World } from "@/ecs/World"
+import {
+	BENCHMARK_HEIGHT,
+	BENCHMARK_WIDTH,
+	buildBenchmarkScene,
+} from "@/app/BenchmarkScene"
+import { ControllerKeysResource } from "@/app/ControllerKeys"
+import { buildDemoScene, resizeDemoWorld } from "@/app/DemoScene"
+import type { DemoHandles } from "@/app/DemoScene"
+import { FrameTimer } from "@/app/FrameTimer"
+import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
+import { createRenderSchedule, createUpdateSchedule } from "@/app/schedules"
+import {
+	DebugOptionsResource,
+	createDebugOptions,
+} from "@/rendering/DebugOptions"
+import { DrawBatches } from "@/rendering/DrawBatches"
+import { RenderContextResource } from "@/rendering/RenderContext"
+
+const BACKGROUND_COLOR = "rgb(240, 240, 240)"
+const TEXT_COLOR = "black"
+const TEXT_FONT = "12px Arial"
+const CANVAS_SCALE = 0.75
+const BENCHMARK_STEP = 1 / 60
+const LEFT_BUTTON = 0
 
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement
 const ctx = canvas.getContext("2d")!
+const isBenchmark =
+	new URLSearchParams(location.search).get("scene") === "benchmark"
 
-DrawUtils.init(ctx)
+const world = new World()
+const controller = new Controller(false)
+const mouse = createMouseInput()
+const render = { ctx, batches: new DrawBatches(), drawCalls: 0 }
+world.setResource(ControllerKeysResource, controller.keys)
+world.setResource(MouseInputResource, mouse)
+world.setResource(RenderContextResource, render)
+world.setResource(DebugOptionsResource, createDebugOptions())
 
+let demoHandles: DemoHandles | null = null
+if (isBenchmark) {
+	canvas.width = BENCHMARK_WIDTH
+	canvas.height = BENCHMARK_HEIGHT
+	buildBenchmarkScene(world)
+} else {
+	resizeCanvas()
+	demoHandles = buildDemoScene(world, canvas.width, canvas.height)
+}
+
+const update = createUpdateSchedule(world)
+const draw = createRenderSchedule(world)
+const frameTimer = new FrameTimer()
 let lastTime = performance.now()
-let currentTime = 0
-let deltaTime = 0
-
-let mousePos = new Vector2(0, 0)
-let mouseDownLeft = false
-
-resizeCanvas()
-
-const simulation = new Simulation(new Vector2(canvas.width, canvas.height))
 
 document.addEventListener("DOMContentLoaded", () => {
-	function getMousePos(canvas: HTMLCanvasElement, evt: MouseEvent) {
-		const rect = canvas.getBoundingClientRect()
-		return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }
-	}
-
-	window.addEventListener("keydown", (evt: KeyboardEvent) => {
-		simulation.controller.keyboard(evt.code, true)
+	window.addEventListener("keydown", (event: KeyboardEvent) => {
+		controller.keyboard(event.code, true)
 	})
 
-	window.addEventListener("keyup", (evt: KeyboardEvent) => {
-		simulation.controller.keyboard(evt.code, false)
+	window.addEventListener("keyup", (event: KeyboardEvent) => {
+		controller.keyboard(event.code, false)
 	})
 
-	canvas.addEventListener("mousemove", (evt: MouseEvent) => {
-		const mouse = getMousePos(canvas, evt)
-		mousePos = new Vector2(mouse.x, mouse.y)
+	canvas.addEventListener("mousemove", (event: MouseEvent) => {
+		const bounds = canvas.getBoundingClientRect()
+		mouse.x = event.clientX - bounds.left
+		mouse.y = event.clientY - bounds.top
 	})
 
-	window.addEventListener("mousedown", (evt: MouseEvent) => {
-		if (evt.button === 0) mouseDownLeft = true
+	window.addEventListener("mousedown", (event: MouseEvent) => {
+		if (event.button === LEFT_BUTTON) {
+			mouse.leftDown = true
+		}
 	})
 
-	window.addEventListener("mouseup", (evt: MouseEvent) => {
-		if (evt.button === 0) mouseDownLeft = false
+	window.addEventListener("mouseup", (event: MouseEvent) => {
+		if (event.button === LEFT_BUTTON) {
+			mouse.leftDown = false
+		}
 	})
 
 	window.addEventListener("resize", () => {
+		if (demoHandles === null) {
+			return
+		}
 		resizeCanvas()
-		simulation.resizeWorld(new Vector2(canvas.width, canvas.height))
+		resizeDemoWorld(world, demoHandles, canvas.width, canvas.height)
 	})
 })
 
 mainLoop()
 
-function updateSimulation(deltaTime: number) {
-	clear()
-	const fpsText = `${Math.round(1.0 / deltaTime)} FPS`
-	DrawUtils.drawText(new Vector2(10, 20), 12, "black", fpsText)
-	simulation.update(deltaTime, mousePos, mouseDownLeft)
-	simulation.draw(ctx)
-}
-
-function mainLoop() {
+function mainLoop(): void {
 	window.requestAnimationFrame(mainLoop)
-	currentTime = performance.now()
-	deltaTime = (currentTime - lastTime) / 1000
-	updateSimulation(deltaTime)
+	const currentTime = performance.now()
+	const deltaTime = (currentTime - lastTime) / 1000
 	lastTime = currentTime
+	runFrame(deltaTime)
 }
 
-function clear() {
-	ctx.fillStyle = "rgb(240, 240, 240)"
+function runFrame(deltaTime: number): void {
+	clear()
+	drawText(`${Math.round(1.0 / deltaTime)} FPS`, 20)
+
+	const updateStart = performance.now()
+	update.run(world, isBenchmark ? BENCHMARK_STEP : deltaTime)
+	const renderStart = performance.now()
+	draw.run(world, deltaTime)
+	const renderEnd = performance.now()
+
+	if (isBenchmark) {
+		frameTimer.record(
+			renderStart - updateStart,
+			renderEnd - renderStart,
+			render.drawCalls,
+		)
+		drawText(benchmarkText(), 40)
+	}
+}
+
+function benchmarkText(): string {
+	const summary = frameTimer.summary
+	if (summary === null) {
+		return "measuring..."
+	}
+	return `update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
+}
+
+function drawText(text: string, y: number): void {
+	ctx.font = TEXT_FONT
+	ctx.fillStyle = TEXT_COLOR
+	ctx.fillText(text, 10, y)
+}
+
+function clear(): void {
+	ctx.fillStyle = BACKGROUND_COLOR
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
-function resizeCanvas() {
-	canvas.width = Math.max(1, Math.floor(window.innerWidth * 0.75))
-	canvas.height = Math.max(1, Math.floor(window.innerHeight * 0.75))
+function resizeCanvas(): void {
+	canvas.width = Math.max(1, Math.floor(window.innerWidth * CANVAS_SCALE))
+	canvas.height = Math.max(1, Math.floor(window.innerHeight * CANVAS_SCALE))
 }

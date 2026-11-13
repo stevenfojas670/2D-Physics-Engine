@@ -5,11 +5,15 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `feat: add demo and benchmark scenes and app systems (#10)` (Task 14). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–14. Everything the ECS demo needs is built: the core, the physics and render systems, the input systems, the demo and benchmark scenes, the schedules, the frame timer and the headless benchmark.
-- **Next:** Task 15 (old-engine baseline on a throwaway branch), then Task 16 (switch `main.ts`) and Task 17.
-- **Checks:** all four green after Task 14, 16 test files, 128 tests.
-- **ECS headless bench:** 262.86 ms mean per step, 2,000 bodies (Node, Vitest 5.1.0). Vitest warns that its module export getters add overhead in the hot loops, so this number is pessimistic.
+- **Last task commit:** `feat: run the demo on the ecs (#10)` (Task 16). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–16, except two browser steps that need the owner. `main.ts` now runs the ECS.
+- **Waiting on the owner:**
+  - **Task 15 Step 4:** in the worktree `.claude/worktrees/ecs-baseline/engine-typescript`, run `npm run dev -- --port 5174` and open `?scene=benchmark`. After 360 frames, the old engine's update and render ms show on screen and in the console.
+  - **Task 16 Step 3:** run `npm run dev` on `feature/ecs` and compare it with the old engine side by side, using the plan's checklist. Then open `?scene=benchmark` and read off update ms, render ms and draw calls.
+- **Next:** Task 17 (delete the old engine, push, open the PR), only after the hand check passes.
+- **Checks:** all four green after Task 16, 16 test files, 128 tests.
+- **Headless bench, 2,000 bodies (Node v24.14.1, Vitest 5.1.0, Windows 11):** the old engine takes 844.64 ms per step and the ECS 262.86 ms, about 3.2× faster. Vitest warns that its module export getters add overhead to the ECS hot loops, so the ECS number is pessimistic. The numbers are in `.superpowers/sdd/2026-11-13-ecs/baseline.md`.
+- **Throwaway branch:** `test/ecs-baseline-benchmark` (commit `06e5baa`) is local only and is never pushed or merged.
 - **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
