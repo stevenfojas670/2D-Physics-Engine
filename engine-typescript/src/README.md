@@ -14,6 +14,7 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 
 ## Folders
 
+- [`app/`](app/README.md) — Input systems, the demo and benchmark scenes, schedules and frame timing
 - [`components/`](components/README.md) — Component definitions and body factories
 - [`ecs/`](ecs/README.md) — Entity Component System core: entities, component stores, views, world and schedule
 - [`collisionDetectionSystem/`](collisionDetectionSystem/README.md) — Narrow-phase collision tests and collision response

@@ -11,7 +11,7 @@
 		"format": "prettier --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
-		"bench": "vitest bench --run"
+		"bench": "vitest bench --run --reporter=verbose"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

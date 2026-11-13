@@ -5,10 +5,11 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `feat: add batched render systems (#10)` (Task 13). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–13. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, every physics system in the update schedule (forces, joints, integration, collider transform, broad phase, solver), and the batched render systems are built.
-- **Next:** Task 14 (app systems, scenes, schedules and the headless benchmark), then Tasks 15–17.
-- **Checks:** all four green after Task 13, 15 test files, 119 tests.
+- **Last task commit:** `feat: add demo and benchmark scenes and app systems (#10)` (Task 14). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–14. Everything the ECS demo needs is built: the core, the physics and render systems, the input systems, the demo and benchmark scenes, the schedules, the frame timer and the headless benchmark.
+- **Next:** Task 15 (old-engine baseline on a throwaway branch), then Task 16 (switch `main.ts`) and Task 17.
+- **Checks:** all four green after Task 14, 16 test files, 128 tests.
+- **ECS headless bench:** 262.86 ms mean per step, 2,000 bodies (Node, Vitest 5.1.0). Vitest warns that its module export getters add overhead in the hot loops, so this number is pessimistic.
 - **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
@@ -45,6 +46,11 @@ One slip on the way: commit `fecb817` (Task 8) went in with lint failing because
   - `DrawBatches` with `line`, `rect`, `arrow`, `fillCircle`, `strokeCircle`, `clear` and `flush(ctx: BatchCanvas): number`. `BatchCanvas` is a `Pick` of `CanvasRenderingContext2D`, so tests pass a fake.
   - `RenderContextResource` (`{ ctx, batches, drawCalls }`) and `DebugOptionsResource` with `createDebugOptions()`.
   - `createColliderRenderSystem`, `createJointRenderSystem`, `createDebugDrawSystem` and `createDrawFlushSystem`. The debug system draws friction and contacts only if `ContactsResource` is set, the mouse drag only if `MouseDragResource` is set, and grid cells only if `BroadPhaseResource` is set.
+- **App** in `src/app/`:
+  - `installWorldResources(world, width, height)` sets the `WorldSize`, `Gravity`, `CollisionSettings`, `BroadPhase` (hash, 20), `Contacts` and `MouseDrag` resources. `spawnWalls(world, width, height)` returns `[top, bottom, left, right]`. Both are in `DemoScene.ts` beside `buildDemoScene`, `resizeDemoWorld`, `spawnDemoObject` and `buildStressTestPyramid`.
+  - `main.ts` must also set `ControllerKeysResource` and `MouseInputResource` (with `createMouseInput()`), plus `RenderContextResource` and `DebugOptionsResource` for rendering.
+  - `buildBenchmarkScene(world, bodyCount = 2000)` exports `BENCHMARK_WIDTH` (1600) and `BENCHMARK_HEIGHT` (1000).
+  - **Vitest 5 benchmarks:** there is no top-level `bench`. The benchmark is a `test` that uses the `bench` fixture: `await bench(name, fn).run({ time })`. `npm run bench` uses `--reporter=verbose` so the table prints. The baseline branch (Task 15) needs the same shape.
 - **Joint helpers** in `joints/jointForces.ts`: `StretchState`, `anchorWorldPosition(transformColumns, slot, localX, localY, out)` and `addForceAtPoint(transformStore, forceStore, entity, pointX, pointY, forceX, forceY)`. `addForceAtPoint` takes the two stores, not `BodyColumns`, and does nothing if the entity lacks either. A joint body with no `Mass` counts as immovable for the force-halving rule.
 
 ## 4. Deviations and decisions

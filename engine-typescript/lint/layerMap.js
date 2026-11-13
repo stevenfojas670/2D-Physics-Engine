@@ -3,7 +3,7 @@ const layers = [
 	{ name: "math", files: ["Vector2.ts", "utils/MathHelper.ts"] },
 	{ name: "rendering", files: ["utils/DrawUtils.ts", "rendering/**"] },
 	{ name: "input", files: ["Controller.ts"] },
-	{ name: "app", files: ["main.ts"] },
+	{ name: "app", files: ["main.ts", "app/**"] },
 	{ name: "types", files: ["types/**"] },
 	{
 		name: "physics",
