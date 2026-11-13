@@ -10,7 +10,8 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 - **Waiting on the owner:**
   - **Task 15 Step 4:** in the worktree `.claude/worktrees/ecs-baseline/engine-typescript`, run `npm run dev -- --port 5174` and open `?scene=benchmark`. After 360 frames, the old engine's update and render ms show on screen and in the console.
   - **Task 16 Step 3:** run `npm run dev` on `feature/ecs` and compare it with the old engine side by side, using the plan's checklist. Then open `?scene=benchmark` and read off update ms, render ms and draw calls.
-- **Next:** Task 17 Step 6 (push and open the PR into `dev`), then the final whole-branch review. Step 7 (remove the baseline worktree) waits until the owner has the browser numbers.
+- **PR:** #12 into `dev` is open.
+- **Next:** the final whole-branch review, then fill in the PR's browser numbers once the owner has them. Step 7 (remove the baseline worktree) waits until the owner has the browser numbers.
 - **Checks:** all four green after Task 17, 16 test files, 128 tests. The ECS bench mean after Task 17 is 173.84 ms per step.
 - **Headless bench, 2,000 bodies (Node v24.14.1, Vitest 5.1.0, Windows 11):** the old engine takes 844.64 ms per step and the ECS 262.86 ms, about 3.2× faster. Vitest warns that its module export getters add overhead to the ECS hot loops, so the ECS number is pessimistic. The numbers are in `.superpowers/sdd/2026-11-13-ecs/baseline.md`.
 - **Throwaway branch:** `test/ecs-baseline-benchmark` (commit `06e5baa`) is local only and is never pushed or merged.
