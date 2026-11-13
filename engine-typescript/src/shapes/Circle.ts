@@ -72,7 +72,7 @@ class Circle extends Shape {
 	 * @returns True if the point is inside the circle.
 	 */
 	isPointInside(position: Vector2): boolean {
-		let distanceToCenter = Sub(this.centroid, position).Length2()
+		const distanceToCenter = Sub(this.centroid, position).Length2()
 		return this.radius * this.radius > distanceToCenter
 	}
 

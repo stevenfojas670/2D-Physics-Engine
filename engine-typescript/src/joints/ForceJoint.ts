@@ -21,10 +21,10 @@ class ForceJoint extends Joint {
 	 * Apply force from body A toward body B.
 	 */
 	updateConnectionA() {
-		let anchorAPos = this.getAnchorAPos()
-		let anchorBPos = this.getAnchorBPos()
+		const anchorAPos = this.getAnchorAPos()
+		const anchorBPos = this.getAnchorBPos()
 
-		let direction = Sub(anchorBPos, anchorAPos)
+		const direction = Sub(anchorBPos, anchorAPos)
 		direction.Normalize()
 		this.rigA.addForceAtPoint(anchorBPos, Scale(direction, this.strength * 0.5))
 	}
@@ -33,10 +33,10 @@ class ForceJoint extends Joint {
 	 * Apply force from body B toward body A.
 	 */
 	updateConnectionB() {
-		let anchorAPos = this.getAnchorAPos()
-		let anchorBPos = this.getAnchorBPos()
+		const anchorAPos = this.getAnchorAPos()
+		const anchorBPos = this.getAnchorBPos()
 
-		let direction = Sub(anchorAPos, anchorBPos)
+		const direction = Sub(anchorAPos, anchorBPos)
 		direction.Normalize()
 		this.rigB.addForceAtPoint(anchorAPos, Scale(direction, this.strength * 0.5))
 	}

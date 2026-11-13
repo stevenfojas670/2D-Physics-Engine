@@ -21,11 +21,10 @@ let deltaTime = 0
 
 let mousePos = new Vector2(0, 0)
 let mouseDownLeft = false
-let mouseDownRight = false
 
 resizeCanvas()
 
-let simulation = new Simulation(new Vector2(canvas.width, canvas.height))
+const simulation = new Simulation(new Vector2(canvas.width, canvas.height))
 
 document.addEventListener("DOMContentLoaded", () => {
 	/**
@@ -36,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @returns Mouse position relative to the canvas.
 	 */
 	function getMousePos(canvas: HTMLCanvasElement, evt: MouseEvent) {
-		var rect = canvas.getBoundingClientRect()
+		const rect = canvas.getBoundingClientRect()
 		return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }
 	}
 
@@ -55,12 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	window.addEventListener("mousedown", (evt: MouseEvent) => {
 		if (evt.button === 0) mouseDownLeft = true
-		if (evt.button === 2) mouseDownRight = true
 	})
 
 	window.addEventListener("mouseup", (evt: MouseEvent) => {
 		if (evt.button === 0) mouseDownLeft = false
-		if (evt.button === 2) mouseDownRight = false
 	})
 
 	window.addEventListener("resize", () => {

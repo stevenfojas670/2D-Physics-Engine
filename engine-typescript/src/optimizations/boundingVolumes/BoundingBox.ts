@@ -21,18 +21,18 @@ class BoundingBox extends BoundingVolume {
 
 	/*This is used to check if the bounding box is intersecting with other bounding boxes*/
 	intersect(otherBoundingBox: BoundingBox): boolean {
-		let leftX = this.topLeft.x
-		let rightX = this.bottomRight.x
-		let topY = this.topLeft.y
-		let bottomY = this.bottomRight.y
+		const leftX = this.topLeft.x
+		const rightX = this.bottomRight.x
+		const topY = this.topLeft.y
+		const bottomY = this.bottomRight.y
 
-		let otherLeftX = otherBoundingBox.topLeft.x
-		let otherRightX = otherBoundingBox.bottomRight.x
-		let otherTopY = otherBoundingBox.topLeft.y
-		let otherBottomY = otherBoundingBox.bottomRight.y
+		const otherLeftX = otherBoundingBox.topLeft.x
+		const otherRightX = otherBoundingBox.bottomRight.x
+		const otherTopY = otherBoundingBox.topLeft.y
+		const otherBottomY = otherBoundingBox.bottomRight.y
 
-		let intersectX = otherRightX > leftX && otherLeftX < rightX
-		let intersectY = otherTopY < bottomY && otherBottomY > topY
+		const intersectX = otherRightX > leftX && otherLeftX < rightX
+		const intersectY = otherTopY < bottomY && otherBottomY > topY
 
 		return intersectX && intersectY
 	}
@@ -44,8 +44,8 @@ class BoundingBox extends BoundingVolume {
 		} else {
 			ctx.strokeStyle = "gray"
 		}
-		let width = this.bottomRight.x - this.topLeft.x
-		let height = this.bottomRight.y - this.topLeft.y
+		const width = this.bottomRight.x - this.topLeft.x
+		const height = this.bottomRight.y - this.topLeft.y
 		ctx.rect(this.topLeft.x, this.topLeft.y, width, height)
 		ctx.stroke()
 		ctx.strokeStyle = "black"

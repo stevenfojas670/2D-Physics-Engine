@@ -53,21 +53,21 @@ class HashGrid extends Grid {
 	 */
 	protected mapBodiesToCells(): void {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
-			let boundingBox = this.rigidBodies[i].getShape().boundingBox
-			let left = boundingBox.topLeft.x
-			let right = boundingBox.bottomRight.x
-			let top = boundingBox.topLeft.y
-			let bottom = boundingBox.bottomRight.y
+			const boundingBox = this.rigidBodies[i].getShape().boundingBox
+			const left = boundingBox.topLeft.x
+			const right = boundingBox.bottomRight.x
+			const top = boundingBox.topLeft.y
+			const bottom = boundingBox.bottomRight.y
 
-			let leftCellIndex = Math.floor(left / this.cellSize)
-			let rightCellIndex = Math.floor(right / this.cellSize)
-			let topCellIndex = Math.floor(top / this.cellSize)
-			let bottomCellIndex = Math.floor(bottom / this.cellSize)
+			const leftCellIndex = Math.floor(left / this.cellSize)
+			const rightCellIndex = Math.floor(right / this.cellSize)
+			const topCellIndex = Math.floor(top / this.cellSize)
+			const bottomCellIndex = Math.floor(bottom / this.cellSize)
 
 			for (let x = leftCellIndex; x <= rightCellIndex; x++) {
 				for (let y = topCellIndex; y <= bottomCellIndex; y++) {
-					let hash = this.cellIndexToHash(x, y)
-					let entries = this.hashMap.get(hash)
+					const hash = this.cellIndexToHash(x, y)
+					const entries = this.hashMap.get(hash)
 
 					if (entries == null) {
 						this.hashMap.set(hash, [this.rigidBodies[i]])
@@ -116,8 +116,8 @@ class HashGrid extends Grid {
 	 * @returns Hash bucket id for the cell containing the provided position.
 	 */
 	getGridIdFromPosition(pos: Vector2): number {
-		let x = Math.floor(pos.x / this.cellSize)
-		let y = Math.floor(pos.y / this.cellSize)
+		const x = Math.floor(pos.x / this.cellSize)
+		const y = Math.floor(pos.y / this.cellSize)
 		return this.cellIndexToHash(x, y)
 	}
 
@@ -129,15 +129,15 @@ class HashGrid extends Grid {
 	 * @returns Candidate nearby rigidbodies for broad-phase collision testing.
 	 */
 	getNeighborRigidBodies(rigIndex: number, rigidBody: Rigidbody): Rigidbody[] {
-		let occupiedCells = this.rigidBodiesToCells[rigIndex]
-		let neighborRigidBodies: Rigidbody[] = []
+		const occupiedCells = this.rigidBodiesToCells[rigIndex]
+		const neighborRigidBodies: Rigidbody[] = []
 
 		for (let i = 0; i < occupiedCells.length; i++) {
-			let cellHash = occupiedCells[i]
-			let rigsInCell = this.hashMap.get(cellHash) ?? []
+			const cellHash = occupiedCells[i]
+			const rigsInCell = this.hashMap.get(cellHash) ?? []
 
 			for (let j = 0; j < rigsInCell.length; j++) {
-				let rigInCell = rigsInCell[j]
+				const rigInCell = rigsInCell[j]
 				if (rigidBody !== rigInCell) {
 					neighborRigidBodies.push(rigInCell)
 				}

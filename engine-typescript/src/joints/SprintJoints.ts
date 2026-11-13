@@ -29,17 +29,17 @@ class SpringJoint extends Joint {
 	 * Apply spring force from body A toward body B.
 	 */
 	updateConnectionA(): void {
-		let anchorAPos = this.getAnchorAPos()
-		let anchorBPos = this.getAnchorBPos()
+		const anchorAPos = this.getAnchorAPos()
+		const anchorBPos = this.getAnchorBPos()
 
-		let direction = Sub(anchorBPos, anchorAPos)
-		let distance = direction.Length()
-		let restDistance = distance - this.restLength
-		let forceHalving = this.rigB.getKinematicFlag() ? 1 : 0.5
-		let forceMagnitude =
+		const direction = Sub(anchorBPos, anchorAPos)
+		const distance = direction.Length()
+		const restDistance = distance - this.restLength
+		const forceHalving = this.rigB.getKinematicFlag() ? 1 : 0.5
+		const forceMagnitude =
 			restDistance * this.restLength * this.springConstant * forceHalving
 		direction.Normalize()
-		let force = Scale(direction, forceMagnitude)
+		const force = Scale(direction, forceMagnitude)
 		this.rigA.addForceAtPoint(anchorAPos, force)
 
 		if (restDistance <= -5) {
@@ -55,17 +55,17 @@ class SpringJoint extends Joint {
 	 * Apply spring force from body B toward body A.
 	 */
 	updateConnectionB() {
-		let anchorAPos = this.getAnchorAPos()
-		let anchorBPos = this.getAnchorBPos()
+		const anchorAPos = this.getAnchorAPos()
+		const anchorBPos = this.getAnchorBPos()
 
-		let direction = Sub(anchorAPos, anchorBPos)
-		let distance = direction.Length()
-		let restDistance = distance - this.restLength
-		let forceHalving = this.rigA.getKinematicFlag() ? 1 : 0.5
-		let forceMagnitude =
+		const direction = Sub(anchorAPos, anchorBPos)
+		const distance = direction.Length()
+		const restDistance = distance - this.restLength
+		const forceHalving = this.rigA.getKinematicFlag() ? 1 : 0.5
+		const forceMagnitude =
 			restDistance * this.restLength * this.springConstant * forceHalving
 		direction.Normalize()
-		let force = Scale(direction, forceMagnitude)
+		const force = Scale(direction, forceMagnitude)
 		this.rigB.addForceAtPoint(anchorBPos, force)
 
 		if (restDistance <= -5) {

@@ -90,8 +90,8 @@ class JointConnection {
 	 * Draw the line between both active anchor points.
 	 */
 	draw(): void {
-		let start = this.rigidBodyA.getShape().getAnchorPos(this.anchorAID)
-		let end = this.rigidBodyB.getShape().getAnchorPos(this.anchorBID)
+		const start = this.rigidBodyA.getShape().getAnchorPos(this.anchorAID)
+		const end = this.rigidBodyB.getShape().getAnchorPos(this.anchorBID)
 		DrawUtils.drawLine(start, end, this.color)
 	}
 }

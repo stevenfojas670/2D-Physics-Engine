@@ -70,28 +70,28 @@ class SpatialGrid extends Grid {
 	 */
 	protected mapBodiesToCells(): void {
 		for (let i = 0; i < this.rigidBodies.length; i++) {
-			let boundingBox = this.rigidBodies[i].getShape().boundingBox
-			let left = boundingBox.topLeft.x
-			let right = boundingBox.bottomRight.x
-			let top = boundingBox.topLeft.y
-			let bottom = boundingBox.bottomRight.y
+			const boundingBox = this.rigidBodies[i].getShape().boundingBox
+			const left = boundingBox.topLeft.x
+			const right = boundingBox.bottomRight.x
+			const top = boundingBox.topLeft.y
+			const bottom = boundingBox.bottomRight.y
 
-			let leftCellIndex = MathHelper.clamp(
+			const leftCellIndex = MathHelper.clamp(
 				Math.floor(left / this.cellSize),
 				0,
 				this.cellCountX - 1,
 			)
-			let rightCellIndex = MathHelper.clamp(
+			const rightCellIndex = MathHelper.clamp(
 				Math.floor(right / this.cellSize),
 				0,
 				this.cellCountX - 1,
 			)
-			let topCellIndex = MathHelper.clamp(
+			const topCellIndex = MathHelper.clamp(
 				Math.floor(top / this.cellSize),
 				0,
 				this.cellCountY - 1,
 			)
-			let bottomCellIndex = MathHelper.clamp(
+			const bottomCellIndex = MathHelper.clamp(
 				Math.floor(bottom / this.cellSize),
 				0,
 				this.cellCountY - 1,
@@ -99,7 +99,7 @@ class SpatialGrid extends Grid {
 
 			for (let x = leftCellIndex; x <= rightCellIndex; x++) {
 				for (let y = topCellIndex; y <= bottomCellIndex; y++) {
-					let cellIndex = x + y * this.cellCountX
+					const cellIndex = x + y * this.cellCountX
 					this.cells[cellIndex].push(this.rigidBodies[i])
 					this.rigidBodiesToCells[i].push(cellIndex)
 				}
@@ -133,8 +133,8 @@ class SpatialGrid extends Grid {
 	 * @returns Flattened cell index for the provided position.
 	 */
 	getGridIdFromPosition(pos: Vector2): number {
-		let x = Math.floor(pos.x / this.cellSize)
-		let y = Math.floor(pos.y / this.cellSize)
+		const x = Math.floor(pos.x / this.cellSize)
+		const y = Math.floor(pos.y / this.cellSize)
 		return x + y * this.cellCountX
 	}
 
@@ -146,14 +146,14 @@ class SpatialGrid extends Grid {
 	 * @returns Candidate nearby rigidbodies for broad-phase collision testing.
 	 */
 	getNeighborRigidBodies(rigIndex: number, rigidBody: Rigidbody): Rigidbody[] {
-		let occupiedCells = this.rigidBodiesToCells[rigIndex]
-		let neighborRigidBodies: Rigidbody[] = []
+		const occupiedCells = this.rigidBodiesToCells[rigIndex]
+		const neighborRigidBodies: Rigidbody[] = []
 
 		for (let i = 0; i < occupiedCells.length; i++) {
-			let occupiedCellIndex = occupiedCells[i]
-			let cell = this.cells[occupiedCellIndex] ?? []
+			const occupiedCellIndex = occupiedCells[i]
+			const cell = this.cells[occupiedCellIndex] ?? []
 			for (let j = 0; j < cell.length; j++) {
-				let rigInCell = cell[j]
+				const rigInCell = cell[j]
 				if (rigidBody !== rigInCell) {
 					neighborRigidBodies.push(rigInCell)
 				}
@@ -174,7 +174,10 @@ class SpatialGrid extends Grid {
 
 		for (let x = 0; x < this.cellCountX; x++) {
 			for (let y = 0; y < this.cellCountY; y++) {
-				let position = new Vector2(x * this.cellSize + 5, y * this.cellSize + 5)
+				const position = new Vector2(
+					x * this.cellSize + 5,
+					y * this.cellSize + 5,
+				)
 				DrawUtils.drawRect(
 					position,
 					new Vector2(this.cellSize - 5, this.cellSize - 5),

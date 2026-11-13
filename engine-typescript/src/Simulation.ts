@@ -65,16 +65,16 @@ class Simulation {
 		this.grid.initialize(this.worldSize, this.rigidBodies)
 
 		this.createBoundary()
-		let Polygon = new Rectangle(new Vector2(300, 420), 40, 40)
-		let PolygonKinematic = new Rigidbody(Polygon, 1)
+		const Polygon = new Rectangle(new Vector2(300, 420), 40, 40)
+		const PolygonKinematic = new Rigidbody(Polygon, 1)
 		this.rigidBodies.push(PolygonKinematic)
 
-		let staticPolygon = new Rectangle(new Vector2(300, 300), 100, 400)
-		let staticBody = new Rigidbody(staticPolygon, 0)
+		const staticPolygon = new Rectangle(new Vector2(300, 300), 100, 400)
+		const staticBody = new Rigidbody(staticPolygon, 0)
 		this.rigidBodies.push(staticBody)
 
-		let recA = new Rectangle(new Vector2(200, 200), 50, 100)
-		let staticRectangle = new StaticBody(recA)
+		const recA = new Rectangle(new Vector2(200, 200), 50, 100)
+		const staticRectangle = new StaticBody(recA)
 		this.staticBodies.push(staticRectangle)
 
 		// This means circleRigA cannot collide with circleRigB
@@ -164,14 +164,14 @@ class Simulation {
 	// HELPER METHODS ----END----
 
 	createStressTestPyramid(_boxSize: number, _iterations: number) {
-		let boxSize = _boxSize
-		let iterations = _iterations
-		let topOffset = this.worldSize.y - iterations * boxSize
+		const boxSize = _boxSize
+		const iterations = _iterations
+		const topOffset = this.worldSize.y - iterations * boxSize
 
 		for (let i = 0; i < iterations; i++) {
 			for (let j = iterations; j >= iterations - i; j--) {
-				let x = boxSize * i + j * (boxSize / 2)
-				let y = boxSize * j
+				const x = boxSize * i + j * (boxSize / 2)
+				const y = boxSize * j
 				this.rigidBodies.push(
 					new Rigidbody(
 						new Circle(new Vector2(x, y + topOffset), boxSize / 2),
@@ -238,16 +238,16 @@ class Simulation {
 		mouseDownLeft: boolean,
 	): void {
 		if (mouseDownLeft) {
-			let id = this.grid.getGridIdFromPosition(mousePos)
-			let nearBodies = this.grid.getContentOfCell(id)
+			const id = this.grid.getGridIdFromPosition(mousePos)
+			const nearBodies = this.grid.getContentOfCell(id)
 			for (let i = 0; i < nearBodies.length; i++) {
-				let mouseInside = nearBodies[i].getShape().isPointInside(mousePos)
+				const mouseInside = nearBodies[i].getShape().isPointInside(mousePos)
 
 				if (mouseInside && this.selectedRigidBody === null) {
 					this.selectedRigidBody = nearBodies[i]
 					this.selectedPosition = mousePos.Cpy()
 					// to local position
-					let localPos = Sub(mousePos, nearBodies[i].getShape().getCentroid())
+					const localPos = Sub(mousePos, nearBodies[i].getShape().getCentroid())
 
 					this.selectedAnchorId = nearBodies[i]
 						.getShape()
@@ -269,13 +269,13 @@ class Simulation {
 			this.selectedPosition !== null &&
 			this.selectedAnchorId !== null
 		) {
-			let anchorPos = this.selectedRigidBody
+			const anchorPos = this.selectedRigidBody
 				.getShape()
 				.getAnchorPos(this.selectedAnchorId)
 			if (anchorPos === undefined) {
 				return
 			}
-			let force = Sub(mousePos, anchorPos)
+			const force = Sub(mousePos, anchorPos)
 			this.selectedRigidBody.addForceAtPoint(anchorPos, force)
 			DrawUtils.drawLine(anchorPos, mousePos, "black")
 		}
@@ -321,24 +321,24 @@ class Simulation {
 		 * Performing Collision Detection and Response on RigidBodies
 		 */
 		// The higher iteration limit, the more stable
-		let iterationLimit = 25
+		const iterationLimit = 25
 		for (
 			let solverIterations = 0;
 			solverIterations < iterationLimit;
 			solverIterations++
 		) {
 			for (let i = 0; i < this.rigidBodies.length; i++) {
-				let rigA = this.rigidBodies[i]
-				let neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA)
+				const rigA = this.rigidBodies[i]
+				const neighborRigidBodies = this.grid.getNeighborRigidBodies(i, rigA)
 
 				for (let j = 0; j < neighborRigidBodies.length; j++) {
-					let rigB = neighborRigidBodies[j]
+					const rigB = neighborRigidBodies[j]
 
 					// Collision Checks
 					if (
 						this.canCollide(rigA.getCollisionGroup(), rigB.getCollisionGroup())
 					) {
-						let isCollidingWithBoundingBox = rigA
+						const isCollidingWithBoundingBox = rigA
 							.getShape()
 							.boundingBox.intersect(rigB.getShape().boundingBox)
 
@@ -349,7 +349,7 @@ class Simulation {
 						rigB.getShape().boundingBox.collisionState =
 							isCollidingWithBoundingBox
 
-						let collisionManifold = CollisionDetection.checkCollisions(
+						const collisionManifold = CollisionDetection.checkCollisions(
 							rigA,
 							rigB,
 						)
@@ -395,8 +395,6 @@ class Simulation {
 
 	pollMovement(): void {
 		// this.controller.log();
-
-		let length = this.rigidBodies.length
 
 		// Moving shape one
 		if (this.controller.keys.KeyD) {

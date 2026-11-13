@@ -97,7 +97,7 @@ class Rigidbody {
 	}
 
 	addForceAtPoint(atPoint: Vector2, force: Vector2): void {
-		let direction = Sub(atPoint, this.shape.getCentroid()) // Direction from point to centroid
+		const direction = Sub(atPoint, this.shape.getCentroid()) // Direction from point to centroid
 		this.forceAccumulator.Add(force)
 		this.torqueAccumulator += direction.Cross(force)
 		console.log(`Torque Accumulator: ${this.torqueAccumulator}`)
@@ -210,7 +210,7 @@ class Rigidbody {
 		 * @description Calculating the acceleration created by a force (forceAccumulator).
 		 * Acceleration = force * invMass (invMass = 1/mass) <=> force / mass
 		 */
-		let acceleration = Scale(this.forceAccumulator, this.invMass)
+		const acceleration = Scale(this.forceAccumulator, this.invMass)
 
 		/**
 		 * @description Find a new velocity (this.velocity) from our current velocity (this.velocity),
@@ -223,13 +223,13 @@ class Rigidbody {
 		 * velocity (this.velocity), and time (deltaTime).
 		 * We will calculate the new position by moving our current shape by deltaPosition.
 		 */
-		let deltaPosition = Scale(this.velocity, deltaTime) // p = p0 + vt
+		const deltaPosition = Scale(this.velocity, deltaTime) // p = p0 + vt
 		this.shape.move(deltaPosition)
 
-		let rotationalAcceleration = this.torqueAccumulator * this.invInertia
+		const rotationalAcceleration = this.torqueAccumulator * this.invInertia
 		this.angularVelocity += rotationalAcceleration * deltaTime
 
-		let deltaRotation = this.angularVelocity * deltaTime
+		const deltaRotation = this.angularVelocity * deltaTime
 		this.shape.rotate(deltaRotation)
 	}
 
@@ -241,15 +241,15 @@ class Rigidbody {
 	 * @param deltaTime - Time step in seconds.
 	 */
 	forwardEuler(deltaTime: number): void {
-		let acceleration = Scale(this.forceAccumulator, this.invMass) // Calculated acceleration
-		let deltaPosition = Scale(this.velocity, deltaTime) // calculated new position
+		const acceleration = Scale(this.forceAccumulator, this.invMass) // Calculated acceleration
+		const deltaPosition = Scale(this.velocity, deltaTime) // calculated new position
 		this.shape.move(deltaPosition) // Moved the shape to the new position
 		this.velocity = Add(this.velocity, Scale(acceleration, deltaTime)) // Calculate the new velocity at the new position
 
 		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
 		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
-		let deltaRotation = this.angularVelocity * deltaTime
+		const deltaRotation = this.angularVelocity * deltaTime
 		this.shape.rotate(deltaRotation)
 	}
 
@@ -259,17 +259,17 @@ class Rigidbody {
 	 * @param deltaTime - Time step in seconds.
 	 */
 	midPointMethod(deltaTime: number): void {
-		let acceleration = Scale(this.forceAccumulator, this.invMass)
-		let halfAcceleration = Scale(acceleration, 0.5)
+		const acceleration = Scale(this.forceAccumulator, this.invMass)
+		const halfAcceleration = Scale(acceleration, 0.5)
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime))
-		let deltaPosition = Scale(this.velocity, deltaTime)
+		const deltaPosition = Scale(this.velocity, deltaTime)
 		this.shape.move(deltaPosition)
 		this.velocity = Add(this.velocity, Scale(halfAcceleration, deltaTime))
 
 		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
 		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
-		let deltaRotation = this.angularVelocity * deltaTime
+		const deltaRotation = this.angularVelocity * deltaTime
 		this.shape.rotate(deltaRotation)
 	}
 
@@ -281,28 +281,26 @@ class Rigidbody {
 	 * @param deltaTime - Time step in seconds.
 	 */
 	rungeKutta2(deltaTime: number): void {
-		let k1, k2
-
 		const computeAcceleration = (force: Vector2, invMass: number) =>
 			Scale(force, invMass)
 
 		// Compute k1
 		let acceleration = computeAcceleration(this.forceAccumulator, this.invMass)
-		k1 = Scale(acceleration, deltaTime) // Computing velocity toward k1
+		const k1 = Scale(acceleration, deltaTime) // Computing velocity toward k1
 
 		// Compute k2
-		let tempForce = Add(this.forceAccumulator, Scale(k1, 0.5)) // Compute force (also a direction) half way toward k1
+		const tempForce = Add(this.forceAccumulator, Scale(k1, 0.5)) // Compute force (also a direction) half way toward k1
 		acceleration = computeAcceleration(tempForce, this.invMass) // Needed for calculating next velocity
-		k2 = Scale(acceleration, deltaTime) // Calculate the velocity toward k2 from the midpoint of k1
+		const k2 = Scale(acceleration, deltaTime) // Calculate the velocity toward k2 from the midpoint of k1
 
 		this.velocity = Add(this.velocity, k2) // Calculate the direction toward k2 directly from our current velocity
-		let deltaPosition = Scale(this.velocity, deltaTime) // p = p0 + vt
+		const deltaPosition = Scale(this.velocity, deltaTime) // p = p0 + vt
 		this.shape.move(deltaPosition)
 
 		// let rotationalAcceleration = this.torqueAccumulator * this.invInertia;
 		// this.angularVelocity += rotationalAcceleration * deltaTime;
 
-		let deltaRotation = this.angularVelocity * deltaTime
+		const deltaRotation = this.angularVelocity * deltaTime
 		this.shape.rotate(deltaRotation)
 	}
 
@@ -314,45 +312,43 @@ class Rigidbody {
 	 * @param deltaTime - Time step in seconds.
 	 */
 	rungeKutta4(deltaTime: number): void {
-		let k1, k2, k3, k4
-
 		const computeAcceleration = (force: Vector2, invMass: number) =>
 			Scale(force, invMass)
 
 		// Compute k1
 		let acceleration = computeAcceleration(this.forceAccumulator, this.invMass)
-		k1 = Scale(acceleration, deltaTime) // New vector k1
+		const k1 = Scale(acceleration, deltaTime) // New vector k1
 
 		// Compute k2
 		let tempForce = Add(this.forceAccumulator, Scale(k1, 0.5))
 		acceleration = computeAcceleration(tempForce, this.invMass)
-		k2 = Scale(acceleration, deltaTime)
+		const k2 = Scale(acceleration, deltaTime)
 
 		// Compute k3
 		tempForce = Add(this.forceAccumulator, Scale(k2, 0.5))
 		acceleration = computeAcceleration(tempForce, this.invMass)
-		k3 = Scale(acceleration, deltaTime)
+		const k3 = Scale(acceleration, deltaTime)
 
 		// Compute k4
 		tempForce = Add(this.forceAccumulator, k3)
 		acceleration = computeAcceleration(tempForce, this.invMass)
-		k4 = Scale(acceleration, deltaTime)
+		const k4 = Scale(acceleration, deltaTime)
 
 		// Combine ks to get new velocity
 		// (k1 + 2xk2 + 2xk3 + k4) / 6
-		let deltaVelocity = Scale(
+		const deltaVelocity = Scale(
 			Add(Add(k1, Scale(k2, 2)), Add(Scale(k3, 2), k4)),
 			1 / 6.0,
 		)
 		this.velocity = Add(this.velocity, deltaVelocity)
 
-		let deltaPosition = Scale(this.velocity, deltaTime)
+		const deltaPosition = Scale(this.velocity, deltaTime)
 		this.shape.move(deltaPosition)
 
-		let rotationalAcceleration = this.torqueAccumulator * this.invInertia
+		const rotationalAcceleration = this.torqueAccumulator * this.invInertia
 		this.angularVelocity += rotationalAcceleration * deltaTime
 
-		let deltaRotation = this.angularVelocity * deltaTime
+		const deltaRotation = this.angularVelocity * deltaTime
 		this.shape.rotate(deltaRotation)
 	}
 

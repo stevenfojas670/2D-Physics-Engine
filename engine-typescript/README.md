@@ -1,4 +1,3 @@
-
 # 2D Physics Engine
 
 A 2D physics engine built with TypeScript and Vite.
@@ -39,10 +38,10 @@ npm run build
 
 ```typescript
 // Example usage
-import { Engine } from './engine';
+import { Engine } from "./engine"
 
-const engine = new Engine();
-engine.start();
+const engine = new Engine()
+engine.start()
 ```
 
 ## Project Structure

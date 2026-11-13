@@ -94,13 +94,13 @@ abstract class Shape {
 			this.anchorPoints.size,
 			Add(this.centroid, localAnchorPos),
 		)
-		let id = this.anchorPoints.size - 1
+		const id = this.anchorPoints.size - 1
 		console.log(`Created anchor with id [${id}]`)
 		return id
 	}
 
 	removeAnchor(anchorIndex: number): boolean {
-		let removed = this.anchorPoints.delete(anchorIndex)
+		const removed = this.anchorPoints.delete(anchorIndex)
 		if (!removed) {
 			console.log(`Anchor with id [${anchorIndex}] not found!`)
 		}
@@ -110,10 +110,10 @@ abstract class Shape {
 	isPointInside(pos: Vector2): boolean {
 		let isInside = false
 		for (let i = 0; i < this.vertices.length; i++) {
-			let vertex = this.vertices[i]
-			let normal = this.normals[i]
-			let vertToPoint = Sub(pos, vertex)
-			let dot = vertToPoint.Dot(normal)
+			const vertex = this.vertices[i]
+			const normal = this.normals[i]
+			const vertToPoint = Sub(pos, vertex)
+			const dot = vertToPoint.Dot(normal)
 			if (dot > 0) {
 				return false
 			} else {
@@ -126,15 +126,15 @@ abstract class Shape {
 
 	calculateBoundingBox(): void {
 		// Initializing the points for topLeft and bottomRight. Inital value are irrelevant.
-		let topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE)
-		let bottomRight = new Vector2(-Number.MAX_VALUE, -Number.MAX_VALUE)
+		const topLeft = new Vector2(Number.MAX_VALUE, Number.MAX_VALUE)
+		const bottomRight = new Vector2(-Number.MAX_VALUE, -Number.MAX_VALUE)
 
 		/*
 		Iterating over each vertice within this shape and setting the points
 		of the bounding box.
 		*/
 		for (let i = 0; i < this.vertices.length; i++) {
-			let [x, y] = [this.vertices[i].x, this.vertices[i].y]
+			const [x, y] = [this.vertices[i].x, this.vertices[i].y]
 
 			if (x < topLeft.x) topLeft.x = x
 			if (y < topLeft.y) topLeft.y = y
@@ -211,7 +211,7 @@ abstract class Shape {
 	 */
 	rotate(radiansDelta: number): void {
 		for (let i = 0; i < this.vertices.length; i++) {
-			let rotatedVertices = MathHelper.rotateAroundPoint(
+			const rotatedVertices = MathHelper.rotateAroundPoint(
 				this.vertices[i],
 				this.centroid,
 				radiansDelta,
@@ -222,7 +222,7 @@ abstract class Shape {
 		this.calculateBoundingBox()
 
 		for (const [key, anchorPos] of this.anchorPoints.entries()) {
-			let rotated = MathHelper.rotateAroundPoint(
+			const rotated = MathHelper.rotateAroundPoint(
 				anchorPos,
 				this.centroid,
 				radiansDelta,

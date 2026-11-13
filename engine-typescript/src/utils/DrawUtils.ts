@@ -118,27 +118,27 @@ class DrawUtils {
 		this.drawLine(startPosition, arrowHeadPosition, color)
 
 		// Calculate the direction
-		let direction = Sub(arrowHeadPosition, startPosition)
+		const direction = Sub(arrowHeadPosition, startPosition)
 		direction.Normalize()
 
 		// Calculate the center of the arrow head
-		let arrowHeadCenter = Sub(arrowHeadPosition, Scale(direction, 10))
+		const arrowHeadCenter = Sub(arrowHeadPosition, Scale(direction, 10))
 
 		// Getting the normalized direction of the left arrow head
-		let directionToLeftArrowHead = direction.GetNormal()
+		const directionToLeftArrowHead = direction.GetNormal()
 
 		// Scaling the left arrow head position, because it was normalized.
 		// We scale because the normalized position was only 1 unit over from
 		// the arrow head center.
-		let leftArrowHeadPosition = Add(
+		const leftArrowHeadPosition = Add(
 			arrowHeadCenter,
 			Scale(directionToLeftArrowHead, 5),
 		)
 		this.drawLine(leftArrowHeadPosition, arrowHeadPosition, color)
 
 		// The right arrow head is opposite of the left, so we make its direction opposite.
-		let directionToRightArrowHead = Scale(direction.GetNormal(), -1)
-		let rightArrowHeadPosition = Add(
+		const directionToRightArrowHead = Scale(direction.GetNormal(), -1)
+		const rightArrowHeadPosition = Add(
 			arrowHeadCenter,
 			Scale(directionToRightArrowHead, 5),
 		)
