@@ -2,7 +2,7 @@ import { Vector2, subtract, add } from "@/Vector2"
 import { BoundingBox } from "@/optimizations/boundingVolumes/BoundingBox"
 import { BoundingVolume } from "@/optimizations/boundingVolumes/BoundingVolume"
 import { DrawUtils } from "@/utils/DrawUtils"
-import MathHelper from "@/utils/MathHelper"
+import { MathHelper } from "@/utils/MathHelper"
 
 /**
  * @class Shape

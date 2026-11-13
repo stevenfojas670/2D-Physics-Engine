@@ -21,6 +21,13 @@ export default defineConfig(
 		plugins: { local },
 		rules: {
 			"local/filename-matches-export": "error",
+			"no-restricted-syntax": [
+				"error",
+				{
+					selector: "ExportDefaultDeclaration",
+					message: "Use named exports.",
+				},
+			],
 			"@typescript-eslint/naming-convention": [
 				"error",
 				{
@@ -61,11 +68,31 @@ export default defineConfig(
 		languageOptions: {
 			globals: globals.browser,
 		},
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{ regex: "^\\.\\./", message: "Use the @/ alias." },
+						{
+							regex: "^\\./.+/",
+							message: "./ is only for same-folder imports; use @/.",
+						},
+					],
+				},
+			],
+		},
 	},
 	{
-		files: ["*.{ts,js,mjs}", "scripts/**/*.{ts,js,mjs}"],
+		files: ["*.{ts,js,mjs}", "scripts/**/*.{ts,js,mjs}", "lint/**/*.js"],
 		languageOptions: {
 			globals: globals.node,
+		},
+	},
+	{
+		files: ["vite.config.ts", "eslint.config.js"],
+		rules: {
+			"no-restricted-syntax": "off",
 		},
 	},
 	prettier,

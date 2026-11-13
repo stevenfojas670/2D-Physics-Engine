@@ -1,6 +1,6 @@
-import { CollisionGroups } from "./optimizations/CollisionGroups"
-import type { Shape } from "./shapes/Shape"
-import type { CollisionGroup } from "./types/collisionGroups/collisionGroups.types"
+import { CollisionGroups } from "@/optimizations/CollisionGroups"
+import type { Shape } from "@/shapes/Shape"
+import type { CollisionGroup } from "@/types/collisionGroups/collisionGroups.types"
 
 /**
  * Represents an immovable body used for static collision geometry.

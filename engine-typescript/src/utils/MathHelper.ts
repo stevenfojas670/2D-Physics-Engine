@@ -215,6 +215,4 @@ class MathHelper {
 	}
 }
 
-export default MathHelper
-
 export { MathHelper }

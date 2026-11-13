@@ -1,6 +1,6 @@
 import type { RigidBody } from "@/RigidBody"
 import { Vector2 } from "@/Vector2"
-import MathHelper from "@/utils/MathHelper"
+import { MathHelper } from "@/utils/MathHelper"
 import { DrawUtils } from "@/utils/DrawUtils"
 import { Grid } from "./Grid"
 

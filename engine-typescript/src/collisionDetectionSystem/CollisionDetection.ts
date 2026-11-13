@@ -3,7 +3,7 @@ import { Circle } from "@/shapes/Circle"
 import { Polygon } from "@/shapes/Polygon"
 import { add, scale, subtract, Vector2 } from "@/Vector2"
 import { CollisionManifold } from "./CollisionManifold"
-import MathHelper from "@/utils/MathHelper"
+import { MathHelper } from "@/utils/MathHelper"
 
 /**
  *

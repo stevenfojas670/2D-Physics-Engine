@@ -1,6 +1,6 @@
 import { Vector2, add, subtract, scale } from "@/Vector2"
 import { Shape } from "./Shape"
-import MathHelper from "@/utils/MathHelper"
+import { MathHelper } from "@/utils/MathHelper"
 import { DrawUtils } from "@/utils/DrawUtils"
 
 /**

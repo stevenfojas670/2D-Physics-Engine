@@ -10,12 +10,12 @@ import type { GridKind } from "@/types/grid/grid.types"
 import {
 	CollisionGroups,
 	CollisionMatrix,
-} from "./optimizations/CollisionGroups"
-import { Rectangle } from "./shapes/Rectangle"
-import type { CollisionGroup } from "./types/collisionGroups/collisionGroups.types"
-import { Circle } from "./shapes/Circle"
-import { DrawUtils } from "./utils/DrawUtils"
-import { CollisionDetection } from "./collisionDetectionSystem/CollisionDetection"
+} from "@/optimizations/CollisionGroups"
+import { Rectangle } from "@/shapes/Rectangle"
+import type { CollisionGroup } from "@/types/collisionGroups/collisionGroups.types"
+import { Circle } from "@/shapes/Circle"
+import { DrawUtils } from "@/utils/DrawUtils"
+import { CollisionDetection } from "@/collisionDetectionSystem/CollisionDetection"
 
 class Simulation {
 	private static readonly boundaryThickness = 50
