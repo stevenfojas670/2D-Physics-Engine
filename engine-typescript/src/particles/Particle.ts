@@ -2,6 +2,7 @@ import type { Shape } from "@/shapes/Shape"
 import { Vector2, scale } from "@/Vector2"
 
 class Particle {
+	static readonly NO_DAMPING = 1
 	private shape: Shape
 	private mass: number
 	private velocity: Vector2
@@ -19,7 +20,7 @@ class Particle {
 
 		this.acceleration = new Vector2(0, 0)
 
-		this.damping = 0
+		this.damping = Particle.NO_DAMPING
 
 		if (mass > 0) {
 			this.inverseMass = 1.0 / mass
@@ -35,14 +36,14 @@ class Particle {
 	}
 
 	integrate(deltaTime: number): void {
-		const resultingAcc = this.acceleration
+		const resultingAcc = this.acceleration.copy()
 		resultingAcc.addScaled(this.forceAccumulator, this.inverseMass)
 
 		this.velocity.addScaled(resultingAcc, deltaTime)
 
 		this.shape.move(scale(this.velocity, deltaTime))
 
-		this.velocity.scale(this.damping)
+		this.velocity.scale(Math.pow(this.damping, deltaTime))
 
 		this.clearAccumulator()
 	}
