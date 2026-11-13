@@ -5,9 +5,10 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 ## 1. Where we are
 
 - **Branch:** `feature/ecs`
-- **Last task commit:** `193d3e1 feat: add force and integration systems (#10)`. This handoff file is committed after it.
-- **Done:** Tasks 1–10. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, and the force, integration and collider-transform systems are built.
-- **Next:** Task 11 (joints), then Tasks 12–17.
+- **Last task commit:** `feat: add joint force system (#10)` (Task 11). This handoff update is part of that commit; see `git log` for the hash.
+- **Done:** Tasks 1–11. The ECS core, geometry, components, resources, factories, narrow phase, contact resolution, broad-phase grids, the force, integration and collider-transform systems, and the joint force system are built.
+- **Next:** Task 12 (broad-phase and collision-solver systems), then Tasks 13–17.
+- **Checks:** all four green after Task 11, 13 test files, 103 tests.
 - **The demo still runs on the old engine.** `main.ts` is untouched until Task 16.
 
 ## 2. State of the checks
@@ -38,7 +39,8 @@ One slip on the way: commit `fecb817` (Task 8) went in with lint failing because
 - **Narrow phase:** `Contact` (with `set(depth, nx, ny, px, py)`) is in `collisionDetectionSystem/Contact.ts`. `testCollision(colliders, slotA, slotB, centerAX, centerAY, centerBX, centerBY, out): boolean` is in `narrowPhase.ts`. The normal points from A to B.
 - **Contact resolution:** the class `BodyColumns(world)` is in `collisionDetectionSystem/BodyColumns.ts`, with `transforms`, `velocities`, `masses`, `materials` and `colliders` stores. `correctPositions(bodies, a, b, contact)` and `resolveImpulse(bodies, a, b, contact, friction: ContactLog | null)` are in `contactResolution.ts`.
 - **Broad phase:** `BroadPhaseGrid` is an **abstract class**, not an interface, in `optimizations/broadPhase/BroadPhaseGrid.ts`. It has `resize`, `insert`, `entitiesInCell`, `cellAt`, `cellsOf`, `clear` and an optional `forEachCellRect`. `HashGrid`, `SpatialGrid` and `createBroadPhaseGrid(kind, cellSize)` sit beside it.
-- **Systems** live in `src/systems/`: `createIntentForceSystem`, `createGravitySystem`, `createRigidBodyIntegrationSystem`, `createParticleIntegrationSystem` and `createColliderTransformSystem`.
+- **Systems** live in `src/systems/`: `createIntentForceSystem`, `createGravitySystem`, `createJointForceSystem`, `createRigidBodyIntegrationSystem`, `createParticleIntegrationSystem` and `createColliderTransformSystem`.
+- **Joint helpers** in `joints/jointForces.ts`: `StretchState`, `anchorWorldPosition(transformColumns, slot, localX, localY, out)` and `addForceAtPoint(transformStore, forceStore, entity, pointX, pointY, forceX, forceY)`. `addForceAtPoint` takes the two stores, not `BodyColumns`, and does nothing if the entity lacks either. A joint body with no `Mass` counts as immovable for the force-halving rule.
 
 ## 4. Deviations and decisions
 
