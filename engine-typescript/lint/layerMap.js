@@ -8,6 +8,8 @@ const layers = [
 	{
 		name: "physics",
 		files: [
+			"components/**",
+			"resources/**",
 			"RigidBody.ts",
 			"StaticBody.ts",
 			"Simulation.ts",

@@ -14,12 +14,14 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 
 ## Folders
 
+- [`components/`](components/README.md) — Component definitions and body factories
 - [`ecs/`](ecs/README.md) — Entity Component System core: entities, component stores, views, world and schedule
 - [`collisionDetectionSystem/`](collisionDetectionSystem/README.md) — Narrow-phase collision tests and collision response
 - [`joints/`](joints/README.md) — Constraints that connect two rigid bodies
 - [`materials/`](materials/README.md) — Surface properties of bodies
 - [`optimizations/`](optimizations/README.md) — Collision filtering, broad-phase grids and bounding volumes
 - [`particles/`](particles/README.md) — Point-mass particles
+- [`resources/`](resources/README.md) — Per-world shared values used by the physics systems
 - [`shapes/`](shapes/README.md) — Geometry of bodies
 - [`types/`](types/README.md) — Shared type aliases
 - [`utils/`](utils/README.md) — Math helpers and canvas drawing helpers

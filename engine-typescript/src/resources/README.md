@@ -1,0 +1,11 @@
+# resources
+
+Per-world singleton values (resources) the physics systems share. Each file defines a value type and its resource key. Layer: physics.
+
+| File                   | Purpose                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| `CollisionSettings.ts` | The collision matrix and group names for one world, with enable, disable and can-collide checks |
+| `ContactLog.ts`        | Contacts and friction arrows recorded by the solver each step, for debug drawing                |
+| `Gravity.ts`           | Gravity acceleration, default (0, 200)                                                          |
+| `MouseDrag.ts`         | The body being dragged by the mouse, its local anchor and the drag target                       |
+| `WorldSize.ts`         | Width and height of the simulated world                                                         |
