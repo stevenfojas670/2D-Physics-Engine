@@ -94,7 +94,7 @@ class Particle {
 		 * Updating acceleration using the following formula:
 		 * new_acceleration = current_acceleration + force * inverse mass
 		 */
-		let resultingAcc = this.acceleration
+		const resultingAcc = this.acceleration
 		resultingAcc.AddScaledVector(this.forceAccumulator, this.inverseMass)
 
 		/**
@@ -150,8 +150,7 @@ class Particle {
 	 * @param {number} _y - Vector2.y position
 	 */
 	setPosition(_x: number, _y: number): void {
-		this.shape.x = _x
-		this.shape.y = _y
+		this.shape.setCentroid(new Vector2(_x, _y))
 	}
 
 	/**
@@ -159,7 +158,7 @@ class Particle {
 	 * @returns {Vector2} Current position
 	 */
 	getPosition(): Vector2 {
-		return this.shape.position
+		return this.shape.getCentroid()
 	}
 
 	/**
@@ -167,7 +166,7 @@ class Particle {
 	 * @param {number} _x - Vector2.x velocity
 	 * @param {number} _y - Vector2.y velocity
 	 */
-	setVelocity(_x, _y): void {
+	setVelocity(_x: number, _y: number): void {
 		this.velocity.x = _x
 		this.velocity.y = _y
 	}
