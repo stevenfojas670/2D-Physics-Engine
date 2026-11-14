@@ -61,7 +61,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 0: measure per system
 
-**Status:** not planned. Issue #21.
+**Status:** planned in `superpowers/plans/2026-11-13-physics-performance-phase-0.md`. Issue #21.
 
 **What:** time each system in the update schedule, not just the update as a whole.
 
