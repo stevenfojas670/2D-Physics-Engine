@@ -1,0 +1,15 @@
+# tests
+
+Vitest tests for the engine. The folders mirror `src/`. Run them with `npm run test` and the benchmarks with `npm run bench`.
+
+## Folders
+
+- [`app/`](app/README.md) — Tests for input, scenes, schedules and frame timing
+- [`benchmark/`](benchmark/README.md) — The headless physics-step benchmark
+- [`broadPhase/`](broadPhase/README.md) — Tests for the broad-phase grids
+- [`collision/`](collision/README.md) — Tests for the narrow phase and contact resolution
+- [`components/`](components/README.md) — Tests for components, body factories and resources
+- [`ecs/`](ecs/README.md) — Tests for the ECS core
+- [`rendering/`](rendering/README.md) — Tests for draw batching and the render systems
+- [`shapes/`](shapes/README.md) — Tests for collider geometry
+- [`systems/`](systems/README.md) — Tests for the physics systems
