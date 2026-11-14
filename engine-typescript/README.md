@@ -30,7 +30,7 @@ npm run dev
 | Benchmark | `/?scene=benchmark` | A fixed 1600×1000 world with a 2,000-body pyramid of circles and boxes, stepped at a fixed 1/60 s. After 60 warm-up frames it averages 300 frames and shows `update X ms · render Y ms · Z draw calls` under the FPS counter, then lists the five slowest update systems with their average ms and share of the update | None; input and resizing are inactive                                                                             |
 | Sandbox   | `/?scene=sandbox`   | A fixed 1200×700 world with a floor and ceiling and a dozen circles and boxes that a steady wind pushes to the right; each body that leaves either side is replaced on the left. It is the worked example in [`docs/ecs-guide.md`](docs/ecs-guide.md)                                                                  | **left-drag** pulls any body; resizing has no effect                                                              |
 
-`npm run bench` times one physics step of the benchmark scene without a browser.
+`npm run bench` times one physics step of the benchmark scene without a browser and prints a per-system breakdown.
 
 ## Files
 

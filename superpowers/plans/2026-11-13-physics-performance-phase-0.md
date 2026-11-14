@@ -302,16 +302,16 @@ git commit -m "feat: show slowest systems in the benchmark scene (#21)"
 **Interfaces:**
 - Consumes: `createUpdateSchedule`, `Schedule.runTimed`/`names` (Task 2) and `SystemTimer` (Task 3).
 
-- [ ] **Step 1: Add the per-system test**
+- [x] **Step 1: Add the per-system test**
 
 Keep `test("physics step", ...)` as it is. Add `test("per-system step times", ...)`: `benchmarkWorld()`, `createUpdateSchedule(world)` and `WARMUP_STEPS` untimed `run` calls. Then `new SystemTimer(update.names, 0, SAMPLE_STEPS)` with `SAMPLE_STEPS = 300`, and `SAMPLE_STEPS` iterations of `runTimed(world, STEP, () => performance.now(), timer.recordSystem)` followed by `timer.endFrame()`. Finally `expect(timer.summary).not.toBeNull()` and `console.table` of rows `{ system, ms: ms.toFixed(3), share: \`${(share * 100).toFixed(1)}%\` }`, plus a `total` row.
 
-- [ ] **Step 2: Run the bench and check the table prints**
+- [x] **Step 2: Run the bench and check the table prints**
 
 Run: `npm run bench`
 Expected: the existing `ecs physics step, 2000 bodies` result, then a table with all 11 update systems, slowest first. If the verbose reporter hides `console.table`, switch to `process.stdout.write` of the same rows, one per line.
 
-- [ ] **Step 3: Update the READMEs and commit**
+- [x] **Step 3: Update the READMEs and commit**
 
 `tests/benchmark/README.md` row: "Times one headless ECS update step on the 2,000-body benchmark scene, then prints each system's average time and share". Scenes sentence: "`npm run bench` times one physics step of the benchmark scene without a browser and prints a per-system breakdown."
 
