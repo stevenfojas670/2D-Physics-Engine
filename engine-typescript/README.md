@@ -48,6 +48,7 @@ npm run dev
 
 ## Folders
 
+- [`docs/`](docs/README.md) — Guides for building with the engine; start with the [ECS guide](docs/ecs-guide.md)
 - [`lint/`](lint/README.md) — Local ESLint rules for this project
 - [`public/`](public/README.md) — Static files Vite serves as-is
 - [`scripts/`](scripts/README.md) — Node scripts used by npm scripts

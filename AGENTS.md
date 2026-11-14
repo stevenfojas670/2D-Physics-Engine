@@ -3,6 +3,7 @@
 ## Map
 
 * `engine-typescript/`: the active TypeScript engine. Every folder has a `README.md` describing each file; start at [`engine-typescript/README.md`](engine-typescript/README.md).
+* [`engine-typescript/docs/ecs-guide.md`](engine-typescript/docs/ecs-guide.md): how to build with the ECS. Read it before adding components, systems, resources or scenes.
 * `engine/`: the owner's playground for manual programming. Do not modify it or add docs to it unless explicitly asked.
 * `superpowers/`: design specs in `specs/`, implementation plans in `plans/`.
 * [`README.md`](README.md): project overview, the full code rules and the architecture layers.
