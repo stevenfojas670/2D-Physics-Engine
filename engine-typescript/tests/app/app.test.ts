@@ -35,6 +35,7 @@ import {
 	buildSandboxScene,
 	createSandboxRespawnSystem,
 } from "@/app/SandboxScene"
+import { selectScene } from "@/app/sceneSelection"
 import { createUpdateSchedule } from "@/app/schedules"
 
 const STEP = 1 / 60
@@ -326,6 +327,15 @@ describe("wind", () => {
 		createUpdateSchedule(world).run(world, STEP)
 		const velocities = world.store(Velocity)
 		expect(velocities.columns.x[velocities.slotOf(body)]).toBeGreaterThan(0)
+	})
+})
+
+describe("scene selection", () => {
+	test("scene query picks the scene, defaulting to demo", () => {
+		expect(selectScene("")).toBe("demo")
+		expect(selectScene("?scene=benchmark")).toBe("benchmark")
+		expect(selectScene("?scene=sandbox")).toBe("sandbox")
+		expect(selectScene("?scene=nope")).toBe("demo")
 	})
 })
 
