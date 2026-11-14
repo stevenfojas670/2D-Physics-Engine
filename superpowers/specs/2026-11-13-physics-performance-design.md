@@ -142,6 +142,13 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 - the mouse drag grabs a body (`MouseDragSystem`);
 - code sets a sleeper's velocity, position or force directly. Those call sites call `wakeBody` themselves.
 
+**Waking without motion.** The broad phase drops pairs where neither body can move (phase 3), so a sleeper is only woken by contact when an *awake* body reaches it. These changes don't involve any awake body, so each needs its own wake rule:
+
+- **A body is destroyed.** Wake every body it had a contact with in the last step, found through phase 1's stored contacts (the ones kept for warm starting). Otherwise removing the bottom crate of a sleeping stack leaves the rest floating. If the destroyed body has joints, wake the bodies on the other end too.
+- **A static body is moved by code.** Moving platforms, elevators and other script-driven bodies aren't static. They're dynamic or kinematic bodies with `NeverSleep`, so an awake body moving through sleepers creates pairs and wakes them. If code still moves a static body, it calls a helper that wakes every body whose bounds overlap the static body's old or new bounds.
+- **World settings change.** Changing the gravity or wind resource wakes every sleeper. It's rare, so waking everything is fine.
+- **Collision rules change.** Changing the collision matrix (`CollisionSettings`) or a body's `CollisionGroup` wakes every sleeper, or for a group change, the bodies overlapping that body. Two sleepers that are newly allowed to collide may already overlap.
+
 Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherwise wind would stop affecting them once they sleep, because force systems skip sleepers.
 
 **Deferral (`world.defer`):** adding and removing `Asleep` are structural changes, so they're always deferred and applied when the queuing system finishes (`Schedule.run` flushes after every system). Commands capture entity IDs, never slots, and check `world.isAlive(entity)` before changing anything. Waking an island queues one command per body, or one command that wakes them all. Commands queued while flushing run in the same flush.
@@ -161,7 +168,18 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 **What:** produce fewer candidate pairs, and do less work per step to produce them.
 
 **How:**
-- **Skip static and sleeping pairs:** don't emit a pair when neither body can move (static, or asleep after phase 2). The check runs once per step in the broad phase instead of 25 times in the solver.
+- **Skip static and sleeping pairs:** emit a pair only if **at least one body is awake and dynamic**. The check runs once per step in the broad phase instead of 25 times in the solver. Sleepers stay in the grid, so awake bodies still find them.
+
+  | Body A | Body B | Emitted | Why |
+  | --- | --- | --- | --- |
+  | awake | awake | yes | normal contact |
+  | awake | asleep | yes | the wake path: the solver resolves it and wakes the sleeper |
+  | awake | static | yes | e.g. landing on the floor |
+  | asleep | asleep | no | neither has moved since sleeping |
+  | asleep | static | no | the sleeper rests on it and neither moves |
+  | static | static | no | static bodies never move |
+
+  Anything that changes the world without motion (destroying a body, moving a static body, changing gravity, wind or collision rules) is handled by phase 2's "waking without motion" rules, not by the broad phase.
 - **Separate static grid:** insert static bodies such as the walls once, into their own grid. Each step, only moving bodies are re-inserted, and each is checked against both grids.
 - **Cell size:** benchmark bodies are 12 px wide (circle radius 6, box size 12) and cells are 20 px. Tune with phase 0's timings. Too small and each body covers many cells; too large and each cell holds many bodies.
 - **Pair slots:** store each pair's collider, transform, mass, velocity and material slots in `CandidatePairs`, so the solver doesn't call `slotOf` in its loops (item 7 above).
@@ -230,7 +248,8 @@ Speed-ups in a solver are easy to get by quietly breaking it, so phase 1 adds te
 - **Friction:** a box on a slope steeper than `atan(μ)` slides, and one on a shallower slope doesn't. That covers the negative-tangent and clamp fixes.
 - **Momentum:** two bodies colliding in empty space conserve linear momentum within a tolerance.
 - **Sleeping (phase 2):** a body falls asleep after the timeout and wakes on contact, joint force, mouse drag and a direct velocity change. A body with `NeverSleep` never gets `Asleep`. A dynamic body without `SleepTimer` is still integrated. With `SleepSettings.enabled` false, nothing sleeps. A sleeper touched by a `NeverSleep` body wakes. With islands, a pile touching a `NeverSleep` body stays awake.
-- **Broad phase (phase 3):** pairs before and after are the same, apart from static or sleeping pairs.
+- **Waking without motion (phase 2):** destroying the bottom body of a sleeping stack makes the bodies above wake and fall; destroying a jointed body wakes the body on the other end; moving a static body through the helper wakes the sleepers it overlapped; changing gravity, wind or the collision matrix wakes every sleeper.
+- **Broad phase (phase 3):** pairs before and after are the same, apart from pairs where neither body is awake and dynamic. An awake body overlapping a sleeper still produces a pair.
 
 The existing tests in `tests/collision/` and `tests/systems/collision.test.ts` will need updating where they assert today's exact numbers, such as positional correction at 90% of depth per pass.
 
