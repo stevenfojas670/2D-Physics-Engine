@@ -160,12 +160,12 @@ function createWindSystem(world: World): System {
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
-A new force goes between 3 and 6. Anything that needs final positions for the frame goes after 11, or in the render schedule.
+A new force system goes anywhere after `MouseDragSystem` (2) and before `RigidBodyIntegrationSystem` (7), because integration consumes and clears the forces. Anything that needs final positions for the frame goes after 11, or in the render schedule.
 
 ## 8. Deferred commands
 
 - Inside `each` you may change component **fields** freely, and you may destroy or remove components from the **current** entity (the loop walks backwards, so the entity swapped into its slot was already visited).
-- Spawning entities, destroying **other** entities, or adding or removing components on them inside `each` moves slots in the stores the view is walking. Defer those.
+- Destroying **other** entities, or removing components from them, inside `each` swaps other entities into their slots, so the walk can skip an entity or visit one twice. Spawning entities or adding components to other entities appends to the stores mid-walk, so whether the view sees them this pass depends on store order. Defer all of these, so every system sees a settled world.
 - `world.defer((world) => { … })` queues a command. The schedule runs the queue after the current system finishes, in order, including commands queued while flushing. Outside a schedule, call `world.flushDeferred()` yourself.
 - Read what the command needs (positions, field values) **before** deferring; slots may have moved by the time it runs. Capture entity IDs, never slots.
 
