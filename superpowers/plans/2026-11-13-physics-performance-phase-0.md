@@ -1,5 +1,7 @@
 # Physics Performance Phase 0: Per-System Timing Implementation Plan
 
+**Status: complete.** All six tasks are done, on branch `feature/physics-timing` and its pull request into `dev`. The baseline is recorded in the spec's Results section. Do not re-run this plan; phase 1 (#22) continues from the handoff in the spec.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Time every system in the update schedule, in the browser benchmark and headlessly, and record how the 46.25 ms update splits across systems as the baseline for phases 1–4.
@@ -40,6 +42,7 @@
 ### Task 1: Branch and plan file
 
 **Files:**
+
 - Create: `superpowers/plans/2026-11-13-physics-performance-phase-0.md` (this plan)
 - Modify: `superpowers/specs/2026-11-13-physics-performance-design.md:64` (Phase 0 status line)
 
@@ -64,12 +67,14 @@ git commit -m "docs: add phase 0 plan for physics performance (#21)"
 ### Task 2: Named systems and `Schedule.runTimed`
 
 **Files:**
+
 - Modify: `engine-typescript/src/ecs/Schedule.ts`
 - Modify (callers, to the new `add(name, system)`): `src/app/schedules.ts`, `src/main.ts:67`, `tests/app/app.test.ts:246`, `tests/systems/integration.test.ts:45-47,77-79`, `tests/systems/collision.test.ts:38-43`, `tests/rendering/rendering.test.ts:87-91`
 - Modify (docs): `src/ecs/README.md` (Schedule row and the "Schedule and deferred commands" section), `docs/ecs-guide.md` (~lines 120, 192, 200: adding a system takes a name)
 - Test: `engine-typescript/tests/ecs/Schedule.test.ts`
 
 **Interfaces:**
+
 - Produces, exported from `@/ecs/Schedule`:
   - `type System = (deltaTime: number) => void` (unchanged)
   - `type Clock = () => number`
@@ -86,45 +91,58 @@ Rewrite the two existing tests to call `.add("a", ...)` and `.add("b", ...)`, an
 
 ```ts
 test("names include systems added later", () => {
-	const schedule = new Schedule().add("a", () => {}).add("b", () => {})
-	schedule.add("c", () => {})
-	expect(schedule.names).toEqual(["a", "b", "c"])
-})
+  const schedule = new Schedule().add("a", () => {}).add("b", () => {});
+  schedule.add("c", () => {});
+  expect(schedule.names).toEqual(["a", "b", "c"]);
+});
 
 test("add rejects a duplicate name", () => {
-	const schedule = new Schedule().add("a", () => {})
-	expect(() => schedule.add("a", () => {})).toThrow("Duplicate system name a")
-})
+  const schedule = new Schedule().add("a", () => {});
+  expect(() => schedule.add("a", () => {})).toThrow("Duplicate system name a");
+});
 
 test("runTimed counts the deferred flush toward the system that queued it", () => {
-	const world = new World()
-	let now = 0
-	const timings: [number, number][] = []
-	const schedule = new Schedule()
-		.add("a", () => {
-			now += 2
-			world.defer(() => {
-				now += 1
-				world.defer(() => {
-					now += 4
-				})
-			})
-		})
-		.add("b", () => {
-			now += 5
-		})
-	schedule.runTimed(world, 0, () => now, (index, ms) => timings.push([index, ms]))
-	expect(timings).toEqual([[0, 7], [1, 5]])
-})
+  const world = new World();
+  let now = 0;
+  const timings: [number, number][] = [];
+  const schedule = new Schedule()
+    .add("a", () => {
+      now += 2;
+      world.defer(() => {
+        now += 1;
+        world.defer(() => {
+          now += 4;
+        });
+      });
+    })
+    .add("b", () => {
+      now += 5;
+    });
+  schedule.runTimed(
+    world,
+    0,
+    () => now,
+    (index, ms) => timings.push([index, ms]),
+  );
+  expect(timings).toEqual([
+    [0, 7],
+    [1, 5],
+  ]);
+});
 
 test("runTimed passes deltaTime and keeps order", () => {
-	const log: string[] = []
-	const schedule = new Schedule()
-		.add("a", (deltaTime) => log.push(`a${deltaTime}`))
-		.add("b", (deltaTime) => log.push(`b${deltaTime}`))
-	schedule.runTimed(new World(), 0.5, () => 0, () => {})
-	expect(log).toEqual(["a0.5", "b0.5"])
-})
+  const log: string[] = [];
+  const schedule = new Schedule()
+    .add("a", (deltaTime) => log.push(`a${deltaTime}`))
+    .add("b", (deltaTime) => log.push(`b${deltaTime}`));
+  schedule.runTimed(
+    new World(),
+    0.5,
+    () => 0,
+    () => {},
+  );
+  expect(log).toEqual(["a0.5", "b0.5"]);
+});
 ```
 
 - [x] **Step 2: Run the tests and check they fail**
@@ -163,12 +181,14 @@ git commit -m "feat: name schedule systems and time them one by one (#21)"
 ### Task 3: `SystemTimer` and `FrameTimer` per-system averages
 
 **Files:**
+
 - Create: `engine-typescript/src/app/SystemTimer.ts`
 - Modify: `engine-typescript/src/app/FrameTimer.ts`
 - Modify: `engine-typescript/src/app/README.md` (add the `SystemTimer.ts` row; update the `FrameTimer.ts` and `schedules.ts` rows: "named systems")
 - Test: `engine-typescript/tests/app/app.test.ts` (`describe("frame timer")`)
 
 **Interfaces:**
+
 - Consumes: `SystemTimed` from `@/ecs/Schedule` (Task 2).
 - Produces, from `@/app/SystemTimer`:
   - `interface SystemTime { name: string; milliseconds: number; share: number }`. `share` is `milliseconds / sum of all systems' milliseconds`, or `0` when the sum is `0`.
@@ -190,43 +210,43 @@ Update the existing test to `new FrameTimer([], 2, 3)` with `systems: []` in bot
 
 ```ts
 test("system timer averages after warm-up, slowest first", () => {
-	const timer = new SystemTimer(["a", "b"], 1, 2)
-	timer.recordSystem(0, 100)
-	timer.recordSystem(1, 100)
-	timer.endFrame()
-	timer.recordSystem(0, 1)
-	timer.recordSystem(1, 6)
-	timer.endFrame()
-	expect(timer.summary).toBeNull()
-	timer.recordSystem(0, 3)
-	timer.recordSystem(1, 2)
-	timer.endFrame()
-	expect(timer.ready).toBe(true)
-	const expected = [
-		{ name: "b", milliseconds: 4, share: 4 / 6 },
-		{ name: "a", milliseconds: 2, share: 2 / 6 },
-	]
-	expect(timer.summary).toEqual(expected)
-	timer.recordSystem(0, 1000)
-	timer.endFrame()
-	expect(timer.summary).toEqual(expected)
-})
+  const timer = new SystemTimer(["a", "b"], 1, 2);
+  timer.recordSystem(0, 100);
+  timer.recordSystem(1, 100);
+  timer.endFrame();
+  timer.recordSystem(0, 1);
+  timer.recordSystem(1, 6);
+  timer.endFrame();
+  expect(timer.summary).toBeNull();
+  timer.recordSystem(0, 3);
+  timer.recordSystem(1, 2);
+  timer.endFrame();
+  expect(timer.ready).toBe(true);
+  const expected = [
+    { name: "b", milliseconds: 4, share: 4 / 6 },
+    { name: "a", milliseconds: 2, share: 2 / 6 },
+  ];
+  expect(timer.summary).toEqual(expected);
+  timer.recordSystem(0, 1000);
+  timer.endFrame();
+  expect(timer.summary).toEqual(expected);
+});
 
 test("shares are zero when nothing took time", () => {
-	const timer = new SystemTimer(["a"], 0, 1)
-	timer.recordSystem(0, 0)
-	timer.endFrame()
-	expect(timer.summary).toEqual([{ name: "a", milliseconds: 0, share: 0 }])
-})
+  const timer = new SystemTimer(["a"], 0, 1);
+  timer.recordSystem(0, 0);
+  timer.endFrame();
+  expect(timer.summary).toEqual([{ name: "a", milliseconds: 0, share: 0 }]);
+});
 
 test("frame timer reports per-system averages with its summary", () => {
-	const timer = new FrameTimer(["gravity"], 0, 1)
-	timer.recordSystem(0, 2)
-	timer.record(5, 1, 3)
-	expect(timer.summary?.systems).toEqual([
-		{ name: "gravity", milliseconds: 2, share: 1 },
-	])
-})
+  const timer = new FrameTimer(["gravity"], 0, 1);
+  timer.recordSystem(0, 2);
+  timer.record(5, 1, 3);
+  expect(timer.summary?.systems).toEqual([
+    { name: "gravity", milliseconds: 2, share: 1 },
+  ]);
+});
 ```
 
 - [x] **Step 2: Run the tests and check they fail**
@@ -259,10 +279,12 @@ git commit -m "feat: average per-system times in the frame timer (#21)"
 ### Task 4: Show the slowest systems in the benchmark scene
 
 **Files:**
+
 - Modify: `engine-typescript/src/main.ts:65-145`
 - Modify: `engine-typescript/README.md` (Scenes table, Benchmark row)
 
 **Interfaces:**
+
 - Consumes: `Schedule.runTimed` and `Schedule.names` (Task 2); `FrameTimer(systemNames)`, `FrameTimer.recordSystem` and `FrameSummary.systems` (Task 3).
 
 - [x] **Step 1: Wire the timed run**
@@ -273,7 +295,7 @@ Build `const frameTimer = new FrameTimer(update.names)` after the sandbox `updat
 
 Add constants `TOP_SYSTEM_COUNT = 5`, `SYSTEM_LINES_TOP = 60` and `LINE_HEIGHT = 15`. Once the summary exists, draw the first `TOP_SYSTEM_COUNT` entries of `summary.systems` one per line, as `` `${name} ${milliseconds.toFixed(2)} ms · ${Math.round(share * 100)}%` ``. Keep it in a `drawSystemLines(systems: SystemTime[])` function next to `benchmarkText`.
 
-- [ ] **Step 3: Check it in the browser** (deferred to the owner's Task 6 run)
+- [x] **Step 3: Check it in the browser** (done by the owner in Brave during Task 6; the five lines look correct)
 
 Run: `npm run dev` and open `http://localhost:5173/?scene=benchmark`.
 Expected: "measuring..." for about 6 s, then the summary line and five lines like `collisionSolver NN.NN ms · NN%`. `/` and `/?scene=sandbox` behave as before.
@@ -296,10 +318,12 @@ git commit -m "feat: show slowest systems in the benchmark scene (#21)"
 ### Task 5: Headless per-system report
 
 **Files:**
+
 - Modify: `engine-typescript/tests/benchmark/physicsStep.bench.ts`
 - Modify: `engine-typescript/tests/benchmark/README.md`, plus the `npm run bench` sentence under Scenes in `engine-typescript/README.md`
 
 **Interfaces:**
+
 - Consumes: `createUpdateSchedule`, `Schedule.runTimed`/`names` (Task 2) and `SystemTimer` (Task 3).
 
 - [x] **Step 1: Add the per-system test**
@@ -327,6 +351,7 @@ git commit -m "test: report per-system times in the physics benchmark (#21)"
 ### Task 6: Record the baseline
 
 **Files:**
+
 - Modify: `superpowers/specs/2026-11-13-physics-performance-design.md` (Phase 0 status, `### Results`)
 
 - [x] **Step 1: Headless numbers**
@@ -345,7 +370,7 @@ In the Phase 0 Results row, add the browser update ms, headless step ms, solver 
 
 Run, in `engine-typescript/`: `npm run lint && npm run typecheck && npm run build && npm run test`. Expected: all four pass.
 
-- [ ] **Step 5: Commit, push and open the PR after the owner confirms**
+- [x] **Step 5: Commit, push and open the PR after the owner confirms**
 
 ```bash
 git add superpowers

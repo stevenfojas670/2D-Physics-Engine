@@ -75,6 +75,36 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 **Risk:** almost none. Timing overhead is tiny compared with the systems being timed.
 
+#### Handoff: phase 0 done, phase 1 next
+
+**State.** Phase 0 is complete. Every task in `superpowers/plans/2026-11-13-physics-performance-phase-0.md` is ticked, and it was built on `feature/physics-timing` with its pull request into `dev`. Don't redo any of it. The baseline is in "Phase 0 baseline split" under Results. The solver takes 46.1 of the 47.5 ms update (97%), the broad phase 1.0 ms and everything else under 0.3 ms.
+
+**Measuring tools now available:**
+
+- **Named systems:** every system has a name, added with `schedule.add("name", system)`. Adding a name twice throws. `schedule.names` lists them in order. A new system (for example phase 1's contact detection and velocity solve) needs a unique name, and its time shows up automatically.
+- **`Schedule.runTimed(world, deltaTime, clock, onSystemTimed)`:** times each system together with its deferred flush. `run` does no timing.
+- **`SystemTimer`** (`src/app/SystemTimer.ts`): averages per-system times over the warm-up and sample window, slowest first, with each system's share. `FrameTimer` takes the system names and owns one.
+- **Browser:** `?scene=benchmark` draws the five slowest systems under the summary line. When the sample finishes, it logs the summary line and a table of every system to the console once. Copy that table into Results.
+- **Headless:** `npm run bench` prints the whole-step bench and a per-system table. Vitest's overhead on calls across module exports makes headless steps 3.5–6× slower than the browser, and runs vary a lot. Use headless shares only for relative comparison. The browser split is the reference.
+- **Build order:** build the `FrameTimer` after every `update.add`. A system added later is left out of the readout without a warning.
+
+**Phase 1 next steps (#22):**
+
+1. Start a new session, branch from `dev` (for example `feature/contact-solver`), and plan phase 1 in `superpowers/plans/YYYY-MM-DD-physics-performance-phase-1.md` using superpowers:writing-plans.
+2. Before planning, settle these Open decisions with the owner:
+   - 1, position correction;
+   - 2, step order (split integration, recommended);
+   - 3, iteration count;
+   - 4, the behaviour change;
+   - 8, the correctness fixes inside phase 1 or as separate bug issues;
+   - 9, the target.
+3. Write phase 1's stability tests first (Testing: resting contact, stack, pyramid, restitution, friction, momentum), then the solver.
+4. Re-run both benchmarks after phase 1. Fill in its Results row and the per-system numbers, and set its Status line.
+
+**Resume prompt:**
+
+> Phase 0 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see its "Handoff: phase 0 done, phase 1 next" and "Phase 0 baseline split"). Review phase 1 (cached contacts and a sequential-impulse solver, issue #22). Talk through Open decisions 1–4, 8 and 9 with me, then plan phase 1 with superpowers:writing-plans.
+
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
 **Status:** not planned. Issue #22.
