@@ -6,11 +6,11 @@ Issue: #20, with one sub-issue per phase (#21–#25). This spec was written on `
 
 The ECS refactor (PR #12) made the engine about 3.9× faster, but the 2,000-body benchmark still misses a 60 FPS frame by a wide margin. The run recorded in `superpowers/plans/2026-11-13-ecs-handoff.md` (Brave, `?scene=benchmark`) measured:
 
-| Stage | Time per frame |
-| --- | --- |
-| Update (physics) | 46.25 ms |
-| Render | 1.74 ms, 6 draw calls |
-| Frame budget at 60 FPS | 16.7 ms |
+| Stage                  | Time per frame        |
+| ---------------------- | --------------------- |
+| Update (physics)       | 46.25 ms              |
+| Render                 | 1.74 ms, 6 draw calls |
+| Frame budget at 60 FPS | 16.7 ms               |
 
 Rendering is about 4% of the frame, so renderer work (sprites #18, WebGL #19) can't fix the frame rate. Physics has to get about 3× faster just to fit the budget. This spec lists the changes that get there, in the order to do them, and how each one is measured.
 
@@ -61,11 +61,12 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 0: measure per system
 
-**Status:** planned in `superpowers/plans/2026-11-13-physics-performance-phase-0.md`. Issue #21.
+**Status:** done. Plan: `superpowers/plans/2026-11-13-physics-performance-phase-0.md`. Issue #21. The baseline split is under Results.
 
 **What:** time each system in the update schedule, not just the update as a whole.
 
 **How:**
+
 - Give `Schedule` an optional timing hook, or wrap each system in the benchmark build, that adds `performance.now()` deltas per system name into a per-frame record. The physics layer can't use browser globals, so the clock is passed in from the app layer.
 - Extend `FrameTimer` to average per-system times over the same warm-up and sample window, and show the top systems under the benchmark's FPS line.
 - Extend `tests/benchmark/physicsStep.bench.ts` (`npm run bench`) to report per-system times headlessly, so results don't depend on one browser run.
@@ -81,8 +82,9 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
 **How:**
+
 1. **Contact manifold.** After the broad phase, run `testCollision` once per candidate pair and store the result in a contact store resource: entity pair, normal, and for each contact point its depth and offset from each body's centre. Polygon–polygon contacts get up to **two points** by clipping the incident edge against the reference edge (the Sutherland–Hodgman clip Box2D uses). Circle contacts keep one point.
-2. **Pre-step, once per contact point:** compute the effective mass along the normal and the tangent, the restitution target from the velocity *before* solving (so bounce is applied once), and the position-correction bias.
+2. **Pre-step, once per contact point:** compute the effective mass along the normal and the tangent, the restitution target from the velocity _before_ solving (so bounce is applied once), and the position-correction bias.
 3. **Velocity iterations.** For N iterations (starting at about 8; **Open**), apply normal and friction impulses per contact point. Use **accumulated impulses**: clamp the running total so the normal impulse is never negative and friction stays within `μ × normal`, then apply only the change. This is what makes few iterations converge.
 4. **Position correction.** Replace moving bodies on every pass with one of these (**Open**):
    - **Baumgarte bias:** add `β × max(depth − slop, 0) / dt` to the normal velocity target. It's simple, but it adds a little energy.
@@ -92,7 +94,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 6. **Recording.** `ContactLog` and the friction arrows read from the manifold directly, rather than from iteration 0.
 7. **Block solver for two-point manifolds (optional, try after the rest works).** The sequential solver handles a manifold's two points one after the other, so they fight: fixing the left corner tilts the box onto the right one. Box2D's block solver solves both normal impulses together as one 2×2 problem. With the "impulse ≥ 0" rule it has only 4 cases (both touching, only one touching, neither), so it can test each directly. Boxes resting flat settle with less rocking and fewer passes. Keep it only if the stack tests show a gain. Friction stays sequential.
 8. **Contact storage ready for parallel solving later.** Store manifolds and contact points in flat typed-array columns (as the ECS stores components), keep each body's velocity in exactly one place, and keep the per-contact solve free of shared mutable state other than the two bodies' velocities. That costs nothing now and lets graph colouring and Web Workers be added later without rewriting the solver (see Later).
-9. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity *and* position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities *before* anything moves:
+9. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity _and_ position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities _before_ anything moves:
 
    ```
    forces (gravity, wind, joints, input)
@@ -124,12 +126,12 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 **Design: tags for eligibility and state, a resource for settings, one component for the timer.** (The owner chose this over making "has a `Sleep` component" the rule for which bodies can sleep.)
 
-| Piece | Kind | Purpose |
-| --- | --- | --- |
-| `NeverSleep` | tag (`{}`) | This body may never sleep: the player, script-driven bodies such as moving platforms, fast projectiles, and bodies under constant small forces |
-| `Asleep` | tag (`{}`) | This body is asleep. Active systems exclude it with `without: [Asleep]` |
-| `SleepTimer` | component, `{ sleepTime: "f64" }` | Seconds this body has stayed below the thresholds. Replaces today's `Sleep` component |
-| `SleepSettings` | resource | `enabled` (world-wide switch, for debugging), `linearThreshold`, `angularThreshold`, `timeout` (about 0.5 s) |
+| Piece           | Kind                              | Purpose                                                                                                                                        |
+| --------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NeverSleep`    | tag (`{}`)                        | This body may never sleep: the player, script-driven bodies such as moving platforms, fast projectiles, and bodies under constant small forces |
+| `Asleep`        | tag (`{}`)                        | This body is asleep. Active systems exclude it with `without: [Asleep]`                                                                        |
+| `SleepTimer`    | component, `{ sleepTime: "f64" }` | Seconds this body has stayed below the thresholds. Replaces today's `Sleep` component                                                          |
+| `SleepSettings` | resource                          | `enabled` (world-wide switch, for debugging), `linearThreshold`, `angularThreshold`, `timeout` (about 0.5 s)                                   |
 
 **Rules:**
 
@@ -152,7 +154,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 - the mouse drag grabs a body (`MouseDragSystem`);
 - code sets a sleeper's velocity, position or force directly. Those call sites call `wakeBody` themselves.
 
-**Waking without motion.** The broad phase drops pairs where neither body can move (phase 3), so a sleeper is only woken by contact when an *awake* body reaches it. These changes don't involve any awake body, so each needs its own wake rule:
+**Waking without motion.** The broad phase drops pairs where neither body can move (phase 3), so a sleeper is only woken by contact when an _awake_ body reaches it. These changes don't involve any awake body, so each needs its own wake rule:
 
 - **A body is destroyed.** Wake every body it had a contact with in the last step, found through phase 1's stored contacts (the ones kept for warm starting). Otherwise removing the bottom crate of a sleeping stack leaves the rest floating. If the destroyed body has joints, wake the bodies on the other end too.
 - **A static body is moved by code.** Moving platforms, elevators and other script-driven bodies aren't static. They're dynamic or kinematic bodies with `NeverSleep`, so an awake body moving through sleepers creates pairs and wakes them. If code still moves a static body, it calls a helper that wakes every body whose bounds overlap the static body's old or new bounds.
@@ -171,8 +173,8 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 - **Building them:** each step after contact detection, use union-find over dynamic bodies. Start with every body in its own set, merge the two sets for each contact and joint, and skip static bodies. This is close to linear in the number of contacts. Islands split by themselves when a pile breaks apart, because they're rebuilt every step.
 - **Solving per island:** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory.
 - **To try, keep only if measured to help:**
-  - *Iteration count per island.* A lone body needs 1–2 passes and a tall stack 8 or more. Stop an island early once its corrections fall below a tolerance.
-  - *Bottom-up order.* Solve each island's contacts in order of distance from static bodies, counted in contacts (floor contacts first), so support passes upward each pass. Warm starting may already make this unnecessary.
+  - _Iteration count per island._ A lone body needs 1–2 passes and a tall stack 8 or more. Stop an island early once its corrections fall below a tolerance.
+  - _Bottom-up order._ Solve each island's contacts in order of distance from static bodies, counted in contacts (floor contacts first), so support passes upward each pass. Warm starting may already make this unnecessary.
 - **Big islands are expected.** Fifty crates in one pile are one island, and the 2,000-body benchmark pyramid is almost certainly a single island. Solver cost doesn't change (it's contacts × passes either way), but:
   - one restless body keeps the whole island awake, and touching any body wakes all of it. That's the price of stable stacks, and the main lever against it is the thresholds in `SleepSettings`;
   - the island needs enough passes for its hardest part;
@@ -191,18 +193,20 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 **What:** produce fewer candidate pairs, and do less work per step to produce them.
 
 **How:**
+
 - **Skip static and sleeping pairs:** emit a pair only if **at least one body is awake and dynamic**. The check runs once per step in the broad phase instead of 25 times in the solver. Sleepers stay in the grid, so awake bodies still find them.
 
-  | Body A | Body B | Emitted | Why |
-  | --- | --- | --- | --- |
-  | awake | awake | yes | normal contact |
-  | awake | asleep | yes | the wake path: the solver resolves it and wakes the sleeper |
-  | awake | static | yes | e.g. landing on the floor |
-  | asleep | asleep | no | neither has moved since sleeping |
-  | asleep | static | no | the sleeper rests on it and neither moves |
-  | static | static | no | static bodies never move |
+  | Body A | Body B | Emitted | Why                                                         |
+  | ------ | ------ | ------- | ----------------------------------------------------------- |
+  | awake  | awake  | yes     | normal contact                                              |
+  | awake  | asleep | yes     | the wake path: the solver resolves it and wakes the sleeper |
+  | awake  | static | yes     | e.g. landing on the floor                                   |
+  | asleep | asleep | no      | neither has moved since sleeping                            |
+  | asleep | static | no      | the sleeper rests on it and neither moves                   |
+  | static | static | no      | static bodies never move                                    |
 
   Anything that changes the world without motion (destroying a body, moving a static body, changing gravity, wind or collision rules) is handled by phase 2's "waking without motion" rules, not by the broad phase.
+
 - **Separate static grid:** insert static bodies such as the walls once, into their own grid. Each step, only moving bodies are re-inserted, and each is checked against both grids.
 - **Cell size:** benchmark bodies are 12 px wide (circle radius 6, box size 12) and cells are 20 px. Tune with phase 0's timings. Too small and each body covers many cells; too large and each cell holds many bodies.
 - **Pair slots:** store each pair's collider, transform, mass, velocity and material slots in `CandidatePairs`, so the solver doesn't call `slotOf` in its loops (item 7 above).
@@ -231,6 +235,7 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
    - **Length:** rotation and translation never change an edge's length, so store each polygon's edge lengths once at spawn (a new `edgeLengths` collider field).
 
    The benchmark is a pyramid of circles and boxes, so circle–polygon tests are common.
+
 4. **Cache the separating axis per pair.** SAT exits as soon as an edge separates the shapes (`deepestContact` returns `false` when no vertex lies behind the edge), but in the worst case it tries every edge of both polygons first (up to 8 edge tests for two boxes, each against 4 vertices). Neighbouring bodies rarely change arrangement between steps, so store per pair which polygon and edge separated them last step, and test that edge first. If it still separates, the test ends after 1 edge instead of up to 8. For touching pairs, store the reference edge instead. Phase 1's clipping starts from it, and it's part of the contact's feature ID for warm starting. It lives in the same per-pair store phase 1 adds, keyed by the entity pair. It mostly helps pairs that are near but not touching, so measure it before keeping it.
 5. **`Math.hypot` → `Math.sqrt(x * x + y * y)` in hot paths.** V8's `Math.hypot` guards against overflow and underflow that engine-scale numbers never reach, and it is noticeably slower. Items 2 and 3 remove the calls in collider transforms and the narrow phase. Switch the rest that run per contact or per step, such as friction tangent normalisation in the solver and joint lengths, and leave one-off uses (shape construction) alone.
 
@@ -275,14 +280,39 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 
 ### Results
 
-| Phase | Browser update ms | Headless step ms | Solver ms | Broad phase ms | Notes |
-| --- | --- | --- | --- | --- | --- |
-| Baseline (ECS, PR #12) | 46.25 | | | | Brave, 2,000 bodies. Per-system numbers come from phase 0 |
-| 0 | | | | | |
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
+| Phase                  | Browser update ms | Headless step ms | Solver ms | Broad phase ms | Notes                                                                                                                                                                                                                                    |
+| ---------------------- | ----------------- | ---------------- | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Baseline (ECS, PR #12) | 46.25             |                  |           |                | Brave, 2,000 bodies. Per-system numbers come from phase 0                                                                                                                                                                                |
+| 0                      | 47.52             | 164.67 / 242.38  | 46.14     | 0.99           | Brave, Windows 11, same machine as the baseline. Render 1.73 ms, 6 draw calls. Headless: Node v24.14.1, Vitest 5.1.0, two `npm run bench` runs that disagreed by about 47%. The browser solver and broad-phase numbers are the reference |
+| 1                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+| 2                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+| 3                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+| 4                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+
+#### Phase 0 baseline split
+
+Each system's average time over the sample window. Browser: Brave, `?scene=benchmark`, frames 60–360, from the console table. Headless: `npm run bench`, the per-system test, steps 120–420.
+
+| System               | Browser ms | Browser share | Headless ms | Headless share |
+| -------------------- | ---------- | ------------- | ----------- | -------------- |
+| collisionSolver      | 46.144     | 97.1%         | 286.719     | 97.7%          |
+| broadPhase           | 0.985      | 2.1%          | 5.100       | 1.7%           |
+| colliderTransform    | 0.204      | 0.4%          | 0.835       | 0.3%           |
+| rigidBodyIntegration | 0.130      | 0.3%          | 0.590       | 0.2%           |
+| gravity              | 0.036      | 0.1%          | 0.128       | 0.0%           |
+| playerInput          | 0.002      | 0.0%          | 0.008       | 0.0%           |
+| jointForce           | 0.002      | 0.0%          | 0.001       | 0.0%           |
+| wind                 | 0.002      | 0.0%          | 0.003       | 0.0%           |
+| particleIntegration  | 0.001      | 0.0%          | 0.001       | 0.0%           |
+| mouseDrag            | 0.001      | 0.0%          | 0.006       | 0.0%           |
+| intentForce          | 0.000      | 0.0%          | 0.001       | 0.0%           |
+
+What this shows:
+
+- **The solver is the step.** 46.1 of 47.5 ms is `collisionSolver`, which confirms that phase 1 (narrow phase once per step, iterating only on velocities) is where nearly all of the gain is. Phases 3 and 4 work on the remaining ~1.4 ms, less than 3% of the step. They only matter once phases 1 and 2 have shrunk the solver.
+- **Headless numbers are relative only.** Vitest's module-runner adds overhead to every call across module exports, and the solver makes the most of those calls. Headless steps run 3.5–6× slower than the browser and vary a lot between runs. Use the headless shares to compare changes, and the browser split as the baseline.
+- **The two windows differ.** The browser samples frames 60–360, and the headless test samples steps 120–420, while the pyramid is still settling. The splits agree anyway.
+- **Small systems are noisy in the browser.** Brave coarsens `performance.now()`, so the times under 0.01 ms are only rough.
 
 ## Testing
 
@@ -324,5 +354,5 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 
 - Erin Catto, "Iterative Dynamics with Temporal Coherence" (GDC 2005) and "Fast and Simple Physics using Sequential Impulses" (GDC 2006): accumulated impulses, warm starting and Box2D-Lite.
 - Box2D-Lite source: a small, readable 2D sequential-impulse solver with clipping and warm starting.
-- Ian Millington, *Game Physics Engine Development*: contact generation, the resolution order and sleeping (the book this engine follows).
-- *3D Math Primer for Graphics and Game Development*, 2nd edition, chapter 12: the impulse maths `resolveImpulse` already follows.
+- Ian Millington, _Game Physics Engine Development_: contact generation, the resolution order and sleeping (the book this engine follows).
+- _3D Math Primer for Graphics and Game Development_, 2nd edition, chapter 12: the impulse maths `resolveImpulse` already follows.

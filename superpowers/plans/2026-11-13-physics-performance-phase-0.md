@@ -329,19 +329,19 @@ git commit -m "test: report per-system times in the physics benchmark (#21)"
 **Files:**
 - Modify: `superpowers/specs/2026-11-13-physics-performance-design.md` (Phase 0 status, `### Results`)
 
-- [ ] **Step 1: Headless numbers**
+- [x] **Step 1: Headless numbers**
 
 Run: `npm run bench` twice. Expected: the two runs agree within about 10%. Note the step mean and the per-system table.
 
-- [ ] **Step 2: Browser numbers from the owner**
+- [x] **Step 2: Browser numbers from the owner**
 
 Ask the owner to open `?scene=benchmark` in Brave on the same machine as the baseline, and to report the update ms, render ms and the five system lines.
 
-- [ ] **Step 3: Fill in the spec**
+- [x] **Step 3: Fill in the spec**
 
 In the Phase 0 Results row, add the browser update ms, headless step ms, solver ms (`collisionSolver`) and broad phase ms (`broadPhase`), with the machine and browser in Notes. Under the table, add `#### Phase 0 baseline split`: a table of every update system with its headless ms and %, and browser ms and % for the top five. Set Phase 0 **Status** to `done. Issue #21.`
 
-- [ ] **Step 4: Full verification**
+- [x] **Step 4: Full verification**
 
 Run, in `engine-typescript/`: `npm run lint && npm run typecheck && npm run build && npm run test`. Expected: all four pass.
 
