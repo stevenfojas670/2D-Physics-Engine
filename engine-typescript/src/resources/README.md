@@ -10,4 +10,5 @@ Per-world singleton values (resources) the physics systems share. Each file defi
 | `ContactLog.ts`        | Contacts and friction arrows recorded by the solver each step, for debug drawing                         |
 | `Gravity.ts`           | Gravity acceleration, default (0, 200)                                                                   |
 | `MouseDrag.ts`         | The body being dragged by the mouse, its local anchor and the drag target                                |
+| `Wind.ts`              | Wind force per unit of exposure, default (0, 0)                                                          |
 | `WorldSize.ts`         | Width and height of the simulated world                                                                  |
