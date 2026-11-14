@@ -86,6 +86,21 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
    - **A separate position pass:** a few iterations of direct position correction after the velocity solve, without redoing the narrow phase. This is closest to today's behaviour.
 5. **Warm starting.** Give each contact point a feature ID (which edge and which vertex made it) and keep last step's accumulated impulses by pair and feature. At the start of the step, apply those impulses first. Stacks then start near the solution and settle in far fewer iterations.
 6. **Recording.** `ContactLog` and the friction arrows read from the manifold directly, rather than from iteration 0.
+7. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity *and* position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities *before* anything moves:
+
+   ```
+   forces (gravity, wind, joints, input)
+   velocity integration      velocity += force × inverseMass × dt; damping
+   collider transforms
+   broad phase
+   contact detection         narrow phase once, store manifolds
+   velocity solve            warm start, then N passes over stored contacts
+   position integration      position += velocity × dt; angle += angular × dt
+   position correction       remove any overlap left
+   sleep update              sleep thresholds and timers (phase 2)
+   ```
+
+   This splits `RigidBodyIntegrationSystem` into a velocity integration system and a position integration system, with the collision systems between them. Particles (`ParticleIntegrationSystem`) can keep integrating in one go, because they don't collide. Collider world vertices are recomputed from the transforms before detection, so they match the positions the contacts are measured at. Position integration moves bodies after detection, so the debug contact points drawn that frame are from the start of the step. (**Open**: split, or keep today's order and lean harder on position correction. Recommended: split.)
 
 **Expected gain:** the narrow phase goes from about 25× per pair to 1×, and each iteration becomes a few multiply-adds per contact point. I'd expect the solver to get roughly 5–20× faster. That is an estimate to confirm with phase 0's numbers.
 
@@ -197,13 +212,14 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 ## Open decisions (to talk through)
 
 1. **Position correction:** Baumgarte bias, split impulses, or a separate position pass (phase 1, step 4).
-2. **Iteration count:** start at 8 velocity iterations, or tune from tests and benchmarks?
-3. **Behaviour change:** is it fine for bounces and stacks to feel different, given restitution will be applied once instead of up to 25 times? If not, which current behaviour should be kept?
-4. **Sleeping representation:** extend `Sleep`, or add an `Asleep` tag component that systems exclude with `without`?
-5. **Sleep timeout:** about 0.5 s, or tunable per body?
-6. **Islands:** part of phase 2, or a later issue?
-7. **Correctness fixes:** fix the restitution NaN, friction direction and friction clamp as separate bug issues first, or inside phase 1?
-8. **Targets:** is under 16.7 ms enough, or is under 8 ms the real goal?
+2. **Step order:** split rigid-body integration into velocity and position halves around the collision systems (phase 1, step 7), or keep today's order? Recommended: split.
+3. **Iteration count:** start at 8 velocity iterations, or tune from tests and benchmarks?
+4. **Behaviour change:** is it fine for bounces and stacks to feel different, given restitution will be applied once instead of up to 25 times? If not, which current behaviour should be kept?
+5. **Sleeping representation:** extend `Sleep`, or add an `Asleep` tag component that systems exclude with `without`?
+6. **Sleep timeout:** about 0.5 s, or tunable per body?
+7. **Islands:** part of phase 2, or a later issue?
+8. **Correctness fixes:** fix the restitution NaN, friction direction and friction clamp as separate bug issues first, or inside phase 1?
+9. **Targets:** is under 16.7 ms enough, or is under 8 ms the real goal?
 
 ## References
 
