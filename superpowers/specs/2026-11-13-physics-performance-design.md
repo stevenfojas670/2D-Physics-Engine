@@ -86,7 +86,9 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
    - **A separate position pass:** a few iterations of direct position correction after the velocity solve, without redoing the narrow phase. This is closest to today's behaviour.
 5. **Warm starting.** Give each contact point a feature ID (which edge and which vertex made it) and keep last step's accumulated impulses by pair and feature. At the start of the step, apply those impulses first. Stacks then start near the solution and settle in far fewer iterations.
 6. **Recording.** `ContactLog` and the friction arrows read from the manifold directly, rather than from iteration 0.
-7. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity *and* position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities *before* anything moves:
+7. **Block solver for two-point manifolds (optional, try after the rest works).** The sequential solver handles a manifold's two points one after the other, so they fight: fixing the left corner tilts the box onto the right one. Box2D's block solver solves both normal impulses together as one 2×2 problem. With the "impulse ≥ 0" rule it has only 4 cases (both touching, only one touching, neither), so it can test each directly. Boxes resting flat settle with less rocking and fewer passes. Keep it only if the stack tests show a gain. Friction stays sequential.
+8. **Contact storage ready for parallel solving later.** Store manifolds and contact points in flat typed-array columns (as the ECS stores components), keep each body's velocity in exactly one place, and keep the per-contact solve free of shared mutable state other than the two bodies' velocities. That costs nothing now and lets graph colouring and Web Workers be added later without rewriting the solver (see Later).
+9. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity *and* position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities *before* anything moves:
 
    ```
    forces (gravity, wind, joints, input)
@@ -101,6 +103,8 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
    ```
 
    This splits `RigidBodyIntegrationSystem` into a velocity integration system and a position integration system, with the collision systems between them. Particles (`ParticleIntegrationSystem`) can keep integrating in one go, because they don't collide. Collider world vertices are recomputed from the transforms before detection, so they match the positions the contacts are measured at. Position integration moves bodies after detection, so the debug contact points drawn that frame are from the start of the step. (**Open**: split, or keep today's order and lean harder on position correction. Recommended: split.)
+
+**Why iterate rather than solve each group exactly:** resolving a group of touching contacts at once means solving a linear complementarity problem (LCP): every contact either pushes with zero relative velocity, or separates with zero impulse. Direct LCP solvers cost roughly the cube of the number of contacts and get unreliable with friction, and a settled pyramid is one group with thousands of contacts. Sequential impulses with accumulated, clamped impulses is projected Gauss–Seidel, the standard iterative method for this problem, used by Box2D, Bullet, PhysX and Rapier. Exact solves are kept for tiny blocks only (step 7). The owner chose iteration.
 
 **Expected gain:** the narrow phase goes from about 25× per pair to 1×, and each iteration becomes a few multiply-adds per contact point. I'd expect the solver to get roughly 5–20× faster. That is an estimate to confirm with phase 0's numbers.
 
@@ -156,6 +160,17 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 **Cost of `without`:** views are uncached, so a sleeping body still costs one store lookup per system per step, but none of the physics work. If that lookup ever shows up in phase 0's timings, a cached view or group (see `src/ecs/README.md`) removes it.
 
 **Islands (second step):** group bodies connected by contacts and joints, and sleep or wake a whole group together. Without islands, a body at the bottom of a stack can fall asleep while the bodies on top still push on it, so the stack sinks or jitters. An island sleeps only when every body in it can sleep and has stayed still for the timeout. One `NeverSleep` body, such as the player standing on a pile of crates, keeps its whole island awake. Islands also give phase 1's solver a natural unit of work.
+
+- **What an island is:** the bodies linked by a chain of contacts or joints. Bodies don't all have to touch each other: if A touches B and B touches C, then A, B and C are one island. Static bodies don't link islands, so two piles on the same floor are two islands.
+- **Building them:** each step after contact detection, use union-find over dynamic bodies. Start with every body in its own set, merge the two sets for each contact and joint, and skip static bodies. This is close to linear in the number of contacts. Islands split by themselves when a pile breaks apart, because they're rebuilt every step.
+- **Solving per island:** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory.
+- **To try, keep only if measured to help:**
+  - *Iteration count per island.* A lone body needs 1–2 passes and a tall stack 8 or more. Stop an island early once its corrections fall below a tolerance.
+  - *Bottom-up order.* Solve each island's contacts in order of distance from static bodies, counted in contacts (floor contacts first), so support passes upward each pass. Warm starting may already make this unnecessary.
+- **Big islands are expected.** Fifty crates in one pile are one island, and the 2,000-body benchmark pyramid is almost certainly a single island. Solver cost doesn't change (it's contacts × passes either way), but:
+  - one restless body keeps the whole island awake, and touching any body wakes all of it. That's the price of stable stacks, and the main lever against it is the thresholds in `SleepSettings`;
+  - the island needs enough passes for its hardest part;
+  - a single island can't be split across Web Workers. That needs graph colouring (see Later).
 
 **Debug draw:** an option in `DebugOptions` to colour sleeping bodies differently.
 
@@ -219,7 +234,14 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 
 Only if phases 1–4 aren't enough:
 
-- **Web Worker:** run the update step off the main thread. Component columns are typed arrays, so they can move to `SharedArrayBuffer`. That needs cross-origin isolation headers on the dev server and any host.
+- **Web Workers and graph colouring (parallel solving).** Not part of this spec's phases. When it comes to planning and implementation, open a separate issue for it and write its own spec and plan. Notes for that work:
+  - **Why islands alone aren't enough:** islands are independent, so separate islands can run on separate workers. But the benchmark pyramid is one island, so splitting by island would give one worker all the work.
+  - **Graph colouring:** treat bodies as nodes and contacts as edges. Colour the contacts so that no two contacts sharing a dynamic body have the same colour. Statics don't count, because their velocity is never written, so all floor contacts can share a colour. Within one colour, no contacts share a body, so they can be solved in parallel without races. Each pass solves the colours one after another, with a barrier between colours. Assign colours greedily each step: pick the lowest colour not used by either body, tracked as a bitmask per body. Cap the number of colours (Box2D v3 uses about 24) and solve any overflow contacts on one thread. A tight cluster (three bodies all touching each other) needs one colour per contact and gains nothing. A packed pyramid needs about 6–8 colours with hundreds of contacts each. Colouring changes the solve order, so results differ slightly from the single-threaded order, but they stay deterministic if the colouring is.
+  - **Order to try it in:** colouring single-threaded first (testable, proves stability holds), then shared memory, then the worker pool.
+  - **Shared memory:** `postMessage` copies data and is far too slow for about 50+ barriers per step (passes × colours). Workers need `SharedArrayBuffer` with `Atomics.wait`/`Atomics.notify` barriers. ECS columns are replaced when they grow (`src/ecs/README.md`), so they'd need `SharedArrayBuffer` backing and a way to hand new buffers to workers. That's a change to the ECS core.
+  - **Cross-origin isolation:** `SharedArrayBuffer` requires `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers on Vite's dev server and any host.
+  - **Physics stays browser-free:** worker creation lives in app. The physics layer only sees the shared columns and a solve function per colour.
+  - Phase 1 step 8 keeps contact storage ready for this.
 - **WASM:** compile the solver and narrow phase from Rust, C or AssemblyScript. It helps most with tight numeric loops. Copying data between JS and WASM can eat the gain unless the columns live in WASM memory.
 - **GPU compute (WebGPU):** for very large body counts, particles or cloth. It's a separate architecture and only makes sense together with #19.
 
@@ -279,12 +301,12 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 ## Open decisions (to talk through)
 
 1. **Position correction:** Baumgarte bias, split impulses, or a separate position pass (phase 1, step 4).
-2. **Step order:** split rigid-body integration into velocity and position halves around the collision systems (phase 1, step 7), or keep today's order? Recommended: split.
+2. **Step order:** split rigid-body integration into velocity and position halves around the collision systems (phase 1, step 9), or keep today's order? Recommended: split.
 3. **Iteration count:** start at 8 velocity iterations, or tune from tests and benchmarks?
 4. **Behaviour change:** is it fine for bounces and stacks to feel different, given restitution will be applied once instead of up to 25 times? If not, which current behaviour should be kept?
 5. **Sleeping representation:** decided: `NeverSleep` and `Asleep` tags, a `SleepTimer` component and a `SleepSettings` resource (phase 2).
 6. **Sleep timeout:** about 0.5 s in `SleepSettings`. Is a world-wide value enough, or does anything need its own?
-7. **Islands:** part of phase 2, or a later issue?
+7. **Islands:** decided: part of phase 2, as the grouping for sleeping and solving, with iteration inside each island. Parallel solving (Web Workers, graph colouring) is a separate issue later.
 8. **Correctness fixes:** fix the restitution NaN, friction direction and friction clamp as separate bug issues first, or inside phase 1?
 9. **Targets:** is under 16.7 ms enough, or is under 8 ms the real goal?
 
