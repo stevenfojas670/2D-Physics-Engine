@@ -74,6 +74,7 @@ if (scene === "sandbox") {
 const draw = createRenderSchedule(world)
 const frameTimer = new FrameTimer(update.names)
 let lastTime = performance.now()
+let summaryLogged = false
 
 document.addEventListener("DOMContentLoaded", () => {
 	window.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -166,6 +167,21 @@ function drawBenchmarkSummary(): void {
 	}
 	drawText(benchmarkText(summary), 40)
 	drawSystemLines(summary.systems)
+	if (!summaryLogged) {
+		logBenchmarkSummary(summary)
+		summaryLogged = true
+	}
+}
+
+function logBenchmarkSummary(summary: FrameSummary): void {
+	console.log(benchmarkText(summary))
+	console.table(
+		summary.systems.map((system) => ({
+			system: system.name,
+			ms: system.milliseconds.toFixed(3),
+			share: `${(system.share * 100).toFixed(1)}%`,
+		})),
+	)
 }
 
 function benchmarkText(summary: FrameSummary): string {
