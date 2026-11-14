@@ -24,6 +24,7 @@ import {
 	resizeDemoWorld,
 } from "@/app/DemoScene"
 import { FrameTimer } from "@/app/FrameTimer"
+import { SystemTimer } from "@/app/SystemTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
 import { createPlayerInputSystem } from "@/app/PlayerInputSystem"
 import {
@@ -243,7 +244,7 @@ function moveTo(world: World, entity: Entity, x: number): void {
 
 function stepSandbox(world: World): void {
 	createUpdateSchedule(world)
-		.add(createSandboxRespawnSystem(world))
+		.add("sandboxRespawn", createSandboxRespawnSystem(world))
 		.run(world, STEP)
 }
 
@@ -341,7 +342,7 @@ describe("scene selection", () => {
 
 describe("frame timer", () => {
 	test("frame timer averages after warm-up", () => {
-		const timer = new FrameTimer(2, 3)
+		const timer = new FrameTimer([], 2, 3)
 		timer.record(100, 100, 100)
 		timer.record(100, 100, 100)
 		timer.record(1, 2, 10)
@@ -350,8 +351,57 @@ describe("frame timer", () => {
 		expect(timer.summary).toBeNull()
 		timer.record(5, 6, 30)
 		expect(timer.ready).toBe(true)
-		expect(timer.summary).toEqual({ updateMs: 3, renderMs: 4, drawCalls: 20 })
+		expect(timer.summary).toEqual({
+			updateMs: 3,
+			renderMs: 4,
+			drawCalls: 20,
+			systems: [],
+		})
 		timer.record(1000, 1000, 1000)
-		expect(timer.summary).toEqual({ updateMs: 3, renderMs: 4, drawCalls: 20 })
+		expect(timer.summary).toEqual({
+			updateMs: 3,
+			renderMs: 4,
+			drawCalls: 20,
+			systems: [],
+		})
+	})
+
+	test("system timer averages after warm-up, slowest first", () => {
+		const timer = new SystemTimer(["a", "b"], 1, 2)
+		timer.recordSystem(0, 100)
+		timer.recordSystem(1, 100)
+		timer.endFrame()
+		timer.recordSystem(0, 1)
+		timer.recordSystem(1, 6)
+		timer.endFrame()
+		expect(timer.summary).toBeNull()
+		timer.recordSystem(0, 3)
+		timer.recordSystem(1, 2)
+		timer.endFrame()
+		expect(timer.ready).toBe(true)
+		const expected = [
+			{ name: "b", milliseconds: 4, share: 4 / 6 },
+			{ name: "a", milliseconds: 2, share: 2 / 6 },
+		]
+		expect(timer.summary).toEqual(expected)
+		timer.recordSystem(0, 1000)
+		timer.endFrame()
+		expect(timer.summary).toEqual(expected)
+	})
+
+	test("shares are zero when nothing took time", () => {
+		const timer = new SystemTimer(["a"], 0, 1)
+		timer.recordSystem(0, 0)
+		timer.endFrame()
+		expect(timer.summary).toEqual([{ name: "a", milliseconds: 0, share: 0 }])
+	})
+
+	test("frame timer reports per-system averages with its summary", () => {
+		const timer = new FrameTimer(["gravity"], 0, 1)
+		timer.recordSystem(0, 2)
+		timer.record(5, 1, 3)
+		expect(timer.summary?.systems).toEqual([
+			{ name: "gravity", milliseconds: 2, share: 1 },
+		])
 	})
 })

@@ -85,10 +85,10 @@ function renderWorld(canvas: FakeCanvas): World {
 
 function renderSchedule(world: World): Schedule {
 	return new Schedule()
-		.add(createColliderRenderSystem(world))
-		.add(createJointRenderSystem(world))
-		.add(createDebugDrawSystem(world))
-		.add(createDrawFlushSystem(world))
+		.add("colliderRender", createColliderRenderSystem(world))
+		.add("jointRender", createJointRenderSystem(world))
+		.add("debugDraw", createDebugDrawSystem(world))
+		.add("drawFlush", createDrawFlushSystem(world))
 }
 
 describe("draw batches", () => {
