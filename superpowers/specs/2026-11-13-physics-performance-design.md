@@ -112,12 +112,45 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 **What:** bodies that stay still are taken out of the step until something disturbs them.
 
-**How:**
-- Add per-body state: `sleepTime` (seconds below the thresholds) and an `asleep` flag. Either extend the `Sleep` component or add an `Asleep` tag component (**Open**). A tag works with `world.view(..., { without: [Asleep] })`, so systems skip sleeping bodies for free. Its cost is adding and removing components when bodies fall asleep or wake.
-- When linear and angular speed stay below the thresholds for a time (about 0.5 s; **Open**), the body falls asleep: velocity is zeroed and it is skipped by integration, collider transforms and the solver.
-- **Waking:** a body wakes when an awake body's contact touches it, when a joint attached to it applies force, when the mouse drags it, or when a force or velocity is set on it directly.
-- **Islands (second step):** group bodies connected by contacts and joints, and sleep or wake a whole group together. Without islands, a body at the bottom of a stack can fall asleep while the bodies on top still push on it, so the stack sinks or jitters. Islands fix that, and they also give phase 1's solver a natural unit of work.
-- Debug draw: an option in `DebugOptions` to colour sleeping bodies differently.
+**Design: tags for eligibility and state, a resource for settings, one component for the timer.** (The owner chose this over making "has a `Sleep` component" the rule for which bodies can sleep.)
+
+| Piece | Kind | Purpose |
+| --- | --- | --- |
+| `NeverSleep` | tag (`{}`) | This body may never sleep: the player, script-driven bodies such as moving platforms, fast projectiles, and bodies under constant small forces |
+| `Asleep` | tag (`{}`) | This body is asleep. Active systems exclude it with `without: [Asleep]` |
+| `SleepTimer` | component, `{ sleepTime: "f64" }` | Seconds this body has stayed below the thresholds. Replaces today's `Sleep` component |
+| `SleepSettings` | resource | `enabled` (world-wide switch, for debugging), `linearThreshold`, `angularThreshold`, `timeout` (about 0.5 s) |
+
+**Rules:**
+
+- **Opt out, not in.** Most bodies should sleep, so the few that shouldn't get `NeverSleep`. `spawnDynamicBody` gets a `canSleep` option (default `true`); `false` adds `NeverSleep`. The demo spawns the player with `canSleep: false`.
+- **Which bodies can sleep:** dynamic bodies with `SleepTimer` and without `NeverSleep`, while `SleepSettings.enabled` is true. Static bodies never get a timer.
+- **Integration stops requiring a sleep component.** Today `RigidBodyIntegrationSystem`'s view includes `Sleep`, so a dynamic body without it isn't integrated at all. The new velocity and position integration views require `[Transform, Velocity, ForceAccumulator, Mass, LinearDamping]` and exclude `Asleep` and `Particle`.
+- **Thresholds move to the resource.** Per-body thresholds are dropped until something needs them. The per-step "snap small velocities to zero" in today's integration is removed; zeroing velocity happens once, when a body falls asleep. This is a behaviour change: slow drift that is snapped to zero today becomes real motion until the body sleeps.
+
+**Systems:**
+
+- **Sleep update system**, last in the update schedule (after position correction). For each `[SleepTimer, Velocity]` body without `NeverSleep` or `Asleep`: if linear and angular speed are below the thresholds, add `deltaTime` to `sleepTime`, otherwise reset it to 0. When `sleepTime ≥ timeout`, defer: zero the velocity, clear the force accumulator, add `Asleep`.
+- **Systems that skip sleepers** (`without: [Asleep]`): gravity, wind, joint forces, velocity integration, position integration, collider transforms and the sleep update. A sleeping body doesn't move, so its world vertices and bounds stay valid.
+- **The broad phase still inserts sleepers**, so awake bodies can find them. Pairs where neither body can move (static or asleep) aren't emitted (phase 3).
+- **The solver treats a sleeper as immovable** for the current step (inverse mass and inertia 0 in that contact) and defers waking it. It moves from the next step, which is invisible at 60 steps a second.
+
+**Waking** removes `Asleep` and resets `sleepTime` to 0, through one helper, `wakeBody(world, entity)`, that defers the change. It's called when:
+
+- an awake dynamic body has a contact with a sleeper (solver);
+- a joint attached to a sleeper applies force (joint force system);
+- the mouse drag grabs a body (`MouseDragSystem`);
+- code sets a sleeper's velocity, position or force directly. Those call sites call `wakeBody` themselves.
+
+Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherwise wind would stop affecting them once they sleep, because force systems skip sleepers.
+
+**Deferral (`world.defer`):** adding and removing `Asleep` are structural changes, so they're always deferred and applied when the queuing system finishes (`Schedule.run` flushes after every system). Commands capture entity IDs, never slots, and check `world.isAlive(entity)` before changing anything. Waking an island queues one command per body, or one command that wakes them all. Commands queued while flushing run in the same flush.
+
+**Cost of `without`:** views are uncached, so a sleeping body still costs one store lookup per system per step, but none of the physics work. If that lookup ever shows up in phase 0's timings, a cached view or group (see `src/ecs/README.md`) removes it.
+
+**Islands (second step):** group bodies connected by contacts and joints, and sleep or wake a whole group together. Without islands, a body at the bottom of a stack can fall asleep while the bodies on top still push on it, so the stack sinks or jitters. An island sleeps only when every body in it can sleep and has stayed still for the timeout. One `NeverSleep` body, such as the player standing on a pile of crates, keeps its whole island awake. Islands also give phase 1's solver a natural unit of work.
+
+**Debug draw:** an option in `DebugOptions` to colour sleeping bodies differently.
 
 **Expected gain:** once the benchmark pyramid settles, nearly every body is asleep, so a step costs a fraction of today's. Benchmarks that only measure a settled scene will look much better than a falling one, so measure both (see "Measuring").
 
@@ -196,7 +229,7 @@ Speed-ups in a solver are easy to get by quietly breaking it, so phase 1 adds te
 - **Restitution:** a ball dropped with restitution r reaches about r² of its drop height. Restitution 0 doesn't bounce and doesn't produce NaN.
 - **Friction:** a box on a slope steeper than `atan(μ)` slides, and one on a shallower slope doesn't. That covers the negative-tangent and clamp fixes.
 - **Momentum:** two bodies colliding in empty space conserve linear momentum within a tolerance.
-- **Sleeping (phase 2):** a body falls asleep after the timeout and wakes on contact, joint force, mouse drag and a direct velocity change.
+- **Sleeping (phase 2):** a body falls asleep after the timeout and wakes on contact, joint force, mouse drag and a direct velocity change. A body with `NeverSleep` never gets `Asleep`. A dynamic body without `SleepTimer` is still integrated. With `SleepSettings.enabled` false, nothing sleeps. A sleeper touched by a `NeverSleep` body wakes. With islands, a pile touching a `NeverSleep` body stays awake.
 - **Broad phase (phase 3):** pairs before and after are the same, apart from static or sleeping pairs.
 
 The existing tests in `tests/collision/` and `tests/systems/collision.test.ts` will need updating where they assert today's exact numbers, such as positional correction at 90% of depth per pass.
@@ -215,8 +248,8 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 2. **Step order:** split rigid-body integration into velocity and position halves around the collision systems (phase 1, step 7), or keep today's order? Recommended: split.
 3. **Iteration count:** start at 8 velocity iterations, or tune from tests and benchmarks?
 4. **Behaviour change:** is it fine for bounces and stacks to feel different, given restitution will be applied once instead of up to 25 times? If not, which current behaviour should be kept?
-5. **Sleeping representation:** extend `Sleep`, or add an `Asleep` tag component that systems exclude with `without`?
-6. **Sleep timeout:** about 0.5 s, or tunable per body?
+5. **Sleeping representation:** decided: `NeverSleep` and `Asleep` tags, a `SleepTimer` component and a `SleepSettings` resource (phase 2).
+6. **Sleep timeout:** about 0.5 s in `SleepSettings`. Is a world-wide value enough, or does anything need its own?
 7. **Islands:** part of phase 2, or a later issue?
 8. **Correctness fixes:** fix the restitution NaN, friction direction and friction clamp as separate bug issues first, or inside phase 1?
 9. **Targets:** is under 16.7 ms enough, or is under 8 ms the real goal?
