@@ -15,6 +15,7 @@ import {
 import { ContactLog, ContactsResource } from "@/resources/ContactLog"
 import { DEFAULT_GRAVITY, GravityResource } from "@/resources/Gravity"
 import { MouseDragResource, createMouseDrag } from "@/resources/MouseDrag"
+import { DEFAULT_WIND, WindResource } from "@/resources/Wind"
 import { WorldSizeResource } from "@/resources/WorldSize"
 import { transformCollider } from "@/shapes/colliderGeometry"
 import {
@@ -56,6 +57,7 @@ function installWorldResources(
 		x: DEFAULT_GRAVITY.x,
 		y: DEFAULT_GRAVITY.y,
 	})
+	world.setResource(WindResource, { x: DEFAULT_WIND.x, y: DEFAULT_WIND.y })
 	world.setResource(CollisionSettingsResource, new CollisionSettings())
 	world.setResource(BroadPhaseResource, grid)
 	world.setResource(ContactsResource, new ContactLog())

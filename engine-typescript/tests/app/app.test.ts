@@ -6,10 +6,13 @@ import { MovementIntent } from "@/components/MovementIntent"
 import { PlayerControlled } from "@/components/PlayerControlled"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
+import { WindExposure } from "@/components/WindExposure"
 import { spawnRigidBody } from "@/components/bodyFactories"
 import { CollisionGroups } from "@/optimizations/CollisionGroups"
 import { CollisionSettingsResource } from "@/resources/CollisionSettings"
+import { GravityResource } from "@/resources/Gravity"
 import { MouseDragResource } from "@/resources/MouseDrag"
+import { WindResource } from "@/resources/Wind"
 import { createRectangleShape } from "@/shapes/colliderShapes"
 import type { ControllerKeys } from "@/types/controller/controller.types"
 import { buildBenchmarkScene } from "@/app/BenchmarkScene"
@@ -203,6 +206,30 @@ describe("scenes", () => {
 		buildBenchmarkScene(world)
 		expect(world.store(Collider).size).toBe(2004)
 		expect(world.store(Velocity).size).toBe(2000)
+	})
+})
+
+describe("wind", () => {
+	test("world resources start with no wind", () => {
+		const world = inputWorld(800, 600)
+		expect(world.resource(WindResource)).toEqual({ x: 0, y: 0 })
+	})
+
+	test("update schedule applies wind before integration", () => {
+		const world = inputWorld(800, 600)
+		world.setResource(WindResource, { x: 600, y: 0 })
+		world.setResource(GravityResource, { x: 0, y: 0 })
+		const body = spawnRigidBody(
+			world,
+			createRectangleShape(20, 20),
+			400,
+			300,
+			1,
+		)
+		world.add(body, WindExposure, { exposure: 1 })
+		createUpdateSchedule(world).run(world, STEP)
+		const velocities = world.store(Velocity)
+		expect(velocities.columns.x[velocities.slotOf(body)]).toBeGreaterThan(0)
 	})
 })
 
