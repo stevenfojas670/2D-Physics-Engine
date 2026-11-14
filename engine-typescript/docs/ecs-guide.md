@@ -117,7 +117,7 @@ From `src/resources/Wind.ts`.
 - A system is a function `(deltaTime: number) => void`. Write it as a factory, `createXSystem(world: World): System`, in a file named `XSystem.ts`.
 - The factory captures `columns`, builds views and defines callbacks. The function it returns is the step: read resources, then run the views.
 - Where it lives: physics systems in `src/systems/` (layer physics: no browser globals, no imports from app or rendering); draw systems in `src/rendering/`; systems that read input in `src/app/`.
-- Add it to a schedule in `src/app/schedules.ts`. `Schedule.run` calls the systems in the order they were added and flushes deferred commands after each one (section 8).
+- Add it to a schedule in `src/app/schedules.ts` with a unique name, such as `.add("wind", createWindSystem(world))`; the name labels its time in the benchmark. `Schedule.run` calls the systems in the order they were added and flushes deferred commands after each one (section 8).
 
 ```ts
 function createWindSystem(world: World): System {
@@ -189,7 +189,7 @@ Wind was added to the engine in four steps; follow the same steps for any new fo
 1. **Resource** `src/resources/Wind.ts`: the `Wind` type, `DEFAULT_WIND` and `WindResource` (section 6).
 2. **Component** `src/components/WindExposure.ts`: how strongly wind pushes each body (section 2).
 3. **System** `src/systems/WindSystem.ts`: for every entity with `ForceAccumulator` and `WindExposure`, add `wind × exposure` to the force (section 7). Static bodies have no `ForceAccumulator`, so the view skips them.
-4. **Wire it in:** `installWorldResources` sets `WindResource` to `DEFAULT_WIND`, so every world has it, and `createUpdateSchedule` adds `createWindSystem(world)` right after gravity.
+4. **Wire it in:** `installWorldResources` sets `WindResource` to `DEFAULT_WIND`, so every world has it, and `createUpdateSchedule` adds `.add("wind", createWindSystem(world))` right after gravity.
 
 Tests: `tests/systems/wind.test.ts` runs the system on its own; `tests/app/app.test.ts` checks the default wind and that the update schedule applies it. Update the READMEs of every folder you touched.
 
@@ -197,7 +197,7 @@ Tests: `tests/systems/wind.test.ts` runs the system on its own; `tests/app/app.t
 
 1. Write `buildXScene(world)` in `src/app/XScene.ts`. Call `installWorldResources(world, width, height)` first, replace any resources the scene changes, then spawn bodies with the factories.
 2. Put scene-only systems in the same file as factories, like `createSandboxRespawnSystem`.
-3. Add the name to `SceneName` and `SELECTABLE_SCENES` in `src/app/sceneSelection.ts`, and a branch in `src/main.ts` that sizes the canvas, builds the scene and appends any scene-only systems with `update.add(...)` (they run after the solver).
+3. Add the name to `SceneName` and `SELECTABLE_SCENES` in `src/app/sceneSelection.ts`, and a branch in `src/main.ts` that sizes the canvas, builds the scene and appends any scene-only systems with `update.add("name", system)` (they run after the solver).
 4. Test it in `tests/app/app.test.ts`: what the scene builds, and what its own systems do.
 5. Add a row to the Scenes table in [`engine-typescript/README.md`](../README.md#scenes) with the address, what it shows and the controls (AGENTS.md rule 4), and a row to `src/app/README.md`.
 

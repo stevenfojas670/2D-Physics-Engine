@@ -18,25 +18,25 @@ import { createPlayerInputSystem } from "./PlayerInputSystem"
 
 function createUpdateSchedule(world: World): Schedule {
 	return new Schedule()
-		.add(createPlayerInputSystem(world))
-		.add(createMouseDragSystem(world))
-		.add(createIntentForceSystem(world))
-		.add(createGravitySystem(world))
-		.add(createWindSystem(world))
-		.add(createJointForceSystem(world))
-		.add(createRigidBodyIntegrationSystem(world))
-		.add(createParticleIntegrationSystem(world))
-		.add(createColliderTransformSystem(world))
-		.add(createBroadPhaseSystem(world))
-		.add(createCollisionSolverSystem(world))
+		.add("playerInput", createPlayerInputSystem(world))
+		.add("mouseDrag", createMouseDragSystem(world))
+		.add("intentForce", createIntentForceSystem(world))
+		.add("gravity", createGravitySystem(world))
+		.add("wind", createWindSystem(world))
+		.add("jointForce", createJointForceSystem(world))
+		.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
+		.add("particleIntegration", createParticleIntegrationSystem(world))
+		.add("colliderTransform", createColliderTransformSystem(world))
+		.add("broadPhase", createBroadPhaseSystem(world))
+		.add("collisionSolver", createCollisionSolverSystem(world))
 }
 
 function createRenderSchedule(world: World): Schedule {
 	return new Schedule()
-		.add(createColliderRenderSystem(world))
-		.add(createJointRenderSystem(world))
-		.add(createDebugDrawSystem(world))
-		.add(createDrawFlushSystem(world))
+		.add("colliderRender", createColliderRenderSystem(world))
+		.add("jointRender", createJointRenderSystem(world))
+		.add("debugDraw", createDebugDrawSystem(world))
+		.add("drawFlush", createDrawFlushSystem(world))
 }
 
 export { createUpdateSchedule, createRenderSchedule }

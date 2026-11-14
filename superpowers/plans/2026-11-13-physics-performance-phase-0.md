@@ -43,16 +43,16 @@
 - Create: `superpowers/plans/2026-11-13-physics-performance-phase-0.md` (this plan)
 - Modify: `superpowers/specs/2026-11-13-physics-performance-design.md:64` (Phase 0 status line)
 
-- [ ] **Step 1: Branch from `dev`**
+- [x] **Step 1: Branch from `dev`**
 
 Run: `git switch dev && git pull && git switch -c feature/physics-timing`
 Expected: `Switched to a new branch 'feature/physics-timing'`
 
-- [ ] **Step 2: Save this plan to the repo and update the spec status**
+- [x] **Step 2: Save this plan to the repo and update the spec status**
 
 Change the spec line to: `**Status:** planned in \`superpowers/plans/2026-11-13-physics-performance-phase-0.md\`. Issue #21.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add superpowers/plans/2026-11-13-physics-performance-phase-0.md superpowers/specs/2026-11-13-physics-performance-design.md
@@ -80,7 +80,7 @@ git commit -m "docs: add phase 0 plan for physics performance (#21)"
   - `Schedule.runTimed(world: World, deltaTime: number, clock: Clock, onSystemTimed: SystemTimed): void`
 - System names (camelCase, factory name without `create`/`System`). Update: `playerInput, mouseDrag, intentForce, gravity, wind, jointForce, rigidBodyIntegration, particleIntegration, colliderTransform, broadPhase, collisionSolver`. Render: `colliderRender, jointRender, debugDraw, drawFlush`. Sandbox: `sandboxRespawn`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Rewrite the two existing tests to call `.add("a", ...)` and `.add("b", ...)`, and add:
 
@@ -127,29 +127,29 @@ test("runTimed passes deltaTime and keeps order", () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests and check they fail**
+- [x] **Step 2: Run the tests and check they fail**
 
 Run: `npx vitest run tests/ecs/Schedule.test.ts`
 Expected: FAIL. The new tests error on the missing `names`/`runTimed`, and typecheck reports `add` arity.
 
-- [ ] **Step 3: Implement in `src/ecs/Schedule.ts`**
+- [x] **Step 3: Implement in `src/ecs/Schedule.ts`**
 
 Keep a parallel `systemNames: string[]` beside `systems`. `runTimed` uses an indexed loop: `start = clock()`, then the system, `world.flushDeferred()`, then `onSystemTimed(index, clock() - start)`. Don't change `run`.
 
-- [ ] **Step 4: Update every caller to named `add`**
+- [x] **Step 4: Update every caller to named `add`**
 
 Use the names from the Interfaces block. In the test helpers, use the same names as the systems they add.
 
-- [ ] **Step 5: Run the tests and check they pass**
+- [x] **Step 5: Run the tests and check they pass**
 
 Run: `npm run typecheck && npx vitest run`
 Expected: typecheck clean; all tests PASS.
 
-- [ ] **Step 6: Update the docs**
+- [x] **Step 6: Update the docs**
 
 `src/ecs/README.md`: Schedule row reads "An ordered list of named systems; runs them and applies deferred changes after each, optionally timing each with a supplied clock". In the section text, say that `runTimed` measures each system plus its flush with a clock passed in, because ecs can't use browser globals. `docs/ecs-guide.md`: show `.add("wind", createWindSystem(world))` wherever adding a system is described.
 
-- [ ] **Step 7: Lint, then commit**
+- [x] **Step 7: Lint, then commit**
 
 Run: `npm run lint`. Expected: no errors.
 

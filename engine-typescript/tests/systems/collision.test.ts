@@ -36,11 +36,11 @@ function collisionWorld(gravityY: number): World {
 
 function physicsSchedule(world: World): Schedule {
 	return new Schedule()
-		.add(createGravitySystem(world))
-		.add(createRigidBodyIntegrationSystem(world))
-		.add(createColliderTransformSystem(world))
-		.add(createBroadPhaseSystem(world))
-		.add(createCollisionSolverSystem(world))
+		.add("gravity", createGravitySystem(world))
+		.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
+		.add("colliderTransform", createColliderTransformSystem(world))
+		.add("broadPhase", createBroadPhaseSystem(world))
+		.add("collisionSolver", createCollisionSolverSystem(world))
 }
 
 function xOf(world: World, entity: Entity): number {

@@ -243,7 +243,7 @@ function moveTo(world: World, entity: Entity, x: number): void {
 
 function stepSandbox(world: World): void {
 	createUpdateSchedule(world)
-		.add(createSandboxRespawnSystem(world))
+		.add("sandboxRespawn", createSandboxRespawnSystem(world))
 		.run(world, STEP)
 }
 

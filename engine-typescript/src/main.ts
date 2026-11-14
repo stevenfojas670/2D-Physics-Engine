@@ -64,7 +64,7 @@ if (scene === "benchmark") {
 
 const update = createUpdateSchedule(world)
 if (scene === "sandbox") {
-	update.add(createSandboxRespawnSystem(world))
+	update.add("sandboxRespawn", createSandboxRespawnSystem(world))
 }
 const draw = createRenderSchedule(world)
 const frameTimer = new FrameTimer()

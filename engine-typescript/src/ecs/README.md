@@ -4,16 +4,16 @@ The Entity Component System core: entities, component storage, views, the world 
 
 This page explains how the core works. For how to _use_ it (adding components, systems, resources and scenes), see [the ECS guide](../../docs/ecs-guide.md).
 
-| File                 | Purpose                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `ComponentStore.ts`  | The sparse set for one component: a packed entity list plus one typed-array column per field    |
-| `defineResource.ts`  | Declares a typed key for a per-world singleton value (a resource)                               |
-| `defineComponent.ts` | Declares a component as a name and a schema of typed fields, plus the column and value types    |
-| `Entity.ts`          | The `Entity` ID type and the functions that pack and unpack its index and generation            |
-| `EntityRegistry.ts`  | Hands out entity IDs, recycles destroyed indices and tracks which IDs are still alive           |
-| `Schedule.ts`        | An ordered list of systems; runs them and applies deferred changes after each                   |
-| `View.ts`            | Iterates the entities that have a set of components, passing each component's slot              |
-| `World.ts`           | Owns the entity registry, one store per component, the resources and the deferred-command queue |
+| File                 | Purpose                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ComponentStore.ts`  | The sparse set for one component: a packed entity list plus one typed-array column per field                                      |
+| `defineResource.ts`  | Declares a typed key for a per-world singleton value (a resource)                                                                 |
+| `defineComponent.ts` | Declares a component as a name and a schema of typed fields, plus the column and value types                                      |
+| `Entity.ts`          | The `Entity` ID type and the functions that pack and unpack its index and generation                                              |
+| `EntityRegistry.ts`  | Hands out entity IDs, recycles destroyed indices and tracks which IDs are still alive                                             |
+| `Schedule.ts`        | An ordered list of named systems; runs them and applies deferred changes after each, optionally timing each with a supplied clock |
+| `View.ts`            | Iterates the entities that have a set of components, passing each component's slot                                                |
+| `World.ts`           | Owns the entity registry, one store per component, the resources and the deferred-command queue                                   |
 
 ## How it works
 
@@ -62,6 +62,8 @@ Bigger engines add _groups_, which reorder stores so matching entities share the
 A system is a function `(deltaTime) => void`. Systems are built by factories (`createGravitySystem(world)`) that capture their world and make their views and callbacks once, so running a system each step allocates nothing.
 
 `Schedule` is an ordered list of systems, and `run` calls them in order. A system in the middle of `each` must not add or remove components on _other_ entities, because that moves slots in the stores the view is walking. Instead it calls `world.defer(command)`. After each system finishes, the schedule calls `world.flushDeferred()`, which runs the queued commands in order, including any queued while flushing. The order is fixed and written in one place, so every run of the simulation is deterministic.
+
+Every system is added with a name (`schedule.add("gravity", createGravitySystem(world))`), and adding the same name twice throws. `names` lists them in order. `runTimed(world, deltaTime, clock, onSystemTimed)` runs the same loop, but reads `clock()` before each system and after its flush and then calls `onSystemTimed(index, milliseconds)`, so deferred work counts toward the system that queued it. The clock is passed in because the ecs layer can't use browser globals; the app passes `performance.now`. `run` does no timing, so normal steps pay nothing for it.
 
 ### Further reading
 
