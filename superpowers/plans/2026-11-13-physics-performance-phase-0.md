@@ -265,24 +265,24 @@ git commit -m "feat: average per-system times in the frame timer (#21)"
 **Interfaces:**
 - Consumes: `Schedule.runTimed` and `Schedule.names` (Task 2); `FrameTimer(systemNames)`, `FrameTimer.recordSystem` and `FrameSummary.systems` (Task 3).
 
-- [ ] **Step 1: Wire the timed run**
+- [x] **Step 1: Wire the timed run**
 
 Build `const frameTimer = new FrameTimer(update.names)` after the sandbox `update.add("sandboxRespawn", ...)`. In `runFrame`, the benchmark calls `update.runTimed(world, BENCHMARK_STEP, readClock, frameTimer.recordSystem)` with a module-level `const readClock = (): number => performance.now()`. Every other scene keeps `update.run(world, deltaTime)`.
 
-- [ ] **Step 2: Draw the top systems**
+- [x] **Step 2: Draw the top systems**
 
 Add constants `TOP_SYSTEM_COUNT = 5`, `SYSTEM_LINES_TOP = 60` and `LINE_HEIGHT = 15`. Once the summary exists, draw the first `TOP_SYSTEM_COUNT` entries of `summary.systems` one per line, as `` `${name} ${milliseconds.toFixed(2)} ms · ${Math.round(share * 100)}%` ``. Keep it in a `drawSystemLines(systems: SystemTime[])` function next to `benchmarkText`.
 
-- [ ] **Step 3: Check it in the browser**
+- [ ] **Step 3: Check it in the browser** (deferred to the owner's Task 6 run)
 
 Run: `npm run dev` and open `http://localhost:5173/?scene=benchmark`.
 Expected: "measuring..." for about 6 s, then the summary line and five lines like `collisionSolver NN.NN ms · NN%`. `/` and `/?scene=sandbox` behave as before.
 
-- [ ] **Step 4: Update the Scenes section**
+- [x] **Step 4: Update the Scenes section**
 
 Append to the Benchmark row's "What it shows" cell: "…, then lists the five slowest update systems with their average ms and share of the update".
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `npm run lint && npm run typecheck && npm run build && npm run test`. Expected: all pass.
 

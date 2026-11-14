@@ -11,6 +11,7 @@ import { ControllerKeysResource } from "@/app/ControllerKeys"
 import { buildDemoScene, resizeDemoWorld } from "@/app/DemoScene"
 import type { DemoHandles } from "@/app/DemoScene"
 import { FrameTimer } from "@/app/FrameTimer"
+import type { FrameSummary } from "@/app/FrameTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
 import {
 	SANDBOX_HEIGHT,
@@ -20,6 +21,7 @@ import {
 } from "@/app/SandboxScene"
 import { selectScene } from "@/app/sceneSelection"
 import { createRenderSchedule, createUpdateSchedule } from "@/app/schedules"
+import type { SystemTime } from "@/app/SystemTimer"
 import {
 	DebugOptionsResource,
 	createDebugOptions,
@@ -33,6 +35,9 @@ const TEXT_FONT = "12px Arial"
 const CANVAS_SCALE = 0.75
 const BENCHMARK_STEP = 1 / 60
 const LEFT_BUTTON = 0
+const TOP_SYSTEM_COUNT = 5
+const SYSTEM_LINES_TOP = 60
+const LINE_HEIGHT = 15
 
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement
 const ctx = canvas.getContext("2d")!
@@ -121,7 +126,11 @@ function runFrame(deltaTime: number): void {
 	drawText(`${Math.round(1.0 / deltaTime)} FPS`, 20)
 
 	const updateStart = performance.now()
-	update.run(world, isBenchmark ? BENCHMARK_STEP : deltaTime)
+	if (isBenchmark) {
+		update.runTimed(world, BENCHMARK_STEP, readClock, frameTimer.recordSystem)
+	} else {
+		update.run(world, deltaTime)
+	}
 	const renderStart = performance.now()
 	draw.run(world, deltaTime)
 	const renderEnd = performance.now()
@@ -132,15 +141,34 @@ function runFrame(deltaTime: number): void {
 			renderEnd - renderStart,
 			render.drawCalls,
 		)
-		drawText(benchmarkText(), 40)
+		drawBenchmarkSummary()
 	}
 }
 
-function benchmarkText(): string {
+function readClock(): number {
+	return performance.now()
+}
+
+function drawSystemLines(systems: SystemTime[]): void {
+	systems.slice(0, TOP_SYSTEM_COUNT).forEach((system, index) => {
+		drawText(
+			`${system.name} ${system.milliseconds.toFixed(2)} ms · ${Math.round(system.share * 100)}%`,
+			SYSTEM_LINES_TOP + index * LINE_HEIGHT,
+		)
+	})
+}
+
+function drawBenchmarkSummary(): void {
 	const summary = frameTimer.summary
 	if (summary === null) {
-		return "measuring..."
+		drawText("measuring...", 40)
+		return
 	}
+	drawText(benchmarkText(summary), 40)
+	drawSystemLines(summary.systems)
+}
+
+function benchmarkText(summary: FrameSummary): string {
 	return `update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
 }
 
