@@ -6,15 +6,16 @@ Handoff for the ECS implementation (issue #10). Plan: [`2026-11-13-ecs.md`](2026
 
 - **Branch:** `feature/ecs`
 - **Last task commit:** `refactor: remove the pre-ecs engine and layer exceptions (#10)` (Task 17). This handoff update is part of that commit; see `git log` for the hash.
-- **Done:** Tasks 1–17 Step 5. The old engine is deleted and the layer `exceptions` list is empty. The owner said to go ahead with Task 17 before the hand check.
-- **Waiting on the owner:**
+- **Done:** Tasks 1–17, and the final whole-branch review (one fix, `c9aba38`). The old engine is deleted and the layer `exceptions` list is empty. The owner said to go ahead with Task 17 before the hand check.
+- **Was waiting on the owner (done):**
   - **Task 15 Step 4:** in the worktree `.claude/worktrees/ecs-baseline/engine-typescript`, run `npm run dev -- --port 5174` and open `?scene=benchmark`. After 360 frames, the old engine's update and render ms show on screen and in the console.
   - **Task 16 Step 3:** run `npm run dev` on `feature/ecs` and compare it with the old engine side by side, using the plan's checklist. Then open `?scene=benchmark` and read off update ms, render ms and draw calls.
-- **PR:** #12 into `dev` is open.
-- **Next:** the final whole-branch review, then fill in the PR's browser numbers once the owner has them. Step 7 (remove the baseline worktree) waits until the owner has the browser numbers.
+- **PR:** #12 into `dev` is open, with every number filled in and parity confirmed by the owner.
+- **Next:** the owner merges PR #12.
+- **Browser benchmark (Brave, 2,000 bodies):** old engine update 179.17 ms and render 4.61 ms; ECS update 46.25 ms, render 1.74 ms and 6 draw calls. Step 7 is done.
 - **Checks:** all four green after Task 17, 16 test files, 128 tests. The ECS bench mean after Task 17 is 173.84 ms per step.
 - **Headless bench, 2,000 bodies (Node v24.14.1, Vitest 5.1.0, Windows 11):** the old engine takes 844.64 ms per step and the ECS 262.86 ms, about 3.2× faster. Vitest warns that its module export getters add overhead to the ECS hot loops, so the ECS number is pessimistic. The numbers are in `.superpowers/sdd/2026-11-13-ecs/baseline.md`.
-- **Throwaway branch:** `test/ecs-baseline-benchmark` (commit `06e5baa`) is local only and is never pushed or merged.
+- **Throwaway branch:** `test/ecs-baseline-benchmark` (commit `06e5baa`) was local only. It and its worktree are removed.
 
 ## 2. State of the checks
 
