@@ -1,10 +1,13 @@
 # 2D Physics Engine
 
-A 2D rigid-body physics engine, restructured along the lines of Ian Millington's *Game Physics Engine Development*. It includes:
+A 2D rigid-body physics engine, restructured along the lines of Ian Millington's *Game Physics Engine Development*. It runs on an Entity Component System: bodies are entities, their data lives in typed-array component columns, and physics and rendering are systems run by schedules. It includes:
 
 * Collision detection for circles and convex polygons, with a broad phase on hash or spatial grids
 * Shapes: circle, rectangle and polygon
-* Rigid bodies with forces, torque, impulses, friction and several integrators
+* An Entity Component System with sparse-set storage, views, resources and schedules
+* Batched Canvas 2D rendering with debug layers (normals, bounding boxes, friction, contacts, grid cells)
+* Particles
+* Rigid bodies with forces, torque, impulses and friction, integrated with semi-implicit Euler
 * Joints: spring and force
 * Collision groups and a collision matrix
 * 2D vector math utilities
@@ -42,6 +45,10 @@ npm run dev
 | `npm run lint` | ESLint, Prettier check and the folder README check |
 | `npm run format` | Rewrites files with Prettier |
 | `npm run typecheck` | Type checks without building |
+| `npm run test` | Runs the Vitest tests in `tests/` |
+| `npm run bench` | Runs the Vitest benchmarks in `tests/` |
+
+`npm run dev` serves the demo scene and a 2,000-body benchmark scene. The [Scenes](engine-typescript/README.md#scenes) section lists each scene's address and controls.
 
 The legacy engine still runs by opening `engine/index.html` with the VS Code Live Server extension.
 
@@ -70,34 +77,22 @@ These apply to `engine-typescript/` and are enforced by `npm run lint`. Inline `
 Every file in `engine-typescript/src/` belongs to one layer. A layer may import from its own layer and from the layers listed for it. The map lives in [`engine-typescript/lint/layerMap.js`](engine-typescript/lint/layerMap.js).
 
 ```
+ecs         ecs/                                        → ecs, types
 math        Vector2.ts, utils/MathHelper.ts            → math, types
-physics     RigidBody, StaticBody, Simulation,          → math, types
+physics     components/, resources/, systems/,          → ecs, math, types
             shapes/, collisionDetectionSystem/,
-            joints/, materials/, particles/,
-            optimizations/
-rendering   utils/DrawUtils.ts                          → physics, math, types
+            joints/, materials/, optimizations/
+rendering   rendering/                                  → physics, ecs, math, types
 input       Controller.ts                               → types
-app         main.ts                                     → everything
+app         main.ts, app/                               → everything
 types       types/                                      → types; every layer may import types
 ```
 
-The math and physics layers may not use browser globals (`window`, `document`, `requestAnimationFrame`, `navigator`).
+The ecs, math and physics layers may not use browser globals (`window`, `document`, `requestAnimationFrame`, `navigator`).
 
 ### Known exceptions
 
-Physics code currently draws itself to the canvas, and `Simulation` reads keyboard input directly. Until that is moved into the rendering and app layers, these imports are allowed:
-
-| File | Allowed to import |
-|---|---|
-| `shapes/Shape.ts` | `utils/DrawUtils.ts` |
-| `shapes/Circle.ts` | `utils/DrawUtils.ts` |
-| `shapes/Polygon.ts` | `utils/DrawUtils.ts` |
-| `collisionDetectionSystem/CollisionManifold.ts` | `utils/DrawUtils.ts` |
-| `joints/JointConnection.ts` | `utils/DrawUtils.ts` |
-| `optimizations/grids/SpatialGrid.ts` | `utils/DrawUtils.ts` |
-| `Simulation.ts` | `utils/DrawUtils.ts`, `Controller.ts` |
-
-Removing these is the goal of the next refactor. The list should only shrink.
+None. The `exceptions` list in `lint/layerMap.js` is empty and should stay that way.
 
 ## Repo layout
 
@@ -106,7 +101,7 @@ Removing these is the goal of the next refactor. The list should only shrink.
 | [`.github/`](.github/pull_request_template.md) | Pull request template and issue templates (bug report, feature request) |
 | [`AGENTS.md`](AGENTS.md) | Rules for AI agents working in this repo |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branches, commits and pull requests |
-| [`engine-typescript/`](engine-typescript/README.md) | The active engine; every folder has a README mapping its files |
+| [`engine-typescript/`](engine-typescript/README.md) | The active engine, built on an Entity Component System; every folder has a README mapping its files |
 | `engine/` | The legacy JavaScript engine |
 | [`superpowers/`](superpowers/README.md) | Design specs and implementation plans |
 
@@ -119,6 +114,5 @@ Removing these is the goal of the next refactor. The list should only shrink.
 * Implement ragdolls.
 * Implement more advanced springs.
 * Implement fractures.
-* Development an Entity-Component-System.
 * Port to Typescript and C++
 * 3D Implementation

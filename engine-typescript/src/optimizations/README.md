@@ -8,5 +8,4 @@ Ways to avoid testing every pair of bodies for collision. Layer: physics.
 
 ## Folders
 
-- [`boundingVolumes/`](boundingVolumes/README.md) — Simple shapes that enclose a body for cheap overlap tests
-- [`grids/`](grids/README.md) — Broad-phase grids that find nearby bodies
+- [`broadPhase/`](broadPhase/README.md) — Entity-based broad-phase grids that find nearby bodies

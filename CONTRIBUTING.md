@@ -45,8 +45,11 @@ From `engine-typescript/`, all of these must pass:
 npm run lint
 npm run typecheck
 npm run build
+npm run test
 ```
 
 `npm run lint` also fails if a folder README is missing a file or lists one that no longer exists. When you add, remove or rename a file, or change what a file does, update its folder's `README.md` in the same change. The check compares names only, so keeping descriptions accurate is on you and the reviewer.
+
+When you add a scene or change how one runs, update the [Scenes](engine-typescript/README.md#scenes) section of `engine-typescript/README.md` in the same change, so users can find its address, what it shows and its controls.
 
 `engine/` is the owner's manual playground. Leave it alone unless the change is specifically about it.

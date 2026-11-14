@@ -1,10 +1,9 @@
 # utils
 
-Math helpers and canvas drawing helpers.
+Math helpers.
 
 | File            | Purpose                                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------------------------- |
-| `DrawUtils.ts`  | Static canvas helpers: filled point, outlined point, line, rectangle, text and arrow. Layer: rendering     |
 | `MathHelper.ts` | Polygon centroid and area, index wrapping, clamping, rotation around a point and edge normals. Layer: math |
 
 ## References
