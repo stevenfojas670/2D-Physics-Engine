@@ -1,6 +1,6 @@
 # Physics performance: design
 
-Issue: #20. Branch: `feature/physics-performance` from `dev`. Status: draft. The owner wants it written down now and will talk through each part before any of it is planned or built, so the decisions marked **Open** below are still theirs to make.
+Issue: #20, with one sub-issue per phase (#21–#25). This spec was written on `feature/physics-performance` and merged into `dev` on its own. Each phase is planned in its own session, in its own `superpowers/plans/` file, just before it is built. Status: draft. Decisions marked **Open** below are still the owner's to make, and each is settled when its phase is planned.
 
 ## Intent
 
@@ -61,6 +61,8 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 0: measure per system
 
+**Status:** not planned. Issue #21.
+
 **What:** time each system in the update schedule, not just the update as a whole.
 
 **How:**
@@ -73,6 +75,8 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 **Risk:** almost none. Timing overhead is tiny compared with the systems being timed.
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
+
+**Status:** not planned. Issue #22.
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
@@ -113,6 +117,8 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 **Fixes along the way:** the three correctness issues above. The new effective-mass and clamping code replaces the lines that have them.
 
 ### Phase 2: real sleeping
+
+**Status:** not planned. Issue #23.
 
 **What:** bodies that stay still are taken out of the step until something disturbs them.
 
@@ -180,6 +186,8 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 
 ### Phase 3: broad-phase trimming
 
+**Status:** not planned. Issue #24.
+
 **What:** produce fewer candidate pairs, and do less work per step to produce them.
 
 **How:**
@@ -205,6 +213,8 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 **Risk:** low. Candidate pairs must stay the same apart from the ones deliberately skipped, so a test should compare pair sets before and after.
 
 ### Phase 4: narrow-phase and transform work
+
+**Status:** not planned. Issue #25.
 
 **What:** smaller wins in code that phase 1 has already cut down to one call per pair.
 
@@ -255,7 +265,7 @@ Phase 0 (measure)
             └─ Phase 4 (narrow-phase details)  only if numbers still call for it
 ```
 
-Each phase is its own issue, branch and pull request, so its benchmark change can be seen on its own.
+Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request back into `dev`, so its benchmark change can be seen on its own. When a phase is planned, built or measured, update its **Status** line and the results table.
 
 ## Measuring
 
