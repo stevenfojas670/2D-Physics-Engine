@@ -193,12 +193,27 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 
 **What:** smaller wins in code that phase 1 has already cut down to one call per pair.
 
-**How:**
-- **Cache the separating axis:** remember which axis separated a pair last step and test it first. Most pairs that were apart stay apart.
-- **Skip unchanged colliders:** `ColliderTransformSystem` skips sleeping bodies (phase 2) and bodies whose position and angle didn't change.
-- **Less repeated maths:** `circleVsPolygonEdges` computes each edge's length and direction with `Math.hypot` on every call. Store edge directions next to world normals when the collider is transformed.
+**How:** five independent items. Each can be done, measured and merged on its own.
 
-**Expected gain:** small. Do it only if phase 0's numbers show the narrow phase or transforms still matter after phases 1–3.
+1. **Skip colliders that didn't change.** `ColliderTransformSystem` calls `transformCollider` (`src/shapes/colliderGeometry.ts`) for every body every step. For a polygon that means `cos` and `sin`, rotating every vertex and rebuilding the bounds, even for bodies that never move.
+   - **Static bodies:** transform once at spawn and exclude them from the transform view (for example `without` a static marker, or requiring `Velocity`). Phase 2's helper for moving a static body re-transforms it when that happens. This is the most certain item, because the walls are re-transformed every step for nothing today.
+   - **Sleepers:** already skipped by phase 2 (`without: [Asleep]`).
+   - **Translated only (angle unchanged):** shift the vertices and bounds by the offset, as `translateCollider` already does, without `cos`/`sin` or rotation.
+   - **Not moved at all:** compare position and angle with last step's and skip. Rare for awake bodies, so the lowest priority.
+2. **Rotate stored local normals instead of recomputing them.** When the angle changes, `computeNormals` rebuilds every edge normal from the world vertices: a subtraction, a `Math.hypot` and two divisions per edge. Normals only rotate with the body. Store each polygon's local normals once at spawn, a new `localNormals` collider field built by the same code from the local vertices. Rotate them with the `cos` and `sin` already computed for the vertices: 4 multiplies and 2 adds per normal, with no square root or division.
+3. **Remove the per-test edge maths in circle vs polygon.** `circleVsPolygonEdges` recomputes each edge's direction and length with `Math.hypot` and two divisions on every test. Neither needs computing:
+   - **Direction:** `computeNormals` sets `normal = (dirY, −dirX)`, so the edge direction is `(−normalY, normalX)`, read from the stored world normals.
+   - **Length:** rotation and translation never change an edge's length, so store each polygon's edge lengths once at spawn (a new `edgeLengths` collider field).
+
+   The benchmark is a pyramid of circles and boxes, so circle–polygon tests are common.
+4. **Cache the separating axis per pair.** SAT exits as soon as an edge separates the shapes (`deepestContact` returns `false` when no vertex lies behind the edge), but in the worst case it tries every edge of both polygons first (up to 8 edge tests for two boxes, each against 4 vertices). Neighbouring bodies rarely change arrangement between steps, so store per pair which polygon and edge separated them last step, and test that edge first. If it still separates, the test ends after 1 edge instead of up to 8. For touching pairs, store the reference edge instead. Phase 1's clipping starts from it, and it's part of the contact's feature ID for warm starting. It lives in the same per-pair store phase 1 adds, keyed by the entity pair. It mostly helps pairs that are near but not touching, so measure it before keeping it.
+5. **`Math.hypot` → `Math.sqrt(x * x + y * y)` in hot paths.** V8's `Math.hypot` guards against overflow and underflow that engine-scale numbers never reach, and it is noticeably slower. Items 2 and 3 remove the calls in collider transforms and the narrow phase. Switch the rest that run per contact or per step, such as friction tangent normalisation in the solver and joint lengths, and leave one-off uses (shape construction) alone.
+
+**Why last:** phase 1 cuts narrow-phase calls from about 25 per pair to 1, so the same saving is worth about 1/25 of what it would be today. Phase 2 removes sleepers and phase 3 removes static pairs from what reaches the narrow phase and transforms. Optimising this code earlier would mean polishing work that is about to shrink.
+
+**Expected gain:** small. Items 1 (statics), 2 and 3 are cheap and low-risk, so they can be done whenever convenient. Item 4 only if phase 0's numbers show the narrow phase still matters after phases 1–3.
+
+**Risk:** low. Items 2 and 3 must give the same normals, contacts and depths as today (within floating-point tolerance), and item 1 must give the same bounds and world vertices. Tests compare old and new results on rotated and translated shapes.
 
 ### Later (out of scope)
 
