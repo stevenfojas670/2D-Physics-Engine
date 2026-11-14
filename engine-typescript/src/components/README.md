@@ -22,3 +22,4 @@ Component definitions: the data every entity is made of. Each file defines one c
 | `SpringJoint.ts`      | Spring between two bodies, anchored in each body local frame                                    |
 | `Transform.ts`        | Position of the body centroid and its rotation in radians                                       |
 | `Velocity.ts`         | Linear velocity and angular velocity                                                            |
+| `WindExposure.ts`     | How strongly wind pushes a body; the wind force is wind times exposure                          |

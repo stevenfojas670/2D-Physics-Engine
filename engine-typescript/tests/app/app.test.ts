@@ -6,10 +6,14 @@ import { MovementIntent } from "@/components/MovementIntent"
 import { PlayerControlled } from "@/components/PlayerControlled"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
+import { WindExposure } from "@/components/WindExposure"
 import { spawnRigidBody } from "@/components/bodyFactories"
 import { CollisionGroups } from "@/optimizations/CollisionGroups"
 import { CollisionSettingsResource } from "@/resources/CollisionSettings"
+import { GravityResource } from "@/resources/Gravity"
 import { MouseDragResource } from "@/resources/MouseDrag"
+import { WindResource } from "@/resources/Wind"
+import { WorldSizeResource } from "@/resources/WorldSize"
 import { createRectangleShape } from "@/shapes/colliderShapes"
 import type { ControllerKeys } from "@/types/controller/controller.types"
 import { buildBenchmarkScene } from "@/app/BenchmarkScene"
@@ -22,6 +26,16 @@ import {
 import { FrameTimer } from "@/app/FrameTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
 import { createPlayerInputSystem } from "@/app/PlayerInputSystem"
+import {
+	SANDBOX_BODY_COUNT,
+	SANDBOX_HEIGHT,
+	SANDBOX_RESPAWN_MARGIN,
+	SANDBOX_WIDTH,
+	SANDBOX_WIND,
+	buildSandboxScene,
+	createSandboxRespawnSystem,
+} from "@/app/SandboxScene"
+import { selectScene } from "@/app/sceneSelection"
 import { createUpdateSchedule } from "@/app/schedules"
 
 const STEP = 1 / 60
@@ -203,6 +217,125 @@ describe("scenes", () => {
 		buildBenchmarkScene(world)
 		expect(world.store(Collider).size).toBe(2004)
 		expect(world.store(Velocity).size).toBe(2000)
+	})
+})
+
+function sandboxWorld(): World {
+	const world = new World()
+	buildSandboxScene(world)
+	world.setResource(ControllerKeysResource, releasedKeys())
+	world.setResource(MouseInputResource, createMouseInput())
+	return world
+}
+
+function exposedEntities(world: World): Entity[] {
+	const exposures = world.store(WindExposure)
+	const entities: Entity[] = []
+	for (let slot = 0; slot < exposures.size; slot++) {
+		entities.push(exposures.entityAt(slot))
+	}
+	return entities
+}
+
+function moveTo(world: World, entity: Entity, x: number): void {
+	world.add(entity, Transform, { x, y: 300, angle: 0 })
+}
+
+function stepSandbox(world: World): void {
+	createUpdateSchedule(world)
+		.add(createSandboxRespawnSystem(world))
+		.run(world, STEP)
+}
+
+describe("sandbox", () => {
+	const pastRightEdge = SANDBOX_WIDTH + SANDBOX_RESPAWN_MARGIN + 50
+	const pastLeftEdge = -SANDBOX_RESPAWN_MARGIN - 50
+
+	test("sandbox scene builds exposed bodies, floor and ceiling", () => {
+		const world = sandboxWorld()
+		expect(world.store(WindExposure).size).toBe(SANDBOX_BODY_COUNT)
+		expect(world.store(Collider).size).toBe(SANDBOX_BODY_COUNT + 2)
+		expect(world.resource(WindResource)).toEqual(SANDBOX_WIND)
+		expect(world.resource(WorldSizeResource)).toEqual({
+			width: SANDBOX_WIDTH,
+			height: SANDBOX_HEIGHT,
+		})
+	})
+
+	test("bodies past the right edge are replaced", () => {
+		const world = sandboxWorld()
+		const before = new Set(exposedEntities(world))
+		const [first, second] = exposedEntities(world)
+		moveTo(world, first, pastRightEdge)
+		moveTo(world, second, pastRightEdge)
+		stepSandbox(world)
+		expect(world.isAlive(first)).toBe(false)
+		expect(world.isAlive(second)).toBe(false)
+		const after = exposedEntities(world)
+		expect(after.length).toBe(SANDBOX_BODY_COUNT)
+		const replacements = after.filter((entity) => !before.has(entity))
+		expect(replacements.length).toBe(2)
+		for (const entity of replacements) {
+			const [x] = positionOf(world, entity)
+			expect(x).toBeGreaterThanOrEqual(0)
+			expect(x).toBeLessThanOrEqual(SANDBOX_WIDTH / 4)
+		}
+	})
+
+	test("bodies past the left edge are replaced", () => {
+		const world = sandboxWorld()
+		const [first] = exposedEntities(world)
+		moveTo(world, first, pastLeftEdge)
+		stepSandbox(world)
+		expect(world.isAlive(first)).toBe(false)
+		expect(exposedEntities(world).length).toBe(SANDBOX_BODY_COUNT)
+	})
+
+	test("a replacement keeps the old body's exposure", () => {
+		const world = sandboxWorld()
+		const [first] = exposedEntities(world)
+		world.add(first, WindExposure, { exposure: 3.5 })
+		moveTo(world, first, pastRightEdge)
+		stepSandbox(world)
+		const exposures = world.store(WindExposure)
+		const matching = exposedEntities(world).filter(
+			(entity) => exposures.columns.exposure[exposures.slotOf(entity)] === 3.5,
+		)
+		expect(matching.length).toBe(1)
+		expect(matching[0]).not.toBe(first)
+	})
+})
+
+describe("wind", () => {
+	test("world resources start with no wind", () => {
+		const world = inputWorld(800, 600)
+		expect(world.resource(WindResource)).toEqual({ x: 0, y: 0 })
+	})
+
+	test("update schedule applies wind before integration", () => {
+		const world = inputWorld(800, 600)
+		world.setResource(WindResource, { x: 600, y: 0 })
+		world.setResource(GravityResource, { x: 0, y: 0 })
+		const body = spawnRigidBody(
+			world,
+			createRectangleShape(20, 20),
+			400,
+			300,
+			1,
+		)
+		world.add(body, WindExposure, { exposure: 1 })
+		createUpdateSchedule(world).run(world, STEP)
+		const velocities = world.store(Velocity)
+		expect(velocities.columns.x[velocities.slotOf(body)]).toBeGreaterThan(0)
+	})
+})
+
+describe("scene selection", () => {
+	test("scene query picks the scene, defaulting to demo", () => {
+		expect(selectScene("")).toBe("demo")
+		expect(selectScene("?scene=benchmark")).toBe("benchmark")
+		expect(selectScene("?scene=sandbox")).toBe("sandbox")
+		expect(selectScene("?scene=nope")).toBe("demo")
 	})
 })
 

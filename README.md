@@ -101,7 +101,7 @@ None. The `exceptions` list in `lint/layerMap.js` is empty and should stay that 
 | [`.github/`](.github/pull_request_template.md) | Pull request template and issue templates (bug report, feature request) |
 | [`AGENTS.md`](AGENTS.md) | Rules for AI agents working in this repo |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branches, commits and pull requests |
-| [`engine-typescript/`](engine-typescript/README.md) | The active engine, built on an Entity Component System; every folder has a README mapping its files |
+| [`engine-typescript/`](engine-typescript/README.md) | The active engine, built on an Entity Component System; every folder has a README mapping its files, and [`docs/ecs-guide.md`](engine-typescript/docs/ecs-guide.md) explains how to build with it |
 | `engine/` | The legacy JavaScript engine |
 | [`superpowers/`](superpowers/README.md) | Design specs and implementation plans |
 

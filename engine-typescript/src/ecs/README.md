@@ -2,6 +2,8 @@
 
 The Entity Component System core: entities, component storage, views, the world and the schedule. It knows nothing about physics. Layer: ecs.
 
+This page explains how the core works. For how to _use_ it (adding components, systems, resources and scenes), see [the ECS guide](../../docs/ecs-guide.md).
+
 | File                 | Purpose                                                                                         |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
 | `ComponentStore.ts`  | The sparse set for one component: a packed entity list plus one typed-array column per field    |

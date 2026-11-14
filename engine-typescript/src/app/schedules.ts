@@ -12,6 +12,7 @@ import { createIntentForceSystem } from "@/systems/IntentForceSystem"
 import { createJointForceSystem } from "@/systems/JointForceSystem"
 import { createParticleIntegrationSystem } from "@/systems/ParticleIntegrationSystem"
 import { createRigidBodyIntegrationSystem } from "@/systems/RigidBodyIntegrationSystem"
+import { createWindSystem } from "@/systems/WindSystem"
 import { createMouseDragSystem } from "./MouseDragSystem"
 import { createPlayerInputSystem } from "./PlayerInputSystem"
 
@@ -21,6 +22,7 @@ function createUpdateSchedule(world: World): Schedule {
 		.add(createMouseDragSystem(world))
 		.add(createIntentForceSystem(world))
 		.add(createGravitySystem(world))
+		.add(createWindSystem(world))
 		.add(createJointForceSystem(world))
 		.add(createRigidBodyIntegrationSystem(world))
 		.add(createParticleIntegrationSystem(world))

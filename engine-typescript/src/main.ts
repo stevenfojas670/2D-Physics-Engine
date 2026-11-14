@@ -12,6 +12,13 @@ import { buildDemoScene, resizeDemoWorld } from "@/app/DemoScene"
 import type { DemoHandles } from "@/app/DemoScene"
 import { FrameTimer } from "@/app/FrameTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
+import {
+	SANDBOX_HEIGHT,
+	SANDBOX_WIDTH,
+	buildSandboxScene,
+	createSandboxRespawnSystem,
+} from "@/app/SandboxScene"
+import { selectScene } from "@/app/sceneSelection"
 import { createRenderSchedule, createUpdateSchedule } from "@/app/schedules"
 import {
 	DebugOptionsResource,
@@ -29,8 +36,8 @@ const LEFT_BUTTON = 0
 
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement
 const ctx = canvas.getContext("2d")!
-const isBenchmark =
-	new URLSearchParams(location.search).get("scene") === "benchmark"
+const scene = selectScene(location.search)
+const isBenchmark = scene === "benchmark"
 
 const world = new World()
 const controller = new Controller(false)
@@ -42,16 +49,23 @@ world.setResource(RenderContextResource, render)
 world.setResource(DebugOptionsResource, createDebugOptions())
 
 let demoHandles: DemoHandles | null = null
-if (isBenchmark) {
+if (scene === "benchmark") {
 	canvas.width = BENCHMARK_WIDTH
 	canvas.height = BENCHMARK_HEIGHT
 	buildBenchmarkScene(world)
+} else if (scene === "sandbox") {
+	canvas.width = SANDBOX_WIDTH
+	canvas.height = SANDBOX_HEIGHT
+	buildSandboxScene(world)
 } else {
 	resizeCanvas()
 	demoHandles = buildDemoScene(world, canvas.width, canvas.height)
 }
 
 const update = createUpdateSchedule(world)
+if (scene === "sandbox") {
+	update.add(createSandboxRespawnSystem(world))
+}
 const draw = createRenderSchedule(world)
 const frameTimer = new FrameTimer()
 let lastTime = performance.now()
