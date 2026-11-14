@@ -67,7 +67,7 @@ if (scene === "sandbox") {
 	update.add("sandboxRespawn", createSandboxRespawnSystem(world))
 }
 const draw = createRenderSchedule(world)
-const frameTimer = new FrameTimer()
+const frameTimer = new FrameTimer(update.names)
 let lastTime = performance.now()
 
 document.addEventListener("DOMContentLoaded", () => {

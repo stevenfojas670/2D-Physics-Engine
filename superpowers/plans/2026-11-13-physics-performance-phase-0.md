@@ -184,7 +184,7 @@ git commit -m "feat: name schedule systems and time them one by one (#21)"
   - `record(...)` keeps its signature and also calls the inner `endFrame()`.
   - `FrameSummary` gains `systems: SystemTime[]`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Update the existing test to `new FrameTimer([], 2, 3)` with `systems: []` in both `toEqual` objects, and add:
 
@@ -229,21 +229,21 @@ test("frame timer reports per-system averages with its summary", () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests and check they fail**
+- [x] **Step 2: Run the tests and check they fail**
 
 Run: `npx vitest run tests/app/app.test.ts -t "timer"`
 Expected: FAIL, because `SystemTimer` can't be resolved.
 
-- [ ] **Step 3: Implement `SystemTimer` in `src/app/SystemTimer.ts`, then extend `FrameTimer`**
+- [x] **Step 3: Implement `SystemTimer` in `src/app/SystemTimer.ts`, then extend `FrameTimer`**
 
 `FrameTimer.ready` stays based on its own frame count. Both timers count frames through `record`/`endFrame`, so they stay in step.
 
-- [ ] **Step 4: Run the tests and check they pass**
+- [x] **Step 4: Run the tests and check they pass**
 
 Run: `npx vitest run tests/app/app.test.ts`
 Expected: PASS. `main.ts` won't typecheck until Task 4. If `npm run typecheck` flags `new FrameTimer()` there, make the one-line change `new FrameTimer(update.names)` now and keep the rest for Task 4.
 
-- [ ] **Step 5: Update the app README, lint and commit**
+- [x] **Step 5: Update the app README, lint and commit**
 
 `SystemTimer.ts` row: "Averages each named system's time over a fixed number of frames after a warm-up, slowest first, with each one's share of the total". `FrameTimer.ts` row: add "and per-system times through a `SystemTimer`".
 
