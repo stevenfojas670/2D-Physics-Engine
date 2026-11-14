@@ -48,6 +48,8 @@ npm run dev
 | `npm run test` | Runs the Vitest tests in `tests/` |
 | `npm run bench` | Runs the Vitest benchmarks in `tests/` |
 
+`npm run dev` serves the demo scene and a 2,000-body benchmark scene. The [Scenes](engine-typescript/README.md#scenes) section lists each scene's address and controls.
+
 The legacy engine still runs by opening `engine/index.html` with the VS Code Live Server extension.
 
 <img width="743" height="145" alt="image" src="https://github.com/user-attachments/assets/55c7620b-5986-4a1f-a8d5-bb1bb902e574" />

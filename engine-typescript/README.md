@@ -20,6 +20,19 @@ npm run dev
 | `npm run test`      | Runs the Vitest tests in `tests/`                  |
 | `npm run bench`     | Runs the Vitest benchmarks in `tests/`             |
 
+## Scenes
+
+`npm run dev` serves every scene. Pick one with the `scene` query parameter on the address Vite prints (normally `http://localhost:5173/`). `src/main.ts` reads the parameter and builds the scene from `src/app/`.
+
+| Scene     | Address             | What it shows                                                                                                                                                                                                                | Controls                                                                                                          |
+| --------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Demo      | `/`                 | Walls around the window, a player box and two fixed rectangles, with the debug layers on: outlines, normals, bounding boxes (red while touching), friction arrows and the drag line                                          | **WASD** moves the player box, **Space** jumps, **left-drag** pulls any body, resizing the window moves the walls |
+| Benchmark | `/?scene=benchmark` | A fixed 1600×1000 world with a 2,000-body pyramid of circles and boxes, stepped at a fixed 1/60 s. After 60 warm-up frames it averages 300 frames and shows `update X ms · render Y ms · Z draw calls` under the FPS counter | None; input and resizing are inactive                                                                             |
+
+`npm run bench` times one physics step of the benchmark scene without a browser.
+
+## Files
+
 | File                | Purpose                                                           |
 | ------------------- | ----------------------------------------------------------------- |
 | `.gitignore`        | Files git ignores: dependencies, build output, logs, editor files |
