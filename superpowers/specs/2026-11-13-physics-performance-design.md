@@ -102,7 +102,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
-**Status:** built; browser measurement and the side-by-side visual check are pending. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`. Headless numbers are under "Phase 1 split".
+**Status:** built and measured: browser update 7.42 ms, under the 16.7 ms target. The side-by-side visual check is pending. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`. Numbers are under Results and "Phase 1 split".
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
@@ -175,7 +175,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 **Still to do before the pull request into `dev`:**
 
-1. Browser benchmark: `npm run dev`, open `?scene=benchmark` in Brave on the phase 0 machine, copy the console table, and fill in the Browser, Solver and Broad phase columns of Results row 1 and a browser column in "Phase 1 split". The bar is an update under 16.7 ms.
+1. Done: browser benchmark recorded in Results row 1 and "Phase 1 split". Update 7.42 ms, under the 16.7 ms bar.
 2. Side-by-side visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox` against `dev`. Expected: less bounce, boxes resting flat instead of rocking, friction arrows drawn from contact points.
 3. Set this phase's Status to done.
 4. Open an issue for the pre-existing tunnelling of small fast circles into the floor (see "Phase 1 split").
@@ -350,7 +350,7 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 | ---------------------- | ----------------- | ---------------- | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Baseline (ECS, PR #12) | 46.25             |                  |           |                | Brave, 2,000 bodies. Per-system numbers come from phase 0                                                                                                                                                                                |
 | 0                      | 47.52             | 164.67 / 242.38  | 46.14     | 0.99           | Brave, Windows 11, same machine as the baseline. Render 1.73 ms, 6 draw calls. Headless: Node v24.14.1, Vitest 5.1.0, two `npm run bench` runs that disagreed by about 47%. The browser solver and broad-phase numbers are the reference |
-| 1                      | _pending_         | 16.10 / 16.39    | _pending_ | _pending_      | Headless only so far: two `npm run bench` runs, Node v24.14.1, same machine as phase 0. Headless solver (velocity + pseudo-velocity solve) 5.40 / 5.91 ms against 286.72 for phase 0's `collisionSolver`. Browser row to be filled from `?scene=benchmark` in Brave |
+| 1                      | 7.42              | 16.10 / 16.39    | 3.45      | 1.08           | Brave, Windows 11, same machine as phase 0. Render 2.00 ms, 6 draw calls. Solver is velocity solve 3.00 + pseudo-velocity solve 0.44 ms, against 46.14 for phase 0's `collisionSolver`. Update is 6.4× faster and under the 16.7 ms bar. Headless: two `npm run bench` runs, Node v24.14.1 |
 | 2                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 | 3                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 | 4                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
@@ -382,25 +382,27 @@ What this shows:
 
 #### Phase 1 split
 
-Headless, `npm run bench` per-system test, steps 120–420, two runs. Browser numbers are pending.
+Browser: Brave, `?scene=benchmark`, frames 60–360, from the console table. Headless: `npm run bench` per-system test, steps 120–420, two runs.
 
-| System              | Run 1 ms | Run 1 share | Run 2 ms | Run 2 share |
-| ------------------- | -------- | ----------- | -------- | ----------- |
-| contactDetection    | 6.428    | 39.5%       | 6.842    | 39.4%       |
-| velocitySolve       | 4.588    | 28.2%       | 4.982    | 28.7%       |
-| broadPhase          | 3.271    | 20.1%       | 3.451    | 19.9%       |
-| pseudoVelocitySolve | 0.812    | 5.0%        | 0.927    | 5.3%        |
-| colliderTransform   | 0.465    | 2.9%        | 0.433    | 2.5%        |
-| velocityIntegration | 0.389    | 2.4%        | 0.394    | 2.3%        |
-| positionIntegration | 0.207    | 1.3%        | 0.221    | 1.3%        |
-| gravity             | 0.095    | 0.6%        | 0.093    | 0.5%        |
-| others              | < 0.01   | 0.0%        | < 0.01   | 0.0%        |
-| **total**           | 16.260   | 100%        | 17.352   | 100%        |
+| System              | Browser ms | Browser share | Headless run 1 ms | Run 1 share | Headless run 2 ms | Run 2 share |
+| ------------------- | ---------- | ------------- | ----------------- | ----------- | ----------------- | ----------- |
+| velocitySolve       | 3.004      | 40.5%         | 4.588             | 28.2%       | 4.982             | 28.7%       |
+| contactDetection    | 2.387      | 32.2%         | 6.428             | 39.5%       | 6.842             | 39.4%       |
+| broadPhase          | 1.084      | 14.6%         | 3.271             | 20.1%       | 3.451             | 19.9%       |
+| pseudoVelocitySolve | 0.442      | 6.0%          | 0.812             | 5.0%        | 0.927             | 5.3%        |
+| colliderTransform   | 0.204      | 2.7%          | 0.465             | 2.9%        | 0.433             | 2.5%        |
+| velocityIntegration | 0.153      | 2.1%          | 0.389             | 2.4%        | 0.394             | 2.3%        |
+| gravity             | 0.067      | 0.9%          | 0.095             | 0.6%        | 0.093             | 0.5%        |
+| positionIntegration | 0.062      | 0.8%          | 0.207             | 1.3%        | 0.221             | 1.3%        |
+| others              | < 0.01     | 0.0%          | < 0.01            | 0.0%        | < 0.01            | 0.0%        |
+| **total**           | 7.42       | 100%          | 16.260            | 100%        | 17.352            | 100%        |
 
 What this shows:
 
-- **The solver is no longer the step.** Phase 0's headless `collisionSolver` was 286.7 ms (97.7%). Detection plus both solves are now 11.8–12.8 ms, and the whole step is about 17× faster headless.
-- **Contact detection and the broad phase are now 60% of the step.** That is where phases 3 and 4 work (static pairs, a separate static grid, pair slots, the narrow-phase micro-optimisations).
+- **The solver is no longer the step.** In the browser, phase 0's `collisionSolver` was 46.1 ms (97%). Both solves are now 3.4 ms, and the whole update is 7.42 ms, 6.4× faster and under the 16.7 ms bar. Headless, the solver went from 286.7 ms to 5.4–5.9 ms.
+- **The browser and headless orders differ.** In the browser the velocity solve is the largest system (40.5%) and contact detection second (32.2%); headless, detection leads. Vitest's per-call overhead lands hardest on detection's calls into the narrow phase. The browser split is the reference.
+- **Detection and the broad phase are 47% of the browser update** (60% headless). That is where phases 3 and 4 work (static pairs, a separate static grid, pair slots, the narrow-phase micro-optimisations). The velocity solve's share is what phase 2's sleeping removes for the settled pyramid.
+- **The 8 ms goal for phases 1–3 is met in this window already.** Frames 60–360 cover the pyramid while it is still settling, so the settled pyramid should be cheaper still. Phases 2–3 now add headroom rather than close a gap. Re-measure a settled window and the collapse before deciding how much of them is worth building.
 - **Solver settings:** the tuning in the plan's Task 9 kept 8 velocity and 3 pseudo-velocity passes, β 0.2 and a 20 px/s restitution threshold. The Box2D-style 2×2 block solver for two-point manifolds was kept: without it a ten-box stack swayed 2.7 px at 8 passes, with it 0.000 px from 4 passes up.
 - **Known gap, not new:** a small fast circle can tunnel into the floor during the pyramid's collapse (about 480 px/s, more than its radius per step). `dev` loses a body the same way at the same moment. Continuous collision is a non-goal, so this needs its own issue.
 
