@@ -207,15 +207,31 @@
 
 ### Task 9: Part A measurement and handoff checkpoint
 
-- [ ] **Step 1:** Run `npm run bench` twice. Record both per-system tables (collapse and settled) under "Part A results" below.
-- [ ] **Step 2:** Ask the owner to run `?scene=benchmark` and `?scene=benchmark&window=settled` in Brave and paste both console tables. Record them below. Also ask for a visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox`: sleepers turn grey and wake when hit, dragged or left without support.
-- [ ] **Step 3:** Write the handoff below: state, deviations from this plan, measured numbers, and the resume prompt. Commit `docs: record part A sleeping results and handoff (#23)`.
+- [x] **Step 1:** Run `npm run bench` twice. Record both per-system tables (collapse and settled) under "Part A results" below.
+- [ ] **Step 2 (moved to Task 13):** Ask the owner to run `?scene=benchmark` and `?scene=benchmark&window=settled` in Brave and paste both console tables. Record them below. Also ask for a visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox`: sleepers turn grey and wake when hit, dragged or left without support.
+- [x] **Step 3:** Write the handoff below: state, deviations from this plan, measured numbers, and the resume prompt. Commit `docs: record part A sleeping results and handoff (#23)`.
 
-**Part A results:** _(fill in)_
+**Part A results:** headless, `npm run bench`, Node v24.14.1, two runs.
+
+| Window | Update total ms | contactDetection | velocitySolve | broadPhase | sleep | Asleep after sample |
+| --- | --- | --- | --- | --- | --- | --- |
+| Collapse (steps 120–420) | 19.62 / 18.64 | 8.92 / 8.13 | 4.62 / 4.72 | 3.68 / 3.50 | 0.29 / 0.28 | 1.6% |
+| Settled (after 1,800 steps) | 16.98 / 16.31 | 7.62 / 6.96 | 3.67 / 3.76 | 3.60 / 3.56 | 0.28 / 0.27 | 34.1% |
+
+Whole-step bench: 59.7 / 59.3 steps per second at the collapse window. Per-body sleeping saves about 2.5 ms headless once settled, because only about a third of the pyramid sleeps at a time (Task 8). `contactDetection` in the collapse window is 8.1–8.9 ms against phase 1's 6.4–6.8 ms; either the extra `Asleep` lookups per pair or headless noise. Check it in Task 13.
 
 #### Handoff: part A done, part B next
 
-_(fill in: state, deviations, numbers)_
+**State.** Tasks 1–8 are built and committed on `feature/sleeping`, with all four checks passing (224 tests). Don't redo them.
+
+**Deviations (ledgered as rulings):**
+- Task 2: the twenty-box stack drifted 2.47 px once the snap was removed; it was `test.fails` until Task 4, where sleeping freezes it at 0.037 px.
+- Task 4: contact detection treats `Asleep` as immovable here rather than in Task 5.
+- Task 5: only a disturbing body (no `SleepTimer`, or `sleepTime` 0) wakes a sleeper; otherwise touching bodies ping-pong. Recorded in the spec.
+- Task 6: world-change tests keep one schedule; the ECS guide's step table and a new "Sleeping" section are updated.
+- Task 9: browser numbers and the visual check are collected once, in Task 13, for the finished phase.
+
+**Numbers:** see "Part A results".
 
 **Resume prompt:**
 
