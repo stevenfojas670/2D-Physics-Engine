@@ -88,7 +88,7 @@ const bodies = world.view(
 )
 ```
 
-From `src/systems/RigidBodyIntegrationSystem.ts`; its callback takes six slots in that order.
+From `src/systems/VelocityIntegrationSystem.ts`; its callback takes six slots in that order.
 
 ## 6. Resources
 
@@ -144,23 +144,26 @@ function createWindSystem(world: World): System {
 
 **The update schedule** (`createUpdateSchedule`), in order:
 
-| #   | System                       | Why it is here                                                                                             |
-| --- | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1   | `PlayerInputSystem`          | Turns keys into `MovementIntent` before anything reads it                                                  |
-| 2   | `MouseDragSystem`            | Adds the drag force; needs last step's broad-phase grid to pick a body                                     |
-| 3   | `IntentForceSystem`          | Turns `MovementIntent` into force                                                                          |
-| 4   | `GravitySystem`              | Adds gravity force                                                                                         |
-| 5   | `WindSystem`                 | Adds wind force                                                                                            |
-| 6   | `JointForceSystem`           | Adds spring and joint forces from current positions                                                        |
-| 7   | `RigidBodyIntegrationSystem` | Turns all forces into velocity and position, then clears the forces; every force system must run before it |
-| 8   | `ParticleIntegrationSystem`  | The same for particles                                                                                     |
-| 9   | `ColliderTransformSystem`    | Moves colliders to the new positions                                                                       |
-| 10  | `BroadPhaseSystem`           | Finds candidate pairs from the moved colliders                                                             |
-| 11  | `CollisionSolverSystem`      | Resolves contacts between those pairs                                                                      |
+| #   | System                      | Why it is here                                                                          |
+| --- | --------------------------- | --------------------------------------------------------------------------------------- |
+| 1   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                               |
+| 2   | `MouseDragSystem`           | Adds the drag force; needs last step's broad-phase grid to pick a body                  |
+| 3   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                       |
+| 4   | `GravitySystem`             | Adds gravity force                                                                      |
+| 5   | `WindSystem`                | Adds wind force                                                                         |
+| 6   | `JointForceSystem`          | Adds spring and joint forces from current positions                                     |
+| 7   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it   |
+| 8   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                      |
+| 9   | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                            |
+| 10  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds                    |
+| 11  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                |
+| 12  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion |
+| 13  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                           |
+| 14  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase       |
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
-A new force system goes anywhere after `MouseDragSystem` (2) and before `RigidBodyIntegrationSystem` (7), because integration consumes and clears the forces. Anything that needs final positions for the frame goes after 11, or in the render schedule.
+A new force system goes anywhere after `MouseDragSystem` (2) and before `VelocityIntegrationSystem` (7), because velocity integration consumes and clears the forces. Anything that needs final positions for the frame goes after 14, or in the render schedule.
 
 ## 8. Deferred commands
 

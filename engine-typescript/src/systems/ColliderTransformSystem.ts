@@ -40,7 +40,6 @@ function createColliderTransformSystem(world: World): System {
 			angle,
 			angleChanged,
 		)
-		colliders.touching[colliderSlot] = 0
 	}
 
 	return () => {

@@ -6,4 +6,3 @@ Tests for `src/collisionDetectionSystem/`.
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `narrowPhase.test.ts`       | Hits, misses, depths and normals for circle, box and mixed pairs, two-point and clipped box manifolds, and stable feature IDs                                      |
 | `sequentialImpulse.test.ts` | Bounces, restitution 0 and the threshold, friction capped at mu in both directions, warm starting, immovable bodies, friction arrows, and split impulses with slop |
-| `contactResolution.test.ts` | Positional correction split by inverse mass, bounces with restitution 0.5, immovable bodies, friction arrows                                                       |

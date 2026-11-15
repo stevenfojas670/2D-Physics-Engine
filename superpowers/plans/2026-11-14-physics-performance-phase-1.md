@@ -181,7 +181,7 @@ Per step: `contacts.clear()`; `colliders.columns.touching.fill(0)`; `manifolds.b
 - Position integration: view `[Transform, Velocity, Sleep]` without `Particle` (same bodies as velocity integration; phase 2 replaces `Sleep`); `x += (v + pv)·dt`, `angle += (ω + pω)·dt`; zero that slot's pseudo-velocity.
 - Schedule: `playerInput, mouseDrag, intentForce, gravity, wind, jointForce, velocityIntegration, particleIntegration, broadPhase, contactDetection, velocitySolve, pseudoVelocitySolve, positionIntegration, colliderTransform`.
 
-- [ ] **Step 1: Write failing behaviour tests** (`solverBehaviour.test.ts`, using `physicsWorld`/`stepWorld` from Task 2):
+- [x] **Step 1: Write failing behaviour tests** (`solverBehaviour.test.ts`, using `physicsWorld`/`stepWorld` from Task 2):
   - `restitution r reaches about r² of its drop height`: floor restitution 0, ball radius 10 restitution 0.8, dropped from a 100 px gap; peak height after the first bounce within 10% of 64 px.
   - `restitution 0 does not bounce`: both 0; after impact the ball never rises more than 0.5 px; no NaN in any velocity.
   - `box slides on a slope steeper than atan(μ)`: friction 0.5 on box and floor (μ 0.5, atan ≈ 26.6°), gravity `200·(sin θ, cos θ)` with θ 35°: x moves > 20 px in 2 s; θ −35°: x moves < −20 px.
@@ -189,14 +189,14 @@ Per step: `contacts.clear()`; `colliders.columns.touching.fill(0)`; `manifolds.b
   - `friction ignores restitution`: box sliding at vx 100 on a floor, all restitution 0 vs all 0.9; vx after 30 steps equal within 1e-6.
   - `overlap is removed without adding velocity`: gravity 0, box 3 px into a static floor; every step `|v|` and `|ω|` `< 1e-12`; after 60 steps depth ≤ slop + 0.01.
   - `touching survives to rendering`: two overlapping boxes, one full update step, both `touching === 1`.
-- [ ] **Step 2:** Run, expect FAIL (old schedule).
-- [ ] **Step 3:** Implement the four systems, switch the schedule, delete the old files and the Task 5 adapter.
-- [ ] **Step 4: Update existing tests:**
+- [x] **Step 2:** Run, expect FAIL (old schedule).
+- [x] **Step 3:** Implement the four systems, switch the schedule, delete the old files and the Task 5 adapter.
+- [x] **Step 4: Update existing tests:**
   - `collision.test.ts` local `physicsSchedule` uses the new order; `two overlapping boxes end up separated` becomes "separate within 60 steps, gap > 20 − slop − 0.01, velocities ≈ 0"; `two worlds' collision matrices are independent` keeps `right.x > 10` after one step; `touching` test runs detection; contact count test still expects 1–2.
   - `integration.test.ts`: the Euler test now runs velocity then position integration and expects vy ≈ 19.98 and y ≈ 101.998 (position uses damped velocity); the transform test no longer expects `touching` reset.
-- [ ] **Step 5:** Run the whole suite including `stability.test.ts` (Task 2 thresholds unchanged), expect PASS. If a stability test fails, stop and go to Task 9 tuning before loosening anything.
-- [ ] **Step 6:** READMEs and `ecs-guide.md`; lint/typecheck/build/test.
-- [ ] **Step 7:** Commit `feat: solve contacts with cached manifolds and split impulses (#22)`.
+- [x] **Step 5:** Run the whole suite including `stability.test.ts` (Task 2 thresholds unchanged), expect PASS. If a stability test fails, stop and go to Task 9 tuning before loosening anything.
+- [x] **Step 6:** READMEs and `ecs-guide.md`; lint/typecheck/build/test.
+- [x] **Step 7:** Commit `feat: solve contacts with cached manifolds and split impulses (#22)`.
 
 ### Task 9: Tune iterations, beta and the restitution threshold
 
