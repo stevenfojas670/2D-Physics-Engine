@@ -7,6 +7,7 @@ Wiring between the browser, input and the ECS: input resources and systems, the 
 | `BenchmarkScene.ts`    | Builds the 2,000-body benchmark: a fixed 1600×1000 world with walls and a pyramid of radius-6 circles and 12×12 boxes                                                                |
 | `ControllerKeys.ts`    | Resource key for the keyboard state (`Controller.keys`)                                                                                                                              |
 | `DemoScene.ts`         | Builds the demo scene and its world resources, resizes its walls, spawns demo objects and the stress-test pyramid                                                                    |
+| `FixedStep.ts`         | Turns variable frame times into a whole number of fixed 1/60 s steps, carrying the remainder and capping steps per frame so a slow frame can't spiral                                |
 | `FrameTimer.ts`        | Averages update time, render time and draw calls over a fixed number of frames after a warm-up, and per-system times through a `SystemTimer`                                         |
 | `MouseDragSystem.ts`   | Picks the body under the held mouse, then pulls it toward the mouse at its anchor; ends the drag on release or when it's gone                                                        |
 | `MouseInput.ts`        | Resource holding the mouse position and whether the left button is held                                                                                                              |

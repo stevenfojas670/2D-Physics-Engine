@@ -18,7 +18,18 @@ import { createColliderTransformSystem } from "@/systems/ColliderTransformSystem
 import { createGravitySystem } from "@/systems/GravitySystem"
 import { createIntentForceSystem } from "@/systems/IntentForceSystem"
 import { createParticleIntegrationSystem } from "@/systems/ParticleIntegrationSystem"
-import { createRigidBodyIntegrationSystem } from "@/systems/RigidBodyIntegrationSystem"
+import { createPositionIntegrationSystem } from "@/systems/PositionIntegrationSystem"
+import { createVelocityIntegrationSystem } from "@/systems/VelocityIntegrationSystem"
+import type { System } from "@/ecs/Schedule"
+
+function rigidBodyIntegration(world: World): System {
+	const integrateVelocity = createVelocityIntegrationSystem(world)
+	const integratePosition = createPositionIntegrationSystem(world)
+	return (deltaTime) => {
+		integrateVelocity(deltaTime)
+		integratePosition(deltaTime)
+	}
+}
 
 function worldWithGravity(): World {
 	const world = new World()
@@ -44,10 +55,10 @@ describe("rigid-body integration", () => {
 		const body = spawnRigidBody(world, createRectangleShape(10, 10), 0, 100, 2)
 		const schedule = new Schedule()
 			.add("gravity", createGravitySystem(world))
-			.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
+			.add("rigidBodyIntegration", rigidBodyIntegration(world))
 		schedule.run(world, 0.1)
 		expect(velocityOf(world, body)[1]).toBeCloseTo(19.98, 9)
-		expect(positionOf(world, body)[1]).toBeCloseTo(102, 9)
+		expect(positionOf(world, body)[1]).toBeCloseTo(101.998, 9)
 		const forces = world.store(ForceAccumulator)
 		expect(forces.columns.y[forces.slotOf(body)]).toBe(0)
 	})
@@ -56,7 +67,7 @@ describe("rigid-body integration", () => {
 		const world = new World()
 		const body = spawnRigidBody(world, createRectangleShape(10, 10), 0, 0, 1)
 		world.add(body, Velocity, { x: 0.005, y: 0, angular: 0.005 })
-		createRigidBodyIntegrationSystem(world)(0.016)
+		rigidBodyIntegration(world)(0.016)
 		expect(velocityOf(world, body)).toEqual([0, 0])
 		const velocities = world.store(Velocity)
 		expect(velocities.columns.angular[velocities.slotOf(body)]).toBe(0)
@@ -66,7 +77,7 @@ describe("rigid-body integration", () => {
 		const world = new World()
 		const body = spawnRigidBody(world, createRectangleShape(10, 10), 0, 0, 1)
 		world.add(body, ForceAccumulator, { torque: 100 })
-		createRigidBodyIntegrationSystem(world)(0.1)
+		rigidBodyIntegration(world)(0.1)
 		const transforms = world.store(Transform)
 		expect(transforms.columns.angle[transforms.slotOf(body)]).toBeGreaterThan(0)
 	})
@@ -76,7 +87,7 @@ describe("rigid-body integration", () => {
 		const wall = spawnStaticBody(world, createRectangleShape(10, 10), 5, 5)
 		const schedule = new Schedule()
 			.add("gravity", createGravitySystem(world))
-			.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
+			.add("rigidBodyIntegration", rigidBodyIntegration(world))
 		schedule.run(world, 0.1)
 		expect(positionOf(world, wall)).toEqual([5, 5])
 	})
@@ -138,7 +149,7 @@ describe("particle integration", () => {
 		const world = new World()
 		const particle = spawnParticle(world, 0, 0, 1, { damping: 1 })
 		world.add(particle, Velocity, { x: 0.001, y: 0 })
-		createRigidBodyIntegrationSystem(world)(1)
+		rigidBodyIntegration(world)(1)
 		expect(velocityOf(world, particle)[0]).toBe(0.001)
 	})
 })
@@ -152,11 +163,9 @@ describe("collider transform", () => {
 		transforms.columns.x[slot] = 100
 		transforms.columns.angle[slot] = Math.PI / 2
 		const colliders = world.store(Collider)
-		colliders.columns.touching[colliders.slotOf(body)] = 1
 		createColliderTransformSystem(world)(0)
 		const colliderSlot = colliders.slotOf(body)
 		expect(colliders.columns.minX[colliderSlot]).toBeCloseTo(90, 9)
 		expect(colliders.columns.worldNormals[colliderSlot]![0]).toBeCloseTo(1, 9)
-		expect(colliders.columns.touching[colliderSlot]).toBe(0)
 	})
 })

@@ -6,12 +6,15 @@ import { createDrawFlushSystem } from "@/rendering/DrawFlushSystem"
 import { createJointRenderSystem } from "@/rendering/JointRenderSystem"
 import { createBroadPhaseSystem } from "@/systems/BroadPhaseSystem"
 import { createColliderTransformSystem } from "@/systems/ColliderTransformSystem"
-import { createCollisionSolverSystem } from "@/systems/CollisionSolverSystem"
+import { createContactDetectionSystem } from "@/systems/ContactDetectionSystem"
 import { createGravitySystem } from "@/systems/GravitySystem"
 import { createIntentForceSystem } from "@/systems/IntentForceSystem"
 import { createJointForceSystem } from "@/systems/JointForceSystem"
 import { createParticleIntegrationSystem } from "@/systems/ParticleIntegrationSystem"
-import { createRigidBodyIntegrationSystem } from "@/systems/RigidBodyIntegrationSystem"
+import { createPositionIntegrationSystem } from "@/systems/PositionIntegrationSystem"
+import { createPseudoVelocitySolveSystem } from "@/systems/PseudoVelocitySolveSystem"
+import { createVelocityIntegrationSystem } from "@/systems/VelocityIntegrationSystem"
+import { createVelocitySolveSystem } from "@/systems/VelocitySolveSystem"
 import { createWindSystem } from "@/systems/WindSystem"
 import { createMouseDragSystem } from "./MouseDragSystem"
 import { createPlayerInputSystem } from "./PlayerInputSystem"
@@ -24,11 +27,14 @@ function createUpdateSchedule(world: World): Schedule {
 		.add("gravity", createGravitySystem(world))
 		.add("wind", createWindSystem(world))
 		.add("jointForce", createJointForceSystem(world))
-		.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
+		.add("velocityIntegration", createVelocityIntegrationSystem(world))
 		.add("particleIntegration", createParticleIntegrationSystem(world))
-		.add("colliderTransform", createColliderTransformSystem(world))
 		.add("broadPhase", createBroadPhaseSystem(world))
-		.add("collisionSolver", createCollisionSolverSystem(world))
+		.add("contactDetection", createContactDetectionSystem(world))
+		.add("velocitySolve", createVelocitySolveSystem(world))
+		.add("pseudoVelocitySolve", createPseudoVelocitySolveSystem(world))
+		.add("positionIntegration", createPositionIntegrationSystem(world))
+		.add("colliderTransform", createColliderTransformSystem(world))
 }
 
 function createRenderSchedule(world: World): Schedule {

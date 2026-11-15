@@ -15,6 +15,10 @@ import {
 import { ContactLog, ContactsResource } from "@/resources/ContactLog"
 import { DEFAULT_GRAVITY, GravityResource } from "@/resources/Gravity"
 import { MouseDragResource, createMouseDrag } from "@/resources/MouseDrag"
+import {
+	createSolverSettings,
+	SolverSettingsResource,
+} from "@/resources/SolverSettings"
 import { DEFAULT_WIND, WindResource } from "@/resources/Wind"
 import { WorldSizeResource } from "@/resources/WorldSize"
 import { transformCollider } from "@/shapes/colliderGeometry"
@@ -62,6 +66,7 @@ function installWorldResources(
 	world.setResource(BroadPhaseResource, grid)
 	world.setResource(ContactsResource, new ContactLog())
 	world.setResource(MouseDragResource, createMouseDrag())
+	world.setResource(SolverSettingsResource, createSolverSettings())
 }
 
 function wallPlacements(width: number, height: number): WallPlacement[] {

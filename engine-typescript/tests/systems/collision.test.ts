@@ -19,9 +19,13 @@ import { GravityResource } from "@/resources/Gravity"
 import { createRectangleShape } from "@/shapes/colliderShapes"
 import { createBroadPhaseSystem } from "@/systems/BroadPhaseSystem"
 import { createColliderTransformSystem } from "@/systems/ColliderTransformSystem"
-import { createCollisionSolverSystem } from "@/systems/CollisionSolverSystem"
+import { createContactDetectionSystem } from "@/systems/ContactDetectionSystem"
 import { createGravitySystem } from "@/systems/GravitySystem"
-import { createRigidBodyIntegrationSystem } from "@/systems/RigidBodyIntegrationSystem"
+import { createPositionIntegrationSystem } from "@/systems/PositionIntegrationSystem"
+import { createPseudoVelocitySolveSystem } from "@/systems/PseudoVelocitySolveSystem"
+import { createVelocityIntegrationSystem } from "@/systems/VelocityIntegrationSystem"
+import { createVelocitySolveSystem } from "@/systems/VelocitySolveSystem"
+import { createSolverSettings } from "@/resources/SolverSettings"
 
 const STEP = 1 / 60
 
@@ -37,10 +41,13 @@ function collisionWorld(gravityY: number): World {
 function physicsSchedule(world: World): Schedule {
 	return new Schedule()
 		.add("gravity", createGravitySystem(world))
-		.add("rigidBodyIntegration", createRigidBodyIntegrationSystem(world))
-		.add("colliderTransform", createColliderTransformSystem(world))
+		.add("velocityIntegration", createVelocityIntegrationSystem(world))
 		.add("broadPhase", createBroadPhaseSystem(world))
-		.add("collisionSolver", createCollisionSolverSystem(world))
+		.add("contactDetection", createContactDetectionSystem(world))
+		.add("velocitySolve", createVelocitySolveSystem(world))
+		.add("pseudoVelocitySolve", createPseudoVelocitySolveSystem(world))
+		.add("positionIntegration", createPositionIntegrationSystem(world))
+		.add("colliderTransform", createColliderTransformSystem(world))
 }
 
 function xOf(world: World, entity: Entity): number {
@@ -68,14 +75,27 @@ function box(
 }
 
 describe("broad phase and collision solver", () => {
-	test("two overlapping boxes end up separated", () => {
+	test("two overlapping boxes separate without gaining speed", () => {
 		const world = collisionWorld(0)
 		const left = box(world, 0, 0)
 		const right = box(world, 10, 0)
-		physicsSchedule(world).run(world, STEP)
-		expect(xOf(world, right) - xOf(world, left)).toBeGreaterThan(19.99)
+		const schedule = physicsSchedule(world)
+		for (let step = 0; step < 60; step++) {
+			schedule.run(world, STEP)
+		}
+		const slop = createSolverSettings().slop
+		expect(xOf(world, right) - xOf(world, left)).toBeGreaterThan(
+			20 - slop - 0.01,
+		)
 		expect(xOf(world, left)).toBeLessThan(0)
 		expect(xOf(world, right)).toBeGreaterThan(10)
+		const velocities = world.store(Velocity)
+		expect(
+			Math.abs(velocities.columns.x[velocities.slotOf(left)]),
+		).toBeLessThan(1e-9)
+		expect(
+			Math.abs(velocities.columns.x[velocities.slotOf(right)]),
+		).toBeLessThan(1e-9)
 	})
 
 	test("a box resting on the floor stays at rest", () => {
