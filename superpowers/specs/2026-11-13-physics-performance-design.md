@@ -178,7 +178,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 1. Done: browser benchmark recorded in Results row 1 and "Phase 1 split". Update 7.42 ms, under the 16.7 ms bar.
 2. Side-by-side visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox` against `dev`. Expected: less bounce, boxes resting flat instead of rocking, friction arrows drawn from contact points.
 3. Set this phase's Status to done.
-4. Open an issue for the pre-existing tunnelling of small fast circles into the floor (see "Phase 1 split").
+4. Done: the pre-existing tunnelling of small fast circles into the floor is issue #28 (see "Phase 1 split").
 
 **Resume prompt (phase 2):**
 
@@ -404,7 +404,7 @@ What this shows:
 - **Detection and the broad phase are 47% of the browser update** (60% headless). That is where phases 3 and 4 work (static pairs, a separate static grid, pair slots, the narrow-phase micro-optimisations). The velocity solve's share is what phase 2's sleeping removes for the settled pyramid.
 - **The 8 ms goal for phases 1–3 is met in this window already.** Frames 60–360 cover the pyramid while it is still settling, so the settled pyramid should be cheaper still. Phases 2–3 now add headroom rather than close a gap. Re-measure a settled window and the collapse before deciding how much of them is worth building.
 - **Solver settings:** the tuning in the plan's Task 9 kept 8 velocity and 3 pseudo-velocity passes, β 0.2 and a 20 px/s restitution threshold. The Box2D-style 2×2 block solver for two-point manifolds was kept: without it a ten-box stack swayed 2.7 px at 8 passes, with it 0.000 px from 4 passes up.
-- **Known gap, not new:** a small fast circle can tunnel into the floor during the pyramid's collapse (about 480 px/s, more than its radius per step). `dev` loses a body the same way at the same moment. Continuous collision is a non-goal, so this needs its own issue.
+- **Known gap, not new:** a small fast circle can tunnel into the floor during the pyramid's collapse (about 480 px/s, more than its radius per step). `dev` loses a body the same way at the same moment. Continuous collision is a non-goal, so it is tracked on its own in issue #28.
 
 ## Testing
 
