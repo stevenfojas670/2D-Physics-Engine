@@ -182,11 +182,11 @@
 
 **Interfaces — Produces:** with `DebugOptions.sleeping` on, `ColliderRenderSystem` draws a body that has `Asleep` in `SLEEPING_COLOR = "rgb(160, 160, 160)"` instead of its `Renderable` colour. Without a `DebugOptionsResource`, it draws normally.
 
-- [ ] **Step 1: Failing tests:** a sleeping box is batched in `SLEEPING_COLOR`, an awake one in its own colour, and with `sleeping: false` the sleeper keeps its own colour. Follow how `rendering.test.ts` inspects `DrawBatches`.
-- [ ] **Step 2:** Run. Expected: FAIL.
-- [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Run. Expected: PASS. README, lint, typecheck, build, test.
-- [ ] **Step 5:** Commit `feat: draw sleeping bodies in grey (#23)`.
+- [x] **Step 1: Failing tests:** a sleeping box is batched in `SLEEPING_COLOR`, an awake one in its own colour, and with `sleeping: false` the sleeper keeps its own colour. Follow how `rendering.test.ts` inspects `DrawBatches`.
+- [x] **Step 2:** Run. Expected: FAIL.
+- [x] **Step 3:** Implement.
+- [x] **Step 4:** Run. Expected: PASS. README, lint, typecheck, build, test.
+- [x] **Step 5:** Commit `feat: draw sleeping bodies in grey (#23)`.
 
 ### Task 8: Benchmark windows
 
