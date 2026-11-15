@@ -254,14 +254,14 @@ Two minors from the final review, fixed before the PR. Two others moved into the
 
 **Files:** Modify `src/systems/ContactDetectionSystem.ts`, `tests/systems/contactDetection.test.ts`, `tests/systems/stability.test.ts`, `src/systems/README.md` (detection row).
 
-- [ ] **Step 1: Failing test** in `contactDetection.test.ts`: `a body with mass but no velocity is immovable in its contacts`. Floor, box A on it with `Velocity` removed, box B resting on A. After one detection run the A–B manifold has A's side with `velocitySlot −1`, `inverseMass 0`, `inverseInertia 0`, and the floor–A pair gives no manifold (both sides immovable).
-- [ ] **Step 2:** Run, expect FAIL (A's inverse mass is 1 today).
-- [ ] **Step 3:** In `ContactDetectionSystem`, a body is movable only when it has both `Mass` and `Velocity`; otherwise its inverse mass and inertia are 0.
-- [ ] **Step 4:** Run, expect PASS.
-- [ ] **Step 5: Tighter stack sink bar.** Measure the top box's sink for the 10- and 20-box stacks, replace `height × slop` with a fixed `STACK_SINK` about 50% above the larger measured value (about 2 px), record the numbers here, and check the test still fails on a softer solver (`velocityIterations` 1 or `beta` 0).
-- [ ] **Step 6:** README row; lint/typecheck/build/test; commit `fix: treat bodies without velocity as immovable in contacts (#22)` and `test: tighten the stack sink bar (#22)`.
+- [x] **Step 1: Failing test** in `contactDetection.test.ts`: `a body with mass but no velocity is immovable in its contacts`. Floor, box A on it with `Velocity` removed, box B resting on A. After one detection run the A–B manifold has A's side with `velocitySlot −1`, `inverseMass 0`, `inverseInertia 0`, and the floor–A pair gives no manifold (both sides immovable).
+- [x] **Step 2:** Run, expect FAIL (A's inverse mass is 1 today).
+- [x] **Step 3:** In `ContactDetectionSystem`, a body is movable only when it has both `Mass` and `Velocity`; otherwise its inverse mass and inertia are 0.
+- [x] **Step 4:** Run, expect PASS.
+- [x] **Step 5: Tighter stack sink bar.** Measure the top box's sink for the 10- and 20-box stacks, replace `height × slop` with a fixed `STACK_SINK` about 50% above the larger measured value (about 2 px), record the numbers here, and check the test still fails on a softer solver (`velocityIterations` 1 or `beta` 0).
+- [x] **Step 6:** README row; lint/typecheck/build/test; commit `fix: treat bodies without velocity as immovable in contacts (#22)` and `test: tighten the stack sink bar (#22)`.
 
-**Task 12 results:** _(fill in: measured sinks, chosen bar)_
+**Task 12 results:** top-box sink at the defaults is 1.13 px for 10 boxes and 5.80 px for 20, so one fixed 2 px bar would fail the 20-box stack. Ruling: one bar per height, about 50% above the measurement: 2 px (10 boxes) and 9 px (20 boxes). With 1 velocity pass both stacks collapse (sink 173 and 1763 px); with 2 passes the 20-box stack collapses. β 0 or no pseudo passes give the same sink (1.12 / 6.07 px) over 600 steps, so the sink bar cannot catch missing position correction; the overlap-removal test in `solverBehaviour.test.ts` covers that.
 
 ## Verification
 

@@ -6,7 +6,6 @@ import { LinearDamping } from "@/components/LinearDamping"
 import { Mass } from "@/components/Mass"
 import { Velocity } from "@/components/Velocity"
 import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
-import { createSolverSettings } from "@/resources/SolverSettings"
 import {
 	createCircleShape,
 	createRectangleShape,
@@ -20,7 +19,8 @@ import {
 } from "./physicsWorld"
 
 const STACK_DRIFT = 1
-const SLOP = createSolverSettings().slop
+const TEN_BOX_SINK = 2
+const TWENTY_BOX_SINK = 9
 const PYRAMID_BODIES = 210
 const PYRAMID_SPEED = 5
 const SETTLED_SHARE = 0.9
@@ -44,7 +44,7 @@ function speedAtShare(world: World, share: number): number {
 	return speeds[Math.floor(speeds.length * share)]
 }
 
-function expectStackStands(height: number): void {
+function expectStackStands(height: number, maxSink: number): void {
 	const world = physicsWorld(0, 200)
 	spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
 	const stack: Entity[] = []
@@ -55,7 +55,7 @@ function expectStackStands(height: number): void {
 	const [topX, topY] = positionOf(world, stack[height - 1])
 	const restingTopY = 290 - 10 - 20 * (height - 1)
 	expect(Math.abs(topX)).toBeLessThan(STACK_DRIFT)
-	expect(Math.abs(topY - restingTopY)).toBeLessThan(height * SLOP)
+	expect(Math.abs(topY - restingTopY)).toBeLessThan(maxSink)
 }
 
 function momentum(world: World, bodies: Entity[]): [number, number] {
@@ -89,11 +89,11 @@ describe("solver stability", () => {
 	})
 
 	test("ten-box stack stays standing", () => {
-		expectStackStands(10)
+		expectStackStands(10, TEN_BOX_SINK)
 	})
 
 	test("twenty-box stack stays standing", () => {
-		expectStackStands(20)
+		expectStackStands(20, TWENTY_BOX_SINK)
 	})
 
 	test("small pyramid settles", () => {
