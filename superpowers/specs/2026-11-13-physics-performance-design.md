@@ -186,9 +186,20 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 ### Phase 2: real sleeping
 
-**Status:** not planned. Issue #23.
+**Status:** planned. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-2.md`. Issue #23. Branch: `feature/sleeping`.
 
 **What:** bodies that stay still are taken out of the step until something disturbs them.
+
+**Phase 2 decisions (2026-11-14, from the review against `dev` after phase 1):**
+
+- **Decision 6 settled:** one world-wide timeout and threshold set in `SleepSettings`, no per-body override. Starting values, scaled from Box2D's defaults (gravity 200 px/s² against 10 m/s², so about 20 px per metre): `timeout` 0.5 s, `linearThreshold` 1 px/s, `angularThreshold` 0.035 rad/s (2°/s). Tuned on the settled pyramid like phase 1's solver settings.
+- **Sleeping islands are recorded.** Contacts between sleepers are never detected (`ContactDetectionSystem` skips pairs where neither body can move, and phase 3 drops them in the broad phase), so an island can't be rebuilt once it sleeps. When an island falls asleep its members are stored in a `SleepingIslands` resource. Waking any member wakes the whole recorded island in one step; destroying a member wakes it too. Without this, waking would spread one contact layer per step and the destroy rule would have no contacts to read.
+- **Warm starting across a wake is measured, not kept.** A woken island starts its impulses from 0. A test wakes a sleeping 10-box stack and bounds its sag. Only if that fails are sleeping islands' manifolds kept as well.
+- **Joints wake like contacts.** A joint whose ends both can't move (static or asleep) is skipped. A joint with one awake dynamic end and one sleeping end wakes the sleeper. "Wake whenever a joint applies force" is dropped, because a spring holding a body against gravity applies force every step and would never let it sleep.
+- **No `NeverSleep` for wind.** Wind is a constant resource and acts like gravity: a body that wind pins against something comes to rest and may sleep, and changing the wind wakes every sleeper.
+- **`LinearDamping` stays required** for a dynamic body to integrate. `spawnRigidBody` always adds it; a test checks that it does.
+- **The option is `BodyOptions.canSleep`** on `spawnRigidBody` (there is no `spawnDynamicBody`).
+- **One plan, two parts:** part A is per-body sleeping, waking and the benchmark windows; part B is islands. A handoff checkpoint sits between them.
 
 **Design: tags for eligibility and state, a resource for settings, one component for the timer.** (The owner chose this over making "has a `Sleep` component" the rule for which bodies can sleep.)
 
@@ -201,33 +212,35 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 **Rules:**
 
-- **Opt out, not in.** Most bodies should sleep, so the few that shouldn't get `NeverSleep`. `spawnDynamicBody` gets a `canSleep` option (default `true`); `false` adds `NeverSleep`. The demo spawns the player with `canSleep: false`.
+- **Opt out, not in.** Most bodies should sleep, so the few that shouldn't get `NeverSleep`. `spawnRigidBody`'s `BodyOptions` gets a `canSleep` option (default `true`); `false` adds `NeverSleep`. The demo spawns the player with `canSleep: false`.
 - **Which bodies can sleep:** dynamic bodies with `SleepTimer` and without `NeverSleep`, while `SleepSettings.enabled` is true. Static bodies never get a timer.
-- **Integration stops requiring a sleep component.** Today `RigidBodyIntegrationSystem`'s view includes `Sleep`, so a dynamic body without it isn't integrated at all. The new velocity and position integration views require `[Transform, Velocity, ForceAccumulator, Mass, LinearDamping]` and exclude `Asleep` and `Particle`. Phase 1's `VelocityIntegrationSystem` and `PositionIntegrationSystem` still require `Sleep` (a finding deferred from phase 1's review), so this is where it goes. Decide here too whether `LinearDamping` stays required or a body without it integrates undamped. Today a dynamic body missing either component silently never moves. Test: a body without the sleep timer, and one without damping if it becomes optional, both fall under gravity.
+- **Integration stops requiring a sleep component.** Today `RigidBodyIntegrationSystem`'s view includes `Sleep`, so a dynamic body without it isn't integrated at all. The new velocity and position integration views require `[Transform, Velocity, ForceAccumulator, Mass, LinearDamping]` and exclude `Asleep` and `Particle`. Phase 1's `VelocityIntegrationSystem` and `PositionIntegrationSystem` still require `Sleep` (a finding deferred from phase 1's review), so this is where it goes. `LinearDamping` stays required (decided above). Test: a body without the sleep timer falls under gravity.
 - **Thresholds move to the resource.** Per-body thresholds are dropped until something needs them. The per-step "snap small velocities to zero" in today's integration is removed; zeroing velocity happens once, when a body falls asleep. This is a behaviour change: slow drift that is snapped to zero today becomes real motion until the body sleeps.
 
 **Systems:**
 
-- **Sleep update system**, last in the update schedule (after collider transforms). For each `[SleepTimer, Velocity]` body without `NeverSleep` or `Asleep`: if linear and angular speed are below the thresholds, add `deltaTime` to `sleepTime`, otherwise reset it to 0. When `sleepTime ≥ timeout`, defer: zero the velocity, clear the force accumulator, add `Asleep`.
-- **Systems that skip sleepers** (`without: [Asleep]`): gravity, wind, joint forces, velocity integration, position integration, collider transforms and the sleep update. A sleeping body doesn't move, so its world vertices and bounds stay valid.
+- **Sleep update system**, last in the update schedule (after collider transforms). For each `[SleepTimer, Velocity]` body without `NeverSleep` or `Asleep`: if linear and angular speed are below the thresholds, add `deltaTime` to `sleepTime`, otherwise reset it to 0. When `sleepTime ≥ timeout` (per body in part A, for the whole island in part B), defer: zero the velocity, clear the force accumulator, add `Asleep`, and record the group in `SleepingIslands`.
+- **World-change wake system**, first in the update schedule. It remembers last step's gravity, wind, collision matrix version and `SleepSettings.enabled`, and wakes every sleeper when one changes. Code that changes those resources needs no extra call.
+- **Island system** (part B), right after contact detection. Union-find over awake dynamic bodies, linked by this step's manifolds and by joints.
+- **Systems that skip sleepers** (`without: [Asleep]`): gravity, wind, velocity integration, position integration, collider transforms and the sleep update. The joint force system skips joints whose ends both can't move. A sleeping body doesn't move, so its world vertices and bounds stay valid.
 - **The broad phase still inserts sleepers**, so awake bodies can find them. Pairs where neither body can move (static or asleep) aren't emitted (phase 3).
-- **The solver treats a sleeper as immovable** for the current step (inverse mass and inertia 0 in that contact) and defers waking it. It moves from the next step, which is invisible at 60 steps a second.
+- **The solver treats a sleeper as immovable** for the current step (inverse mass and inertia 0 in that contact) and defers waking it. Contact detection checks `Asleep` for this, because a sleeper keeps its `Velocity` and today "immovable" means "has no `Velocity`". The sleeper moves from the next step, which is invisible at 60 steps a second. Wakes queued before velocity integration (mouse drag, joints, intent forces) take effect in the same step, because `Schedule` flushes deferred commands after every system.
 
-**Waking** removes `Asleep` and resets `sleepTime` to 0, through one helper, `wakeBody(world, entity)`, that defers the change. It's called when:
+**Waking** removes `Asleep` and resets `sleepTime` to 0, through one helper, `wakeBody(world, entity)`. It resets the timer at once and defers removing `Asleep` from every member of the body's recorded island. It's called when:
 
-- an awake dynamic body has a contact with a sleeper (solver);
-- a joint attached to a sleeper applies force (joint force system);
-- the mouse drag grabs a body (`MouseDragSystem`);
+- an awake dynamic body has a contact with a sleeper (contact detection);
+- a joint links an awake dynamic body to a sleeper (joint force system);
+- the mouse drag holds a body, every step it's held, so a held body never falls asleep (`MouseDragSystem`);
+- a body's movement intent is non-zero (`IntentForceSystem`);
 - code sets a sleeper's velocity, position or force directly. Those call sites call `wakeBody` themselves.
 
 **Waking without motion.** The broad phase drops pairs where neither body can move (phase 3), so a sleeper is only woken by contact when an _awake_ body reaches it. These changes don't involve any awake body, so each needs its own wake rule:
 
-- **A body is destroyed.** Wake every body it had a contact with in the last step, found through phase 1's stored contacts (the ones kept for warm starting). Otherwise removing the bottom crate of a sleeping stack leaves the rest floating. If the destroyed body has joints, wake the bodies on the other end too.
-- **A static body is moved by code.** Moving platforms, elevators and other script-driven bodies aren't static. They're dynamic or kinematic bodies with `NeverSleep`, so an awake body moving through sleepers creates pairs and wakes them. If code still moves a static body, it calls a helper that wakes every body whose bounds overlap the static body's old or new bounds.
-- **World settings change.** Changing the gravity or wind resource wakes every sleeper. It's rare, so waking everything is fine.
-- **Collision rules change.** Changing the collision matrix (`CollisionSettings`) or a body's `CollisionGroup` wakes every sleeper, or for a group change, the bodies overlapping that body. Two sleepers that are newly allowed to collide may already overlap.
-
-Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherwise wind would stop affecting them once they sleep, because force systems skip sleepers.
+- **A body is destroyed** through `destroyBody(world, entity)`. It wakes the body's recorded island, every sleeper whose bounds overlap the body's bounds (this covers a static floor, which links no island), and the bodies on the other end of its joints, then destroys it. Otherwise removing the bottom crate of a sleeping stack leaves the rest floating. Stored contacts can't be used for this, because contacts between sleepers are never detected.
+- **A static body is moved by code.** Moving platforms, elevators and other script-driven bodies aren't static. They're dynamic or kinematic bodies with `NeverSleep`, so an awake body moving through sleepers creates pairs and wakes them. If code still moves a static body, it calls `moveStaticBody`, which wakes every sleeper whose bounds overlap the static body's old or new bounds. Resizing the demo window moves the walls and wakes every sleeper.
+- **World settings change.** Changing the gravity or wind resource wakes every sleeper (world-change wake system). It's rare, so waking everything is fine.
+- **Collision rules change.** Changing the collision matrix (`CollisionSettings`, which gets a version counter) wakes every sleeper. Changing a body's group goes through `setCollisionGroup`, which wakes the sleepers overlapping that body. Two sleepers that are newly allowed to collide may already overlap.
+- **Sleeping is switched off.** Setting `SleepSettings.enabled` to false wakes every sleeper.
 
 **Deferral (`world.defer`):** adding and removing `Asleep` are structural changes, so they're always deferred and applied when the queuing system finishes (`Schedule.run` flushes after every system). Commands capture entity IDs, never slots, and check `world.isAlive(entity)` before changing anything. Waking an island queues one command per body, or one command that wakes them all. Commands queued while flushing run in the same flush.
 
@@ -236,9 +249,9 @@ Bodies under constant non-gravity forces, such as wind, get `NeverSleep`. Otherw
 **Islands (second step):** group bodies connected by contacts and joints, and sleep or wake a whole group together. Without islands, a body at the bottom of a stack can fall asleep while the bodies on top still push on it, so the stack sinks or jitters. An island sleeps only when every body in it can sleep and has stayed still for the timeout. One `NeverSleep` body, such as the player standing on a pile of crates, keeps its whole island awake. Islands also give phase 1's solver a natural unit of work.
 
 - **What an island is:** the bodies linked by a chain of contacts or joints. Bodies don't all have to touch each other: if A touches B and B touches C, then A, B and C are one island. Static bodies don't link islands, so two piles on the same floor are two islands.
-- **Building them:** each step after contact detection, use union-find over dynamic bodies. Start with every body in its own set, merge the two sets for each contact and joint, and skip static bodies. This is close to linear in the number of contacts. Islands split by themselves when a pile breaks apart, because they're rebuilt every step.
-- **Solving per island:** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory.
-- **To try, keep only if measured to help:**
+- **Building them:** each step after contact detection, use union-find over awake dynamic bodies. Start with every body in its own set, merge the two sets for each contact and joint, and skip static bodies. This is close to linear in the number of contacts. Islands split by themselves when a pile breaks apart, because they're rebuilt every step. An island that falls asleep is recorded in `SleepingIslands` (see "Phase 2 decisions"), because it can't be rebuilt while asleep.
+- **Solving per island (keep only if measured to help):** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory. Islands are needed for sleeping either way; the reordering is kept only if `velocitySolve` gets faster.
+- **To try later, not in the phase 2 plan:**
   - _Iteration count per island._ A lone body needs 1–2 passes and a tall stack 8 or more. Stop an island early once its corrections fall below a tolerance.
   - _Bottom-up order._ Solve each island's contacts in order of distance from static bodies, counted in contacts (floor contacts first), so support passes upward each pass. Warm starting may already make this unnecessary.
 - **Big islands are expected.** Fifty crates in one pile are one island, and the 2,000-body benchmark pyramid is almost certainly a single island. Solver cost doesn't change (it's contacts × passes either way), but:
@@ -343,7 +356,7 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 
 - **Browser:** `?scene=benchmark` gives update ms, render ms and draw calls, and per-system ms after phase 0. Use the same browser and machine for before and after, and note them.
 - **Headless:** `npm run bench` (`tests/benchmark/physicsStep.bench.ts`) for numbers that don't depend on the browser.
-- **Two moments:** the benchmark samples a fixed window after 60 warm-up frames. Once sleeping exists, also measure a window during the pyramid's collapse (heavy contact, nothing asleep), so sleeping doesn't hide a slow solver.
+- **Two moments:** the benchmark samples a fixed window after 60 warm-up frames. That window (frames 60–360) is the pyramid's collapse and settling: heavy contact, little asleep. Once sleeping exists, `?scene=benchmark&window=settled` samples 300 frames after the pyramid has settled, so sleeping's gain is measured and doesn't hide a slow solver. `npm run bench` reports both.
 
 ### Results
 
@@ -440,7 +453,7 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 3. **Iteration count:** decided: a `SolverSettings` resource starting at 8 velocity and 3 pseudo-velocity passes, β 0.2, slop 0.5 px, tuned against the stability tests (phase 1, step 4).
 4. **Behaviour change:** decided: accepted, along with `max` restitution and `√(a·b)` friction combine rules, a restitution threshold in `SolverSettings`, and a fixed-step accumulator in `main.ts` (phase 1, steps 10–11 and Risk).
 5. **Sleeping representation:** decided: `NeverSleep` and `Asleep` tags, a `SleepTimer` component and a `SleepSettings` resource (phase 2).
-6. **Sleep timeout:** about 0.5 s in `SleepSettings`. Is a world-wide value enough, or does anything need its own?
+6. **Sleep timeout:** decided: one world-wide set in `SleepSettings` (timeout 0.5 s, 1 px/s, 0.035 rad/s), no per-body override; `NeverSleep` covers bodies that must stay awake. See "Phase 2 decisions".
 7. **Islands:** decided: part of phase 2, as the grouping for sleeping and solving, with iteration inside each island. Parallel solving (Web Workers, graph colouring) is a separate issue later.
 8. **Correctness fixes:** decided: all four are fixed inside phase 1, each with a test. The NaN fix waits for phase 1.
 9. **Targets:** decided: phase 1's bar is a browser benchmark update under 16.7 ms. The goal for phases 1–3 together is under 8 ms for the settled pyramid and under 16.7 ms during the collapse.
