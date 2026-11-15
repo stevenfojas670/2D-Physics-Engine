@@ -243,9 +243,9 @@ Only if Task 9 leaves the stack or pyramid needing more than 8 velocity passes, 
 **Files:** Modify the spec (Results row 1, a "Phase 1 split" table like "Phase 0 baseline split", Phase 1 Status), `engine-typescript/README.md` Scenes (if the benchmark readout or demo behaviour text changed).
 
 - [ ] **Step 1:** Browser benchmark (same Brave and machine as phase 0): copy the console table; `npm run bench` twice.
-- [ ] **Step 2:** Fill in Results row 1 and the per-system table; note whether the 16.7 ms target is met. If not, record what's slow and stop before phase 2.
+- [x] **Step 2:** (headless part done; browser columns pending) Fill in Results row 1 and the per-system table; note whether the 16.7 ms target is met. If not, record what's slow and stop before phase 2.
 - [ ] **Step 3:** Side-by-side visual check of `?scene=demo` and `?scene=benchmark` against `dev`; note differences (expected: less bounce, steadier boxes).
-- [ ] **Step 4:** Set Phase 1 Status to done and add a "Handoff: phase 1 done, phase 2 next" section with a resume prompt.
+- [x] **Step 4:** (handoff added; Status stays "built" until the browser check) Set Phase 1 Status to done and add a "Handoff: phase 1 done, phase 2 next" section with a resume prompt.
 - [ ] **Step 5:** lint/typecheck/build/test; commit `docs: record phase 1 results (#22)`; push; open the PR into `dev` per CONTRIBUTING.md.
 
 ## Verification

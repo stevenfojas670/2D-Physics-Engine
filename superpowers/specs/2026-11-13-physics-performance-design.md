@@ -102,7 +102,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
-**Status:** planned. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`.
+**Status:** built; browser measurement and the side-by-side visual check are pending. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`. Headless numbers are under "Phase 1 split".
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
@@ -117,7 +117,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
    - **Where pseudo-velocities live:** solver scratch arrays (`x`, `y`, `angular`), flat typed arrays indexed by a solver-local body index, grown as needed and zeroed each step. They aren't a component, so `Velocity` stays the only place a body's real velocity lives (step 8).
    - **Position integration** moves bodies by `(velocity + pseudoVelocity) × dt`, and the same for the angle, then zeroes the pseudo-velocities.
    - **Rejected:** Baumgarte bias, because its correction becomes real velocity and makes stacks jitter. A separate position pass (Box2D v2.x's nonlinear Gauss–Seidel) and soft constraints (Box2D v3's soft step) were the other candidates.
-   - **`SolverSettings` resource:** `velocityIterations` (8), `pseudoVelocityIterations` (3), `beta` (0.2), `slop` (0.5 px), `restitutionThreshold` (px/s, tuned in phase 1). The starting counts are Box2D v2's long-standing defaults. Tune by lowering each count until a stability test fails or the benchmark visibly degrades, then step back up and keep a margin of one or two. Record the final values and solver times in the plan.
+   - **`SolverSettings` resource:** `velocityIterations` (8), `pseudoVelocityIterations` (3), `beta` (0.2), `slop` (0.5 px), `restitutionThreshold` (20 px/s, kept after tuning in phase 1). The starting counts are Box2D v2's long-standing defaults. Tune by lowering each count until a stability test fails or the benchmark visibly degrades, then step back up and keep a margin of one or two. Record the final values and solver times in the plan.
 5. **Warm starting.** Give each contact point a feature ID (which edge and which vertex made it) and keep last step's accumulated impulses by pair and feature. At the start of the step, apply those impulses first. Stacks then start near the solution and settle in far fewer iterations.
 6. **Recording.** `ContactLog` and the friction arrows read from the manifold directly, rather than from iteration 0.
 7. **Block solver for two-point manifolds (optional, try after the rest works).** The sequential solver handles a manifold's two points one after the other, so they fight: fixing the left corner tilts the box onto the right one. Box2D's block solver solves both normal impulses together as one 2×2 problem. With the "impulse ≥ 0" rule it has only 4 cases (both touching, only one touching, neither), so it can test each directly. Boxes resting flat settle with less rocking and fewer passes. Keep it only if the stack tests show a gain. Friction stays sequential.
@@ -168,6 +168,21 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 What must not change: stacks are at least as stable as on `dev` (the anti-goal), checked by the stability tests and a side-by-side visual check against `dev`. If the demo scene feels dead afterwards, retuning its material values is a follow-up outside phase 1, so the phase 1 comparison stays fair.
 
 **Fixes along the way:** all four correctness issues above, inside phase 1 (decision 8), each with a test. The new effective-mass and clamping code replaces the lines that have them.
+
+#### Handoff: phase 1 built, measurement and phase 2 next
+
+**State.** Every task in `superpowers/plans/2026-11-14-physics-performance-phase-1.md` is built and ticked on `feature/contact-solver`, including the optional block solver (kept). Lint, typecheck, build and all tests pass. Don't redo any of it.
+
+**Still to do before the pull request into `dev`:**
+
+1. Browser benchmark: `npm run dev`, open `?scene=benchmark` in Brave on the phase 0 machine, copy the console table, and fill in the Browser, Solver and Broad phase columns of Results row 1 and a browser column in "Phase 1 split". The bar is an update under 16.7 ms.
+2. Side-by-side visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox` against `dev`. Expected: less bounce, boxes resting flat instead of rocking, friction arrows drawn from contact points.
+3. Set this phase's Status to done.
+4. Open an issue for the pre-existing tunnelling of small fast circles into the floor (see "Phase 1 split").
+
+**Resume prompt (phase 2):**
+
+> Phase 1 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 1 built, measurement and phase 2 next" and "Phase 1 split"). Review phase 2 (real sleeping, issue #23). Talk through Open decision 6 with me, then plan phase 2 with superpowers:writing-plans.
 
 ### Phase 2: real sleeping
 
@@ -335,7 +350,7 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 | ---------------------- | ----------------- | ---------------- | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Baseline (ECS, PR #12) | 46.25             |                  |           |                | Brave, 2,000 bodies. Per-system numbers come from phase 0                                                                                                                                                                                |
 | 0                      | 47.52             | 164.67 / 242.38  | 46.14     | 0.99           | Brave, Windows 11, same machine as the baseline. Render 1.73 ms, 6 draw calls. Headless: Node v24.14.1, Vitest 5.1.0, two `npm run bench` runs that disagreed by about 47%. The browser solver and broad-phase numbers are the reference |
-| 1                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+| 1                      | _pending_         | 16.10 / 16.39    | _pending_ | _pending_      | Headless only so far: two `npm run bench` runs, Node v24.14.1, same machine as phase 0. Headless solver (velocity + pseudo-velocity solve) 5.40 / 5.91 ms against 286.72 for phase 0's `collisionSolver`. Browser row to be filled from `?scene=benchmark` in Brave |
 | 2                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 | 3                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 | 4                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
@@ -364,6 +379,30 @@ What this shows:
 - **Headless numbers are relative only.** Vitest's module-runner adds overhead to every call across module exports, and the solver makes the most of those calls. Headless steps run 3.5–6× slower than the browser and vary a lot between runs. Use the headless shares to compare changes, and the browser split as the baseline.
 - **The two windows differ.** The browser samples frames 60–360, and the headless test samples steps 120–420, while the pyramid is still settling. The splits agree anyway.
 - **Small systems are noisy in the browser.** Brave coarsens `performance.now()`, so the times under 0.01 ms are only rough.
+
+#### Phase 1 split
+
+Headless, `npm run bench` per-system test, steps 120–420, two runs. Browser numbers are pending.
+
+| System              | Run 1 ms | Run 1 share | Run 2 ms | Run 2 share |
+| ------------------- | -------- | ----------- | -------- | ----------- |
+| contactDetection    | 6.428    | 39.5%       | 6.842    | 39.4%       |
+| velocitySolve       | 4.588    | 28.2%       | 4.982    | 28.7%       |
+| broadPhase          | 3.271    | 20.1%       | 3.451    | 19.9%       |
+| pseudoVelocitySolve | 0.812    | 5.0%        | 0.927    | 5.3%        |
+| colliderTransform   | 0.465    | 2.9%        | 0.433    | 2.5%        |
+| velocityIntegration | 0.389    | 2.4%        | 0.394    | 2.3%        |
+| positionIntegration | 0.207    | 1.3%        | 0.221    | 1.3%        |
+| gravity             | 0.095    | 0.6%        | 0.093    | 0.5%        |
+| others              | < 0.01   | 0.0%        | < 0.01   | 0.0%        |
+| **total**           | 16.260   | 100%        | 17.352   | 100%        |
+
+What this shows:
+
+- **The solver is no longer the step.** Phase 0's headless `collisionSolver` was 286.7 ms (97.7%). Detection plus both solves are now 11.8–12.8 ms, and the whole step is about 17× faster headless.
+- **Contact detection and the broad phase are now 60% of the step.** That is where phases 3 and 4 work (static pairs, a separate static grid, pair slots, the narrow-phase micro-optimisations).
+- **Solver settings:** the tuning in the plan's Task 9 kept 8 velocity and 3 pseudo-velocity passes, β 0.2 and a 20 px/s restitution threshold. The Box2D-style 2×2 block solver for two-point manifolds was kept: without it a ten-box stack swayed 2.7 px at 8 passes, with it 0.000 px from 4 passes up.
+- **Known gap, not new:** a small fast circle can tunnel into the floor during the pyramid's collapse (about 480 px/s, more than its radius per step). `dev` loses a body the same way at the same moment. Continuous collision is a non-goal, so this needs its own issue.
 
 ## Testing
 
