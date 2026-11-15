@@ -1,5 +1,6 @@
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { ForceJoint } from "@/components/ForceJoint"
 import { Mass } from "@/components/Mass"
@@ -10,6 +11,7 @@ import {
 	addForceAtPoint,
 	anchorWorldPosition,
 } from "@/joints/jointForces"
+import { disturbs, wakeBody } from "@/sleeping/wakeBodies"
 
 const COMPRESSION_THRESHOLD = -5
 const SHARED_FORCE = 0.5
@@ -19,6 +21,7 @@ function createJointForceSystem(world: World): System {
 	const transforms = world.store(Transform)
 	const forces = world.store(ForceAccumulator)
 	const masses = world.store(Mass)
+	const asleep = world.store(Asleep)
 	const springs = world.store(SpringJoint).columns
 	const forceJoints = world.store(ForceJoint).columns
 	const springView = world.view([SpringJoint])
@@ -29,6 +32,24 @@ function createJointForceSystem(world: World): System {
 	const isMovable = (entity: number): boolean => {
 		const slot = masses.slotOf(entity)
 		return slot !== -1 && masses.columns.inverseMass[slot] !== 0
+	}
+
+	const canMove = (entity: number): boolean =>
+		isMovable(entity) && !asleep.has(entity)
+
+	const settleSleep = (entityA: number, entityB: number): boolean => {
+		const canMoveA = canMove(entityA)
+		const canMoveB = canMove(entityB)
+		if (!canMoveA && !canMoveB) {
+			return false
+		}
+		if (canMoveA && asleep.has(entityB) && disturbs(world, entityA)) {
+			wakeBody(world, entityB)
+		}
+		if (canMoveB && asleep.has(entityA) && disturbs(world, entityB)) {
+			wakeBody(world, entityA)
+		}
+		return true
 	}
 
 	const locateAnchors = (
@@ -75,7 +96,7 @@ function createJointForceSystem(world: World): System {
 			springs.anchorBX[springSlot],
 			springs.anchorBY[springSlot],
 		)
-		if (!located) {
+		if (!located || !settleSleep(entityA, entityB)) {
 			return
 		}
 		const deltaX = anchorB.x - anchorA.x
@@ -127,7 +148,7 @@ function createJointForceSystem(world: World): System {
 			forceJoints.anchorBX[forceJointSlot],
 			forceJoints.anchorBY[forceJointSlot],
 		)
-		if (!located) {
+		if (!located || !settleSleep(entityA, entityB)) {
 			return
 		}
 		const deltaX = anchorB.x - anchorA.x

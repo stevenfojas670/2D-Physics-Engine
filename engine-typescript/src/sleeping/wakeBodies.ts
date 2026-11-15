@@ -34,6 +34,12 @@ function resetSleepTime(world: World, entity: Entity): void {
 	}
 }
 
+function disturbs(world: World, entity: Entity): boolean {
+	const timers = world.store(SleepTimer)
+	const slot = timers.slotOf(entity)
+	return slot === MISSING_SLOT || timers.columns.sleepTime[slot] === 0
+}
+
 function wakeMembers(world: World, members: readonly Entity[]): void {
 	for (const member of members) {
 		if (!world.isAlive(member)) {
@@ -126,6 +132,7 @@ function fallAsleep(world: World, members: readonly Entity[]): void {
 }
 
 export {
+	disturbs,
 	fallAsleep,
 	installSleepResources,
 	wakeAllBodies,

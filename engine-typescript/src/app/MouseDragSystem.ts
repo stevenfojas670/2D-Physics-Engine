@@ -8,6 +8,7 @@ import { BroadPhaseResource } from "@/resources/BroadPhase"
 import { MouseDragResource, createMouseDrag } from "@/resources/MouseDrag"
 import type { MouseDrag } from "@/resources/MouseDrag"
 import { isPointInsideCollider } from "@/shapes/colliderGeometry"
+import { wakeBody } from "@/sleeping/wakeBodies"
 import { MouseInputResource } from "./MouseInput"
 import type { MouseInput } from "./MouseInput"
 
@@ -61,6 +62,7 @@ function createMouseDragSystem(world: World): System {
 			drag.active = false
 			return
 		}
+		wakeBody(world, drag.entity)
 		drag.targetX = mouse.x
 		drag.targetY = mouse.y
 		anchorWorldPosition(

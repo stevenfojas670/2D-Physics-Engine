@@ -1,7 +1,9 @@
+import type { Entity } from "@/ecs/Entity"
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { MovementIntent } from "@/components/MovementIntent"
+import { wakeBody } from "@/sleeping/wakeBodies"
 
 const MOVE_SPEED = 5
 const MOVE_FORCE = 100
@@ -13,7 +15,18 @@ function createIntentForceSystem(world: World): System {
 	const forces = world.store(ForceAccumulator).columns
 	const movers = world.view([MovementIntent, ForceAccumulator])
 
-	const applyIntent = (intentSlot: number, forceSlot: number): void => {
+	const applyIntent = (
+		intentSlot: number,
+		forceSlot: number,
+		entity: Entity,
+	): void => {
+		if (
+			intents.x[intentSlot] !== 0 ||
+			intents.y[intentSlot] !== 0 ||
+			intents.jump[intentSlot] !== 0
+		) {
+			wakeBody(world, entity)
+		}
 		forces.x[forceSlot] += intents.x[intentSlot] * FORCE_PER_AXIS
 		forces.y[forceSlot] += intents.y[intentSlot] * FORCE_PER_AXIS
 		if (intents.jump[intentSlot] === 1) {

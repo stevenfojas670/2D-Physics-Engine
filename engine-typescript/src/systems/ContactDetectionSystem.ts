@@ -17,6 +17,7 @@ import {
 	MAX_MANIFOLD_POINTS,
 } from "@/resources/ContactManifolds"
 import { aabbOverlap } from "@/shapes/colliderGeometry"
+import { disturbs, wakeBody } from "@/sleeping/wakeBodies"
 
 const MISSING_SLOT = -1
 const TOUCHING = 1
@@ -166,6 +167,12 @@ function createContactDetectionSystem(world: World): System {
 				centerBX,
 				centerBY,
 			)
+			if (inverseMassA > 0 && asleep.has(entityB) && disturbs(world, entityA)) {
+				wakeBody(world, entityB)
+			}
+			if (inverseMassB > 0 && asleep.has(entityA) && disturbs(world, entityB)) {
+				wakeBody(world, entityA)
+			}
 			for (let index = 0; index < scratch.pointCount; index++) {
 				contacts.recordContact(
 					scratch.pointX[index],

@@ -9,7 +9,7 @@ Wiring between the browser, input and the ECS: input resources and systems, the 
 | `DemoScene.ts`         | Builds the demo scene and its world resources, resizes its walls, spawns demo objects and the stress-test pyramid                                                                    |
 | `FixedStep.ts`         | Turns variable frame times into a whole number of fixed 1/60 s steps, carrying the remainder and capping steps per frame so a slow frame can't spiral                                |
 | `FrameTimer.ts`        | Averages update time, render time and draw calls over a fixed number of frames after a warm-up, and per-system times through a `SystemTimer`                                         |
-| `MouseDragSystem.ts`   | Picks the body under the held mouse, then pulls it toward the mouse at its anchor; ends the drag on release or when it's gone                                                        |
+| `MouseDragSystem.ts`   | Picks the body under the held mouse, then pulls it toward the mouse at its anchor and keeps it awake; ends the drag on release or when it's gone                                     |
 | `MouseInput.ts`        | Resource holding the mouse position and whether the left button is held                                                                                                              |
 | `PlayerInputSystem.ts` | Turns held keys into `MovementIntent` on `PlayerControlled` entities                                                                                                                 |
 | `SandboxScene.ts`      | Builds the wind sandbox: a fixed 1200×700 world with floor and ceiling, wind-exposed bodies, and a respawn system that replaces bodies leaving either side through deferred commands |

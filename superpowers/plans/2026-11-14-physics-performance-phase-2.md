@@ -135,17 +135,19 @@
 - **Mouse drag:** `wakeBody(world, drag.entity)` every step the drag is active, including the pick step.
 - **Intent:** `wakeBody` the body when its intent `x`, `y` or `jump` is non-zero.
 
-- [ ] **Step 1: Failing tests** (each starts from the box asleep on the floor, as in Task 4):
+- [x] **Step 1: Failing tests** (each starts from the box asleep on the floor, as in Task 4):
   - `a falling box wakes a sleeper`: drop a second box from y −40 onto it. Within 120 steps the lower box has lost `Asleep` at least once (track it in `onStep`), and after 600 steps both are asleep again.
   - `a joint to an awake body wakes a sleeper`: add an awake box at (60, 40) and a `SpringJoint` between the two (as in `tests/systems/joints.test.ts`). After 1 step the sleeper is awake.
   - `a joint to a static body doesn't wake a sleeper`: add a `SpringJoint` between the sleeping box and the floor. After 60 steps the box is still asleep.
   - `dragging wakes a sleeper and keeps it awake`: set `MouseInput` `x`, `y` to the box centre and `leftDown = true`. After 1 step it's awake. Holding still for 300 more steps, it never gets `Asleep`.
   - `a woken body starts from rest`: wake the sleeper with `wakeBody`, step once with no floor contact (destroy the floor with `world.destroyEntity` first). The body's velocity is `(0, 200/60)` within `1e-9` after damping is accounted for: `toBeCloseTo(200 / 60 * 0.999, 9)`.
   - `setting a velocity and calling wakeBody moves a sleeper`: set its velocity to `(50, 0, 0)` and call `wakeBody`. After 1 step x has grown.
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3:** Implement the four changes.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS.
-- [ ] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: wake sleepers on contact, joints, drag and intent (#23)`.
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3:** Implement the four changes.
+- [x] **Step 4:** Run the whole suite. Expected: PASS.
+- [x] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: wake sleepers on contact, joints, drag and intent (#23)`.
+
+**Task 5 note:** only a disturbing body (no `SleepTimer`, or `sleepTime` 0) wakes a sleeper by contact or joint. Without it, a box resting on a sleeping box woke it every time it fell asleep, and the two never slept together. The spec's Phase 2 decisions record the rule.
 
 ### Task 6: Waking without motion
 
