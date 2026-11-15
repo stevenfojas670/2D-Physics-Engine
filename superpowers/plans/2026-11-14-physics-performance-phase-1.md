@@ -244,9 +244,9 @@ Only if Task 9 leaves the stack or pyramid needing more than 8 velocity passes, 
 
 - [x] **Step 1:** Browser benchmark (same Brave and machine as phase 0): copy the console table; `npm run bench` twice.
 - [x] **Step 2:** (met: browser update 7.42 ms) Fill in Results row 1 and the per-system table; note whether the 16.7 ms target is met. If not, record what's slow and stop before phase 2.
-- [ ] **Step 3:** Side-by-side visual check of `?scene=demo` and `?scene=benchmark` against `dev`; note differences (expected: less bounce, steadier boxes).
-- [x] **Step 4:** (handoff added; Status stays "built and measured" until the visual check) Set Phase 1 Status to done and add a "Handoff: phase 1 done, phase 2 next" section with a resume prompt.
-- [ ] **Step 5:** lint/typecheck/build/test; commit `docs: record phase 1 results (#22)`; push; open the PR into `dev` per CONTRIBUTING.md.
+- [x] **Step 3:** Side-by-side visual check of `?scene=demo` and `?scene=benchmark` against `dev`; note differences (expected: less bounce, steadier boxes).
+- [x] **Step 4:** (Status done after the visual check) Set Phase 1 Status to done and add a "Handoff: phase 1 done, phase 2 next" section with a resume prompt.
+- [x] **Step 5:** lint/typecheck/build/test; commit `docs: record phase 1 results (#22)`; push; open the PR into `dev` per CONTRIBUTING.md.
 
 ### Task 12: Review follow-ups
 

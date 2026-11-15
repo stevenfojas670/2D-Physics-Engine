@@ -102,7 +102,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
-**Status:** built and measured: browser update 7.42 ms, under the 16.7 ms target. The side-by-side visual check is pending. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`. Numbers are under Results and "Phase 1 split".
+**Status:** done. Browser update 7.42 ms, under the 16.7 ms target; the side-by-side visual check against `dev` passed. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`. Numbers are under Results and "Phase 1 split".
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
@@ -169,20 +169,20 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 **Fixes along the way:** all four correctness issues above, inside phase 1 (decision 8), each with a test. The new effective-mass and clamping code replaces the lines that have them.
 
-#### Handoff: phase 1 built, measurement and phase 2 next
+#### Handoff: phase 1 done, phase 2 next
 
 **State.** Every task in `superpowers/plans/2026-11-14-physics-performance-phase-1.md` is built and ticked on `feature/contact-solver`, including the optional block solver (kept). Lint, typecheck, build and all tests pass. Don't redo any of it.
 
-**Still to do before the pull request into `dev`:**
+**Done before the pull request into `dev`:**
 
 1. Done: browser benchmark recorded in Results row 1 and "Phase 1 split". Update 7.42 ms, under the 16.7 ms bar.
-2. Side-by-side visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox` against `dev`. Expected: less bounce, boxes resting flat instead of rocking, friction arrows drawn from contact points.
-3. Set this phase's Status to done.
+2. Done: side-by-side visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox` against `dev`.
+3. Done: Status set to done.
 4. Done: the pre-existing tunnelling of small fast circles into the floor is issue #28 (see "Phase 1 split").
 
 **Resume prompt (phase 2):**
 
-> Phase 1 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 1 built, measurement and phase 2 next" and "Phase 1 split"). Review phase 2 (real sleeping, issue #23). Talk through Open decision 6 with me, then plan phase 2 with superpowers:writing-plans.
+> Phase 1 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 1 done, phase 2 next" and "Phase 1 split"). Review phase 2 (real sleeping, issue #23). Talk through Open decision 6 with me, then plan phase 2 with superpowers:writing-plans.
 
 ### Phase 2: real sleeping
 
