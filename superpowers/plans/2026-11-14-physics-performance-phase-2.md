@@ -271,19 +271,19 @@ Whole-step bench: 59.7 / 59.3 steps per second at the collapse window. Per-body 
 **Interfaces — Consumes:** `IslandsResource` (Task 10), `fallAsleep` (Task 3).
 **Produces:** the sleep system still updates every body's `sleepTime` as in Task 4, but no longer puts single bodies to sleep. For each island, if every member has a `SleepTimer`, has no `NeverSleep` and has `sleepTime ≥ timeout`, it calls `fallAsleep(world, members)`.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `a stack falls asleep together`: a 5-box stack; the step at which the first box gets `Asleep` is the step at which all five have it.
   - `a NeverSleep body keeps its pile awake`: a 3-box stack whose top box has `canSleep: false`; after 900 steps no box is asleep.
   - `touching one body wakes the whole sleeping stack at once`: a 5-box stack asleep; `wakeBody` on the top box and a flush wake all five.
   - `destroying the bottom of a sleeping stack wakes all of it in one step`: a 5-box stack; after `destroyBody(bottom)` and one step, none of the remaining four is asleep.
   - `a woken stack doesn't sag`: a sleeping 10-box stack (as in `stability.test.ts`). Record the top box's y, `wakeBody` it, step 60, then check the top box's y changed by under `WAKE_SAG = 0.5` px. If this fails, stop and ask the owner whether to keep sleeping islands' manifolds (spec, "Phase 2 decisions"); don't raise the bar.
   - Task 4's and Task 5's sleeping tests still pass. The resting box's island is the box alone.
-- [ ] **Step 2:** Run. Expected: FAIL.
-- [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS. Record the measured sag here.
-- [ ] **Step 5:** READMEs and ecs-guide; lint, typecheck, build, test. Commit `feat: sleep and wake whole islands (#23)`.
+- [x] **Step 2:** Run. Expected: FAIL.
+- [x] **Step 3:** Implement.
+- [x] **Step 4:** Run the whole suite. Expected: PASS. Record the measured sag here.
+- [x] **Step 5:** READMEs and ecs-guide; lint, typecheck, build, test. Commit `feat: sleep and wake whole islands (#23)`.
 
-**Task 11 measurement:** _(fill in: wake sag)_
+**Task 11 measurement:** a woken ten-box stack moves its top box 0.353 px over 60 steps (bar 0.5), so warm starting across a wake isn't needed and sleeping islands keep only their members.
 
 ### Task 12 (optional): Solve contacts island by island
 

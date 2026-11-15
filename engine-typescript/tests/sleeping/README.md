@@ -2,8 +2,8 @@
 
 Tests for `src/sleeping/`.
 
-| File                 | Purpose                                                                                                                                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wakeBodies.test.ts` | Falling asleep zeroes motion and records the group, waking one member wakes the group, timers reset at once, recycled entities stay asleep, waking everything, and waking by overlap with its margin |
-| `worldEdits.test.ts` | Destroying the bottom of a sleeping stack, the floor or a jointed body, moving a static body and changing a group all wake the sleepers they affect                                                  |
-| `islands.test.ts`    | Union-find, and islands from touching chains, separate piles on one floor, joints and bodies spawned mid-run                                                                                         |
+| File                 | Purpose                                                                                                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wakeBodies.test.ts` | Falling asleep zeroes motion and records the group, waking one member wakes the group, timers reset at once, recycled entities stay asleep, waking everything, and waking by overlap with its margin                                                                |
+| `worldEdits.test.ts` | Destroying the bottom of a sleeping stack, the floor or a jointed body, moving a static body and changing a group all wake the sleepers they affect                                                                                                                 |
+| `islands.test.ts`    | Union-find; islands from touching chains, separate piles on one floor, joints and bodies spawned mid-run; stacks sleep together, a `NeverSleep` body keeps its pile awake, waking or destroying one body wakes the stack in one step, and a woken stack doesn't sag |

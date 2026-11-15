@@ -192,6 +192,7 @@ From `createSandboxRespawnSystem` in `src/app/SandboxScene.ts`.
 Bodies that stay still are taken out of the step until something disturbs them. Design and reasons: Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md`.
 
 - **Pieces:** the `Asleep` tag (the body sleeps), the `NeverSleep` tag (it may never sleep), the `SleepTimer` component (seconds it has been still) and the `SleepSettings` resource (`enabled`, `linearThreshold` 1 px/s, `angularThreshold` 0.035 rad/s, `timeout` 0.5 s). `spawnRigidBody` adds `SleepTimer` to every movable body; `canSleep: false` adds `NeverSleep`.
+- **Islands sleep together.** Bodies linked by contacts or joints form an island (`IslandSystem`), and an island sleeps only when every member can sleep and has been still for the timeout. One `NeverSleep` body keeps its whole island awake. Waking any member wakes the whole island.
 - **Active systems skip sleepers** with `without: [Asleep]`. A sleeper's world vertices and bounds stay valid because it doesn't move. Contact detection treats it as immovable.
 - **Waking** goes through `src/sleeping/wakeBodies.ts`. `wakeBody(world, entity)` resets the timer at once and defers removing `Asleep` from every body that fell asleep with it. Contacts, joints, mouse drag and movement intent call it already.
 - **Code that sets a body's velocity, position or force directly calls `wakeBody`** after doing so, or a sleeper ignores the change.
