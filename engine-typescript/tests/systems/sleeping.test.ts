@@ -3,6 +3,7 @@ import type { Schedule } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
 import { createUpdateSchedule } from "@/app/schedules"
 import type { Entity } from "@/ecs/Entity"
+import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { SpringJoint } from "@/components/SpringJoint"
 import { Velocity } from "@/components/Velocity"
 import { MouseInputResource } from "@/app/MouseInput"
@@ -15,6 +16,7 @@ import { SleepSettingsResource } from "@/resources/SleepSettings"
 import { WindResource } from "@/resources/Wind"
 import { createRectangleShape } from "@/shapes/colliderShapes"
 import { wakeBody } from "@/sleeping/wakeBodies"
+import { destroyBody } from "@/sleeping/worldEdits"
 import {
 	PHYSICS_STEP,
 	isAsleep,
@@ -227,5 +229,60 @@ describe("waking on world changes", () => {
 		const { world, box, schedule } = sleepingBoxWithSchedule()
 		runSteps(schedule, world, 60)
 		expect(isAsleep(world, box)).toBe(true)
+	})
+})
+
+describe("sleeping edge cases", () => {
+	test("a joint to a resting body adds no force to a sleeper", () => {
+		const { world, box } = sleepingBox()
+		const other = spawnRigidBody(
+			world,
+			createRectangleShape(20, 20),
+			100,
+			80,
+			1,
+		)
+		stepWorld(world, 10)
+		const joint = world.createEntity()
+		world.add(joint, SpringJoint, {
+			entityA: box,
+			entityB: other,
+			springConstant: 0.05,
+			restLength: 90,
+		})
+		stepWorld(world, 120)
+		expect(isAsleep(world, box)).toBe(true)
+		const forces = world.store(ForceAccumulator)
+		expect(forces.columns.x[forces.slotOf(box)]).toBe(0)
+		expect(forces.columns.y[forces.slotOf(box)]).toBe(0)
+	})
+
+	test("a body left without support doesn't sleep in mid-air", () => {
+		const world = physicsWorld(0, 40)
+		spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
+		const support = spawnRigidBody(
+			world,
+			createRectangleShape(20, 20),
+			0,
+			280,
+			1,
+			{ canSleep: false },
+		)
+		const crate = spawnRigidBody(
+			world,
+			createRectangleShape(20, 20),
+			0,
+			259.9,
+			1,
+		)
+		stepWorld(world, 300)
+		destroyBody(world, support)
+		const [, startY] = positionOf(world, crate)
+		let asleepInAir = false
+		stepWorld(world, 30, () => {
+			const [, y] = positionOf(world, crate)
+			asleepInAir ||= isAsleep(world, crate) && y < startY + 15
+		})
+		expect(asleepInAir).toBe(false)
 	})
 })
