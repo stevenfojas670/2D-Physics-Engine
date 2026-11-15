@@ -133,7 +133,7 @@ Circle cases keep today's maths, written as a one-point manifold.
 - `solvePseudoVelocities(manifolds, pseudo: PseudoVelocities, settings, deltaTime: number): void` — one pass on pseudo-velocities only: target `beta · max(depth − slop, 0) / deltaTime`, `λ = normalMass · (target − vnPseudo)`, accumulate `pseudoImpulse` clamped `≥ 0`, apply the change.
 - `recordFrictionArrows(manifolds: ContactManifolds, log: ContactLog): void` — per point with `tangentImpulse ≠ 0`, arrow from the point along `t · sign(tangentImpulse)`, length 40.
 
-- [ ] **Step 1: Failing tests** on hand-built manifolds (use `ContactManifolds.add` and set columns directly):
+- [x] **Step 1: Failing tests** on hand-built manifolds (use `ContactManifolds.add` and set columns directly):
   - head-on circles, masses 1, v ±10, restitution 0.5, normal (1,0): after prepare + 8 passes, v ≈ −5 and +5.
   - restitution 0 on both: no NaN, both end with relative normal velocity ≈ 0.
   - closing speed below `restitutionThreshold` doesn't bounce (relative normal velocity ends ≈ 0 with restitution 1).
@@ -141,10 +141,10 @@ Circle cases keep today's maths, written as a one-point manifold.
   - friction: box sliding at vx 10 on a static floor with normalImpulse warm-started to 1 and friction 0.5: |tangentImpulse| ≤ 0.5 after any number of passes; sliding left (vx −10) gives the mirrored result (negative-tangent bug).
   - pseudo solve: depth 3, slop 0.5, beta 0.2, dt 1/60 → pseudo vy non-zero, real velocities exactly unchanged, `pseudoImpulse ≥ 0`.
   - immovable side (slot −1) is never written.
-- [ ] **Step 2:** Run, expect FAIL.
-- [ ] **Step 3:** Implement with `Math.sqrt`, not `Math.hypot`, and no `slotOf` in the loops.
-- [ ] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
-- [ ] **Step 5:** Commit `feat: add sequential-impulse and split-impulse solver passes (#22)`.
+- [x] **Step 2:** Run, expect FAIL.
+- [x] **Step 3:** Implement with `Math.sqrt`, not `Math.hypot`, and no `slotOf` in the loops.
+- [x] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
+- [x] **Step 5:** Commit `feat: add sequential-impulse and split-impulse solver passes (#22)`.
 
 #### Handoff checkpoint (after Task 6)
 
