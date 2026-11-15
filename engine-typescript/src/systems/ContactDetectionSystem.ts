@@ -32,13 +32,18 @@ function createContactDetectionSystem(world: World): System {
 	const velocities = bodies.velocities
 	const scratch = new ContactManifold()
 
+	const movableMassSlot = (entity: Entity): number =>
+		velocities.slotOf(entity) === MISSING_SLOT
+			? MISSING_SLOT
+			: masses.slotOf(entity)
+
 	const inverseMassOf = (entity: Entity): number => {
-		const slot = masses.slotOf(entity)
+		const slot = movableMassSlot(entity)
 		return slot === MISSING_SLOT ? 0 : masses.columns.inverseMass[slot]
 	}
 
 	const inverseInertiaOf = (entity: Entity): number => {
-		const slot = masses.slotOf(entity)
+		const slot = movableMassSlot(entity)
 		return slot === MISSING_SLOT ? 0 : masses.columns.inverseInertia[slot]
 	}
 

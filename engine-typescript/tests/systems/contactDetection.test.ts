@@ -4,6 +4,7 @@ import type { Entity } from "@/ecs/Entity"
 import { Schedule } from "@/ecs/Schedule"
 import { Collider } from "@/components/Collider"
 import { Material } from "@/components/Material"
+import { Velocity } from "@/components/Velocity"
 import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
 import { DEFAULT_FRICTION } from "@/materials/materialDefaults"
 import { ContactsResource } from "@/resources/ContactLog"
@@ -111,6 +112,30 @@ describe("contact detection", () => {
 			Math.sqrt(0.4 * DEFAULT_FRICTION),
 			12,
 		)
+	})
+
+	test("a body with mass but no velocity is immovable in its contacts", () => {
+		const world = physicsWorld(0, 0)
+		const { box: lower } = boxOnFloor(world)
+		world.remove(lower, Velocity)
+		const upper = spawnRigidBody(world, createRectangleShape(20, 20), 0, 62, 1)
+		detectionSchedule(world).run(world, STEP)
+		const manifolds = world.resource(ContactManifoldsResource)
+		expect(manifolds.count).toBe(1)
+		const columns = manifolds.columns
+		const lowerIsA = columns.entityA[0] === lower
+		expect(lowerIsA || columns.entityB[0] === lower).toBe(true)
+		expect(columns.entityA[0] === upper || columns.entityB[0] === upper).toBe(
+			true,
+		)
+		const lowerSlot = lowerIsA ? columns.velocitySlotA : columns.velocitySlotB
+		const lowerMass = lowerIsA ? columns.inverseMassA : columns.inverseMassB
+		const lowerInertia = lowerIsA
+			? columns.inverseInertiaA
+			: columns.inverseInertiaB
+		expect(lowerSlot[0]).toBe(-1)
+		expect(lowerMass[0]).toBe(0)
+		expect(lowerInertia[0]).toBe(0)
 	})
 
 	test("impulses carry over to the next step", () => {
