@@ -3,6 +3,7 @@ import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
 import { BodyColumns } from "@/collisionDetectionSystem/BodyColumns"
 import { Contact } from "@/collisionDetectionSystem/Contact"
+import { ContactManifold } from "@/collisionDetectionSystem/ContactManifold"
 import {
 	correctPositions,
 	resolveImpulse,
@@ -23,6 +24,23 @@ function createCollisionSolverSystem(world: World): System {
 	const colliders = bodies.colliders
 	const masses = bodies.masses
 	const contact = new Contact()
+	const manifold = new ContactManifold()
+
+	const deepestPointOf = (out: Contact): void => {
+		let deepest = 0
+		for (let point = 1; point < manifold.pointCount; point++) {
+			if (manifold.depth[point] > manifold.depth[deepest]) {
+				deepest = point
+			}
+		}
+		out.set(
+			manifold.depth[deepest],
+			manifold.normalX,
+			manifold.normalY,
+			manifold.pointX[deepest],
+			manifold.pointY[deepest],
+		)
+	}
 
 	const inverseMassOf = (entity: Entity): number => {
 		const slot = masses.slotOf(entity)
@@ -57,11 +75,12 @@ function createCollisionSolverSystem(world: World): System {
 			transforms.columns.y[transformSlotA],
 			transforms.columns.x[transformSlotB],
 			transforms.columns.y[transformSlotB],
-			contact,
+			manifold,
 		)
 		if (!hit) {
 			return
 		}
+		deepestPointOf(contact)
 		if (log !== null) {
 			log.recordContact(
 				contact.pointX,

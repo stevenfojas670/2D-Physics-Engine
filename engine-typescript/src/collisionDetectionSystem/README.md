@@ -2,12 +2,13 @@
 
 Narrow-phase collision detection and collision response over component data. Layer: physics.
 
-| File                   | Purpose                                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `BodyColumns.ts`       | Bundles the transform, velocity, mass, material and collider stores that contact resolution reads and writes          |
-| `contactResolution.ts` | Resolves a contact between two entities: positional correction (90% of depth), then restitution and friction impulses |
-| `Contact.ts`           | Reusable scratch result of a collision test: depth, normal from A to B, and contact point                             |
-| `narrowPhase.ts`       | Exact collision tests on collider data (circle, polygon, mixed) that write into a `Contact` without allocating        |
+| File                   | Purpose                                                                                                                                                                                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BodyColumns.ts`       | Bundles the transform, velocity, mass, material and collider stores that contact resolution reads and writes                                                                                                   |
+| `contactResolution.ts` | Resolves a contact between two entities: positional correction (90% of depth), then restitution and friction impulses                                                                                          |
+| `Contact.ts`           | Reusable scratch result of a collision test: depth, normal from A to B, and contact point                                                                                                                      |
+| `ContactManifold.ts`   | Reusable scratch result of a collision test: the normal from A to B and up to two contact points, each with a depth and a feature ID                                                                           |
+| `narrowPhase.ts`       | Exact collision tests on collider data that write a `ContactManifold` without allocating: one point for circle pairs, and up to two for polygon pairs by clipping the incident edge against the reference edge |
 
 ## References
 

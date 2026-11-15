@@ -116,11 +116,11 @@ Algorithm for polygon–polygon (Box2D-Lite clipping), replacing the single deep
 
 Circle cases keep today's maths, written as a one-point manifold.
 
-- [ ] **Step 1: Update and add tests:** all existing cases read `out.pointX[0]` etc. and assert `pointCount === 1` for circle cases. New: two 20×20 boxes, B at (0, 15) → `pointCount` 2, both depths ≈ 5, normal (0,1), points at x ≈ −10 and 10; B at (6, 15) → points at x ≈ −4 and 10; B rotated 0.3 rad resting on a corner → `pointCount` 1; feature IDs of the two points differ and are equal across two calls with B moved 0.1 px.
-- [ ] **Step 2:** Run `npx vitest run tests/collision/narrowPhase.test.ts`, expect FAIL.
-- [ ] **Step 3:** Implement. The solver still compiles against the old `Contact` until Task 8, so for now `CollisionSolverSystem` builds a `Contact` from the *deepest* point of a `ContactManifold` (a small adapter, deleted in Task 8). For polygon pairs this can pick a different vertex than today's, so re-run `stability.test.ts`; it must still pass with Task 2's thresholds.
-- [ ] **Step 4:** Run all tests, expect PASS; READMEs; lint/typecheck/build.
-- [ ] **Step 5:** Commit `feat: clip polygon contacts into two-point manifolds (#22)`.
+- [x] **Step 1: Update and add tests:** all existing cases read `out.pointX[0]` etc. and assert `pointCount === 1` for circle cases. New: two 20×20 boxes, B at (0, 15) → `pointCount` 2, both depths ≈ 5, normal (0,1), points at x ≈ −10 and 10; B at (6, 15) → points at x ≈ −4 and 10; B rotated 0.3 rad resting on a corner → `pointCount` 1; feature IDs of the two points differ and are equal across two calls with B moved 0.1 px.
+- [x] **Step 2:** Run `npx vitest run tests/collision/narrowPhase.test.ts`, expect FAIL.
+- [x] **Step 3:** Implement. The solver still compiles against the old `Contact` until Task 8, so for now `CollisionSolverSystem` builds a `Contact` from the *deepest* point of a `ContactManifold` (a small adapter, deleted in Task 8). For polygon pairs this can pick a different vertex than today's, so re-run `stability.test.ts`; it must still pass with Task 2's thresholds.
+- [x] **Step 4:** Run all tests, expect PASS; READMEs; lint/typecheck/build.
+- [x] **Step 5:** Commit `feat: clip polygon contacts into two-point manifolds (#22)`.
 
 ### Task 6: Sequential-impulse maths
 
