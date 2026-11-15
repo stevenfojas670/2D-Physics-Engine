@@ -23,6 +23,7 @@ import {
 	installWorldResources,
 	resizeDemoWorld,
 } from "@/app/DemoScene"
+import { FixedStep } from "@/app/FixedStep"
 import { FrameTimer } from "@/app/FrameTimer"
 import { SystemTimer } from "@/app/SystemTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
@@ -403,5 +404,34 @@ describe("frame timer", () => {
 		expect(timer.summary?.systems).toEqual([
 			{ name: "gravity", milliseconds: 2, share: 1 },
 		])
+	})
+})
+
+describe("fixed step", () => {
+	test("one frame of exactly one step runs one step", () => {
+		const fixedStep = new FixedStep(0.25, 5)
+		expect(fixedStep.advance(0.25)).toBe(1)
+	})
+
+	test("short frames accumulate into a step", () => {
+		const fixedStep = new FixedStep(0.25, 5)
+		expect(fixedStep.advance(0.125)).toBe(0)
+		expect(fixedStep.advance(0.125)).toBe(1)
+	})
+
+	test("the remainder carries into the next frame", () => {
+		const fixedStep = new FixedStep(0.25, 5)
+		expect(fixedStep.advance(0.625)).toBe(2)
+		expect(fixedStep.advance(0.125)).toBe(1)
+	})
+
+	test("a long frame is capped and its excess time dropped", () => {
+		const fixedStep = new FixedStep(0.25, 5)
+		expect(fixedStep.advance(5)).toBe(5)
+		expect(fixedStep.advance(0)).toBe(0)
+	})
+
+	test("the default step is 1/60 s", () => {
+		expect(new FixedStep().stepSeconds).toBe(1 / 60)
 	})
 })

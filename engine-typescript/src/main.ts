@@ -10,6 +10,7 @@ import {
 import { ControllerKeysResource } from "@/app/ControllerKeys"
 import { buildDemoScene, resizeDemoWorld } from "@/app/DemoScene"
 import type { DemoHandles } from "@/app/DemoScene"
+import { FixedStep } from "@/app/FixedStep"
 import { FrameTimer } from "@/app/FrameTimer"
 import type { FrameSummary } from "@/app/FrameTimer"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
@@ -73,6 +74,7 @@ if (scene === "sandbox") {
 }
 const draw = createRenderSchedule(world)
 const frameTimer = new FrameTimer(update.names)
+const fixedStep = new FixedStep()
 let lastTime = performance.now()
 let summaryLogged = false
 
@@ -130,7 +132,10 @@ function runFrame(deltaTime: number): void {
 	if (isBenchmark) {
 		update.runTimed(world, BENCHMARK_STEP, readClock, frameTimer.recordSystem)
 	} else {
-		update.run(world, deltaTime)
+		const steps = fixedStep.advance(deltaTime)
+		for (let step = 0; step < steps; step++) {
+			update.run(world, fixedStep.stepSeconds)
+		}
 	}
 	const renderStart = performance.now()
 	draw.run(world, deltaTime)

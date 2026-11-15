@@ -70,11 +70,11 @@ These pin "at least as stable as `dev`" before anything changes. They must pass 
 
 **Interfaces — Produces:** `class FixedStep { constructor(stepSeconds = 1 / 60, maxStepsPerFrame = 5); readonly stepSeconds: number; advance(frameSeconds: number): number }` — adds `frameSeconds` to the accumulator, returns the number of steps to run, keeps the remainder, and when the count would exceed `maxStepsPerFrame` returns the cap and drops the leftover time.
 
-- [ ] **Step 1: Failing tests** (use `new FixedStep(0.25, 5)` so the arithmetic is exact in binary): `advance(0.25)` → 1; `advance(0.125)` twice → 0 then 1; `advance(0.625)` → 2, then `advance(0.125)` → 1 (remainder carried); `advance(5)` → 5, then `advance(0)` → 0 (excess dropped); default `stepSeconds` is `1 / 60`.
-- [ ] **Step 2:** Run, expect FAIL (module missing).
-- [ ] **Step 3:** Implement `FixedStep`. In `main.ts` non-benchmark branch: `const steps = fixedStep.advance(deltaTime); for (…) update.run(world, fixedStep.stepSeconds)`. Benchmark branch unchanged. Render keeps `deltaTime`.
-- [ ] **Step 4:** Run tests, expect PASS; README rows; lint/typecheck/build/test.
-- [ ] **Step 5:** Commit `feat: step demo scenes at a fixed 60 Hz (#22)`.
+- [x] **Step 1: Failing tests** (use `new FixedStep(0.25, 5)` so the arithmetic is exact in binary): `advance(0.25)` → 1; `advance(0.125)` twice → 0 then 1; `advance(0.625)` → 2, then `advance(0.125)` → 1 (remainder carried); `advance(5)` → 5, then `advance(0)` → 0 (excess dropped); default `stepSeconds` is `1 / 60`.
+- [x] **Step 2:** Run, expect FAIL (module missing).
+- [x] **Step 3:** Implement `FixedStep`. In `main.ts` non-benchmark branch: `const steps = fixedStep.advance(deltaTime); for (…) update.run(world, fixedStep.stepSeconds)`. Benchmark branch unchanged. Render keeps `deltaTime`.
+- [x] **Step 4:** Run tests, expect PASS; README rows; lint/typecheck/build/test.
+- [x] **Step 5:** Commit `feat: step demo scenes at a fixed 60 Hz (#22)`.
 
 ### Task 4: Solver resources
 
