@@ -160,11 +160,11 @@ State: resources, manifold narrow phase and solver maths exist and are unit-test
 
 Per step: `contacts.clear()`; `colliders.columns.touching.fill(0)`; `manifolds.beginStep()`; for each pair: AABB overlap → set `touching` 1 on both; skip when both inverse masses are 0; `testCollision`; on hit `add`, store velocity slots (−1 without `Velocity`), inverse mass/inertia from `Mass` (0 without), normal, `restitution = max(a, b)`, `friction = √(a·b)` (defaults when a body has no `Material`), per point `pointX/Y`, anchors `point − centre`, depth, featureId; `inheritImpulses`; `recordContact` per point.
 
-- [ ] **Step 1: Failing tests:** a box resting flat on a floor gives 1 manifold with 2 points and 2 logged contacts; `touching` is 1 for overlapping and 0 for far bodies; two overlapping static bodies give 0 manifolds; restitution 0.2 vs 0.7 combines to 0.7 and friction 0.4 vs 0.9 to 0.6; a body with its `Material` removed combines with the defaults without NaN; a manifold with impulses set, re-detected next step, keeps them; after `destroyEntity(b)` and a new entity on the same index overlapping `a`, the new manifold's impulses are 0.
-- [ ] **Step 2:** Run, expect FAIL.
-- [ ] **Step 3:** Implement (not yet in the schedule).
-- [ ] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
-- [ ] **Step 5:** Commit `feat: add contact detection system (#22)`.
+- [x] **Step 1: Failing tests:** a box resting flat on a floor gives 1 manifold with 2 points and 2 logged contacts; `touching` is 1 for overlapping and 0 for far bodies; two overlapping static bodies give 0 manifolds; restitution 0.2 vs 0.7 combines to 0.7 and friction 0.4 vs 0.9 to 0.6; a body with its `Material` removed combines with the defaults without NaN; a manifold with impulses set, re-detected next step, keeps them; after `destroyEntity(b)` and a new entity on the same index overlapping `a`, the new manifold's impulses are 0.
+- [x] **Step 2:** Run, expect FAIL.
+- [x] **Step 3:** Implement (not yet in the schedule).
+- [x] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
+- [x] **Step 5:** Commit `feat: add contact detection system (#22)`.
 
 ### Task 8: Split integration and switch the schedule
 
