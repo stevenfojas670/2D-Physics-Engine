@@ -102,7 +102,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
-**Status:** decisions settled (2026-11-14), not planned. Issue #22. Branch: `feature/contact-solver`.
+**Status:** planned. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-1.md`. Issue #22. Branch: `feature/contact-solver`.
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
