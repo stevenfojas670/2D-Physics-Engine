@@ -37,6 +37,26 @@ function createJointForceSystem(world: World): System {
 	const canMove = (entity: number): boolean =>
 		isMovable(entity) && !asleep.has(entity)
 
+	const pushAwake = (
+		entity: number,
+		pointX: number,
+		pointY: number,
+		forceX: number,
+		forceY: number,
+	): void => {
+		if (!asleep.has(entity)) {
+			addForceAtPoint(
+				transforms,
+				forces,
+				entity,
+				pointX,
+				pointY,
+				forceX,
+				forceY,
+			)
+		}
+	}
+
 	const settleSleep = (entityA: number, entityB: number): boolean => {
 		const canMoveA = canMove(entityA)
 		const canMoveB = canMove(entityB)
@@ -114,21 +134,17 @@ function createJointForceSystem(world: World): System {
 		const baseMagnitude =
 			(extension * restLength * springs.springConstant[springSlot]) / distance
 		const magnitudeA =
-			baseMagnitude * (isMovable(entityB) ? SHARED_FORCE : FULL_FORCE)
+			baseMagnitude * (canMove(entityB) ? SHARED_FORCE : FULL_FORCE)
 		const magnitudeB =
-			baseMagnitude * (isMovable(entityA) ? SHARED_FORCE : FULL_FORCE)
-		addForceAtPoint(
-			transforms,
-			forces,
+			baseMagnitude * (canMove(entityA) ? SHARED_FORCE : FULL_FORCE)
+		pushAwake(
 			entityA,
 			anchorA.x,
 			anchorA.y,
 			deltaX * magnitudeA,
 			deltaY * magnitudeA,
 		)
-		addForceAtPoint(
-			transforms,
-			forces,
+		pushAwake(
 			entityB,
 			anchorB.x,
 			anchorB.y,
@@ -159,18 +175,14 @@ function createJointForceSystem(world: World): System {
 		}
 		const magnitude =
 			(forceJoints.strength[forceJointSlot] * SHARED_FORCE) / distance
-		addForceAtPoint(
-			transforms,
-			forces,
+		pushAwake(
 			entityA,
 			anchorB.x,
 			anchorB.y,
 			deltaX * magnitude,
 			deltaY * magnitude,
 		)
-		addForceAtPoint(
-			transforms,
-			forces,
+		pushAwake(
 			entityB,
 			anchorA.x,
 			anchorA.y,
