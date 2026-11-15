@@ -253,16 +253,16 @@ Whole-step bench: 59.7 / 59.3 steps per second at the collapse window. Per-body 
 - `class Islands { begin(entityCapacity: number): void; addBody(entity: Entity): void; link(entityA: Entity, entityB: Entity): void; finish(): void; get count(): number; members(island: number): readonly Entity[]; islandOf(entity: Entity): number }` + `IslandsResource`. `link` ignores an entity that wasn't added. `islandOf` returns −1 for a body that wasn't added. Islands are numbered 0…count−1 after `finish`.
 - `createIslandSystem(world: World): System` does nothing when `SleepSettings.enabled` is false. Otherwise it adds every `[Velocity, Mass]` body `without: [Asleep, Particle]` whose inverse mass is > 0, links the two bodies of each manifold in `ContactManifolds`, links the two ends of each `SpringJoint` and `ForceJoint`, then calls `finish`. Statics are never added, so they link nothing.
 
-- [ ] **Step 1: Failing tests** (`tests/sleeping/islands.test.ts`):
+- [x] **Step 1: Failing tests** (`tests/sleeping/islands.test.ts`):
   - `UnionFind` unit cases: a chain 0–1–2 has one root, and 3 stays alone; `reset` to a larger size keeps working.
   - `a chain of touching bodies is one island`: three boxes in a row touching, no gravity, one step; all three share `islandOf`.
   - `two piles on one floor are two islands`: two 2-box stacks 200 px apart on one floor, after 60 steps; the piles have different islands and the floor has −1.
   - `a joint links two bodies that don't touch`: two boxes 100 px apart with a `SpringJoint`, gravity 0; same island after one step.
   - `bodies spawned mid-run join islands`: run 1 step, spawn two touching boxes, run 1 step; they share an island.
-- [ ] **Step 2:** Run. Expected: FAIL.
-- [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS.
-- [ ] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: build contact and joint islands each step (#23)`.
+- [x] **Step 2:** Run. Expected: FAIL.
+- [x] **Step 3:** Implement.
+- [x] **Step 4:** Run the whole suite. Expected: PASS.
+- [x] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: build contact and joint islands each step (#23)`.
 
 ### Task 11: Sleep by island
 

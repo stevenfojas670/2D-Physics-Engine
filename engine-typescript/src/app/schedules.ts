@@ -9,6 +9,7 @@ import { createColliderTransformSystem } from "@/systems/ColliderTransformSystem
 import { createContactDetectionSystem } from "@/systems/ContactDetectionSystem"
 import { createGravitySystem } from "@/systems/GravitySystem"
 import { createIntentForceSystem } from "@/systems/IntentForceSystem"
+import { createIslandSystem } from "@/systems/IslandSystem"
 import { createJointForceSystem } from "@/systems/JointForceSystem"
 import { createParticleIntegrationSystem } from "@/systems/ParticleIntegrationSystem"
 import { createPositionIntegrationSystem } from "@/systems/PositionIntegrationSystem"
@@ -34,6 +35,7 @@ function createUpdateSchedule(world: World): Schedule {
 		.add("particleIntegration", createParticleIntegrationSystem(world))
 		.add("broadPhase", createBroadPhaseSystem(world))
 		.add("contactDetection", createContactDetectionSystem(world))
+		.add("islands", createIslandSystem(world))
 		.add("velocitySolve", createVelocitySolveSystem(world))
 		.add("pseudoVelocitySolve", createPseudoVelocitySolveSystem(world))
 		.add("positionIntegration", createPositionIntegrationSystem(world))

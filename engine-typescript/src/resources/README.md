@@ -17,3 +17,4 @@ Per-world singleton values (resources) the physics systems share. Each file defi
 | `SolverSettings.ts`    | Solver iteration counts, split-impulse beta and slop, and the restitution threshold, with the spec defaults                                                      |
 | `Wind.ts`              | Wind force per unit of exposure, default (0, 0)                                                                                                                  |
 | `WorldSize.ts`         | Width and height of the simulated world                                                                                                                          |
+| `Islands.ts`           | This step's islands: awake dynamic bodies grouped by contacts and joints, with each body's island and each island's members                                      |

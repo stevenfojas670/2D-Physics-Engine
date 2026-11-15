@@ -156,15 +156,16 @@ function createWindSystem(world: World): System {
 | 9   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                                                |
 | 10  | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                                                      |
 | 11  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds; treats sleepers as immovable and wakes them |
-| 12  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                          |
-| 13  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                           |
-| 14  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                     |
-| 15  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                 |
-| 16  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                   |
+| 12  | `IslandSystem`              | Groups awake bodies linked by contacts and joints into islands for sleeping                                       |
+| 13  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                          |
+| 14  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                           |
+| 15  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                     |
+| 16  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                 |
+| 17  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                   |
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
-A new force system goes anywhere after `MouseDragSystem` (3) and before `VelocityIntegrationSystem` (8), because velocity integration consumes and clears the forces. Give it `without: [Asleep]` so sleepers stay still. Anything that needs final positions for the frame goes after 15, or in the render schedule.
+A new force system goes anywhere after `MouseDragSystem` (3) and before `VelocityIntegrationSystem` (8), because velocity integration consumes and clears the forces. Give it `without: [Asleep]` so sleepers stay still. Anything that needs final positions for the frame goes after 16, or in the render schedule.
 
 ## 8. Deferred commands
 
