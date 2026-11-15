@@ -296,11 +296,22 @@ Keep only if measured to help (spec, "Solving per island").
 - [ ] **Step 3:** After the island system runs, reorder the current manifolds so each island's manifolds are contiguous. Warm-start matching is by pair key, so the order doesn't affect it.
 - [ ] **Step 4:** Re-measure. Keep it if `velocitySolve` drops by more than the spread between the two runs; otherwise revert. Record the numbers and the outcome here, and commit `perf: solve contacts island by island (#23)` or `docs: record per-island solve trial (#23)`.
 
-**Task 12 outcome:** _(fill in)_
+**Task 12 outcome:** not tried. With islands, 1,999 of the benchmark's 2,000 bodies form one island at every check (steps 600–1,800), so grouping manifolds by island leaves their order essentially unchanged and can't improve locality.
 
 ### Task 13: Tune, measure and close phase 2
 
-- [ ] **Step 1: Tune `SleepSettings` on the settled pyramid.** Re-run Task 8's settle-time test. If the pyramid doesn't reach 95% asleep, raise `linearThreshold` and `angularThreshold` in steps of 2× (up to 4 px/s and 0.14 rad/s) until it does or the limit is reached, and check after each step that the stability suite and the sleeping tests still pass. Record each try. Update `createSleepSettings`, the spec's values and `BENCHMARK_SETTLED_WARMUP_FRAMES` if they change.
+- [x] **Step 1: Tune `SleepSettings` on the settled pyramid.** Re-run Task 8's settle-time test. If the pyramid doesn't reach 95% asleep, raise `linearThreshold` and `angularThreshold` in steps of 2× (up to 4 px/s and 0.14 rad/s) until it does or the limit is reached, and check after each step that the stability suite and the sleeping tests still pass. Record each try. Update `createSleepSettings`, the spec's values and `BENCHMARK_SETTLED_WARMUP_FRAMES` if they change.
 - [ ] **Step 2:** Run `npm run bench` twice and ask the owner for both browser windows and the visual check (as in Task 9). Fill in the spec's Results row 2 and add a "Phase 2 split" next to "Phase 1 split", with both windows. Check them against the targets: settled pyramid under 8 ms, collapse under 16.7 ms.
 - [ ] **Step 3:** Set the spec's Phase 2 Status to done, and add "Handoff: phase 2 done, phase 3 next" with a resume prompt for phase 3 (#24), in the same style as the phase 1 handoff.
 - [ ] **Step 4:** Lint, typecheck, build, test. Commit `docs: record phase 2 results and mark it done (#23)`.
+
+**Task 13 measurement (headless, two `npm run bench` runs):**
+
+Pyramid sleep with islands: best 0.1% asleep within 3,600 steps at the default thresholds, 0.1% at 2 px/s / 0.07 rad/s and 0.1% at 4 px/s / 0.14 rad/s, so the defaults stay. The pyramid is one island of 1,999–2,000 bodies. At any moment a few bodies in the bottom rows jitter at 1–7 px/s and 0.15–0.57 rad/s while their positions stay within 0.1 px: contact jitter that 8 velocity passes don't remove, not real motion. One restless body keeps the whole island awake.
+
+| Window | Update total ms | contactDetection | velocitySolve | broadPhase | islands | sleep | Asleep |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Collapse (steps 120–420) | 18.64 / 20.00 | 7.98 / 8.73 | 4.35 / 4.45 | 3.34 / 3.61 | 0.76 / 0.85 | 0.27 / 0.30 | 0.0% |
+| Settled (after 1,800 steps) | 19.26 / 22.17 | 8.28 / 9.95 | 4.62 / 5.00 | 3.30 / 3.74 | 0.79 / 0.93 | 0.26 / 0.31 | 0.1% |
+
+Phase 1's headless total was 16.26 / 17.35 ms. On the benchmark, phase 2 adds the `islands` and `sleep` systems (about 1.1 ms headless) and saves nothing, because nothing sleeps. Separate piles (demo, tests) do sleep. Steps 2–4 wait on the owner: browser numbers, the visual check, and a decision on the benchmark result.
