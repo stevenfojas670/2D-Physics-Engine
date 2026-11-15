@@ -16,7 +16,7 @@ Rendering is about 4% of the frame, so renderer work (sprites #18, WebGL #19) ca
 
 ## Goals
 
-- The 2,000-body benchmark's update step fits the frame budget: **under 16.7 ms**, with a stretch target of **under 8 ms** so rendering, input and the browser have room.
+- The 2,000-body benchmark's update step fits the frame budget: **under 16.7 ms** after phase 1. After phases 1–3, **under 8 ms** for the settled pyramid, so rendering, input and the browser have room, and **under 16.7 ms** during the pyramid's collapse.
 - Stacks stay at least as stable as now: the benchmark pyramid settles and stays standing, and the demo scene behaves the same to the eye.
 - Every change is measured. Per-system timings are recorded before and after each phase, in this spec's results table or the plan that implements it.
 
@@ -54,6 +54,7 @@ These aren't performance problems, but the solver rewrite touches the same code,
 - **Restitution can be NaN.** Restitution is combined as `2ab / (a + b)`, so two materials with restitution 0 give `0 / 0 = NaN`. This is similar to #13.
 - **Friction direction check ignores negative tangents.** `if (tangentX > TANGENT_THRESHOLD || tangentY > TANGENT_THRESHOLD)` is false when both components are negative, so the tangent is never normalised and the friction impulse is scaled by its raw length. It should test the tangent's length.
 - **Friction isn't clamped by the friction coefficient.** Coulomb friction limits the friction impulse to `μ × normal impulse`, in both directions. The code clamps to `linearImpulse` and only from above.
+- **Friction is scaled by the bounce factor.** The friction impulse is multiplied by `(restitution + 1)` (`contactResolution.ts`), so bouncier materials get more friction.
 
 ## The improvements
 
@@ -91,13 +92,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 **Phase 1 next steps (#22):**
 
 1. Start a new session, branch from `dev` (for example `feature/contact-solver`), and plan phase 1 in `superpowers/plans/YYYY-MM-DD-physics-performance-phase-1.md` using superpowers:writing-plans.
-2. Before planning, settle these Open decisions with the owner:
-   - 1, position correction;
-   - 2, step order (split integration, recommended);
-   - 3, iteration count;
-   - 4, the behaviour change;
-   - 8, the correctness fixes inside phase 1 or as separate bug issues;
-   - 9, the target.
+2. Before planning, settle Open decisions 1–4, 8 and 9 with the owner. Done on 2026-11-14; see "Phase 1 decisions" and the Open decisions list.
 3. Write phase 1's stability tests first (Testing: resting contact, stack, pyramid, restitution, friction, momentum), then the solver.
 4. Re-run both benchmarks after phase 1. Fill in its Results row and the per-system numbers, and set its Status line.
 
@@ -107,46 +102,72 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 ### Phase 1: cached contacts and a sequential-impulse solver (largest gain)
 
-**Status:** not planned. Issue #22.
+**Status:** decisions settled (2026-11-14), not planned. Issue #22. Branch: `feature/contact-solver`.
 
 **What:** run the narrow phase once per step, then iterate on velocities only using the stored contacts. This is how Box2D, Box2D-Lite and most game physics engines solve contacts.
 
 **How:**
 
 1. **Contact manifold.** After the broad phase, run `testCollision` once per candidate pair and store the result in a contact store resource: entity pair, normal, and for each contact point its depth and offset from each body's centre. Polygon–polygon contacts get up to **two points** by clipping the incident edge against the reference edge (the Sutherland–Hodgman clip Box2D uses). Circle contacts keep one point.
-2. **Pre-step, once per contact point:** compute the effective mass along the normal and the tangent, the restitution target from the velocity _before_ solving (so bounce is applied once), and the position-correction bias.
-3. **Velocity iterations.** For N iterations (starting at about 8; **Open**), apply normal and friction impulses per contact point. Use **accumulated impulses**: clamp the running total so the normal impulse is never negative and friction stays within `μ × normal`, then apply only the change. This is what makes few iterations converge.
-4. **Position correction.** Replace moving bodies on every pass with one of these (**Open**):
-   - **Baumgarte bias:** add `β × max(depth − slop, 0) / dt` to the normal velocity target. It's simple, but it adds a little energy.
-   - **Split impulses / pseudo-velocities:** a separate correction velocity that changes position but not momentum. It's more stable for stacks and is what Box2D v2.x moved to.
-   - **A separate position pass:** a few iterations of direct position correction after the velocity solve, without redoing the narrow phase. This is closest to today's behaviour.
+2. **Pre-step, once per contact point:** compute the effective mass along the normal and the tangent, the restitution target from the velocity _before_ solving (so bounce is applied once), and the split-impulse target `β × max(depth − slop, 0) / dt`. Below `SolverSettings.restitutionThreshold` (closing speed, px/s) the restitution target is 0, so resting contacts don't jitter with tiny bounces.
+3. **Velocity iterations.** For `SolverSettings.velocityIterations` passes (starting at 8), apply normal and friction impulses per contact point. Use **accumulated impulses**: clamp the running total so the normal impulse is never negative and friction stays within `±μ × normal`, then apply only the change. This is what makes few iterations converge. The velocity target holds no overlap term.
+4. **Position correction: split impulses (decided).** Overlap is removed through a pseudo-velocity that moves bodies but is never kept as real motion, so it adds no energy. This is the approach Bullet uses (`m_pushVelocity`, `m_turnVelocity`).
+   - **Pseudo-velocity solve:** after the velocity solve, `SolverSettings.pseudoVelocityIterations` passes (starting at 3) over the same contacts. Each contact point aims for the split-impulse target from the pre-step and applies its impulse to the pseudo-velocities only. The accumulated pseudo-impulse is clamped to stay non-negative. It isn't warm-started, because it's discarded every step.
+   - **Depth is fixed for the step.** The pseudo solve uses the depth from detection and doesn't recompute it as bodies rotate during the step. That's the method's known linear limit, and it's fine for boxes resting flat in stacks.
+   - **Where pseudo-velocities live:** solver scratch arrays (`x`, `y`, `angular`), flat typed arrays indexed by a solver-local body index, grown as needed and zeroed each step. They aren't a component, so `Velocity` stays the only place a body's real velocity lives (step 8).
+   - **Position integration** moves bodies by `(velocity + pseudoVelocity) × dt`, and the same for the angle, then zeroes the pseudo-velocities.
+   - **Rejected:** Baumgarte bias, because its correction becomes real velocity and makes stacks jitter. A separate position pass (Box2D v2.x's nonlinear Gauss–Seidel) and soft constraints (Box2D v3's soft step) were the other candidates.
+   - **`SolverSettings` resource:** `velocityIterations` (8), `pseudoVelocityIterations` (3), `beta` (0.2), `slop` (0.5 px), `restitutionThreshold` (px/s, tuned in phase 1). The starting counts are Box2D v2's long-standing defaults. Tune by lowering each count until a stability test fails or the benchmark visibly degrades, then step back up and keep a margin of one or two. Record the final values and solver times in the plan.
 5. **Warm starting.** Give each contact point a feature ID (which edge and which vertex made it) and keep last step's accumulated impulses by pair and feature. At the start of the step, apply those impulses first. Stacks then start near the solution and settle in far fewer iterations.
 6. **Recording.** `ContactLog` and the friction arrows read from the manifold directly, rather than from iteration 0.
 7. **Block solver for two-point manifolds (optional, try after the rest works).** The sequential solver handles a manifold's two points one after the other, so they fight: fixing the left corner tilts the box onto the right one. Box2D's block solver solves both normal impulses together as one 2×2 problem. With the "impulse ≥ 0" rule it has only 4 cases (both touching, only one touching, neither), so it can test each directly. Boxes resting flat settle with less rocking and fewer passes. Keep it only if the stack tests show a gain. Friction stays sequential.
 8. **Contact storage ready for parallel solving later.** Store manifolds and contact points in flat typed-array columns (as the ECS stores components), keep each body's velocity in exactly one place, and keep the per-contact solve free of shared mutable state other than the two bodies' velocities. That costs nothing now and lets graph colouring and Web Workers be added later without rewriting the solver (see Later).
-9. **Step order: split integration.** Today `RigidBodyIntegrationSystem` updates velocity _and_ position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities _before_ anything moves:
+9. **Step order: split integration (decided).** Today `RigidBodyIntegrationSystem` updates velocity _and_ position before collision runs, so bodies move into each other first and the solver repairs the overlap afterwards. The sequential-impulse solver works best in the Box2D order, where contacts fix velocities _before_ anything moves:
 
    ```
-   forces (gravity, wind, joints, input)
-   velocity integration      velocity += force × inverseMass × dt; damping
-   collider transforms
-   broad phase
-   contact detection         narrow phase once, store manifolds
-   velocity solve            warm start, then N passes over stored contacts
-   position integration      position += velocity × dt; angle += angular × dt
-   position correction       remove any overlap left
+   forces                    playerInput, mouseDrag, intentForce, gravity, wind, jointForce
+   velocityIntegration       velocity += force × inverseMass × dt, then damping; clear forces
+   particleIntegration       unchanged, particles don't collide
+   broadPhase                uses world vertices from the end of last step
+   contactDetection          narrow phase once, store manifolds
+   velocitySolve             warm start, then velocityIterations passes (normal + friction)
+   pseudoVelocitySolve       pseudoVelocityIterations passes on the scratch arrays
+   positionIntegration       position += (velocity + pseudo) × dt; zero pseudo
+   colliderTransform         world vertices and bounds from the final positions
    sleep update              sleep thresholds and timers (phase 2)
    ```
 
-   This splits `RigidBodyIntegrationSystem` into a velocity integration system and a position integration system, with the collision systems between them. Particles (`ParticleIntegrationSystem`) can keep integrating in one go, because they don't collide. Collider world vertices are recomputed from the transforms before detection, so they match the positions the contacts are measured at. Position integration moves bodies after detection, so the debug contact points drawn that frame are from the start of the step. (**Open**: split, or keep today's order and lean harder on position correction. Recommended: split.)
+   - **Two solver systems.** `velocitySolve` and `pseudoVelocitySolve` are separate systems sharing the contact resource, so the benchmark times each one and their iteration counts can be tuned separately.
+   - **No position correction slot.** Split impulses fold it into position integration (step 4).
+   - **Collider transforms run last.** `ColliderRenderSystem` draws polygons from `worldVertices` but circles and centre dots from `Transform`. If transforms ran before position integration, a polygon's outline would be drawn one step behind its own centre dot. Running them last keeps both current for rendering, and nothing moves bodies between the end of one step and the next step's broad phase, so the vertices are still valid for detection. A body spawned mid-frame must get its world vertices at spawn; check `spawnDynamicBody` while planning.
+   - **Damping moves into velocity integration,** as in Box2D. Today it is applied after the position update, so damped bodies move slightly differently (accepted in decision 4).
+   - **The small-velocity snap stays for now.** Today's "snap velocities under the sleep threshold to zero" moves into velocity integration unchanged. Phase 2 removes it, so phase 1 doesn't change sleeping behaviour as well.
+   - Particles (`ParticleIntegrationSystem`) keep integrating in one go, because they don't collide. Joints and mouse drag already act through forces, so they keep their place.
+
+10. **Material combine rules.** Restitution combines as `max(a, b)` and friction as `√(a·b)`, as in Box2D. Today's harmonic-mean restitution gives NaN when both are 0, and `min` friction lets one surface decide everything.
+11. **Fixed timestep.** Normal scenes step with the real frame time, so `dt` varies from frame to frame, and split impulses' `β × depth / dt` and warm starting both behave worse when it jitters. `main.ts` gets a fixed-step accumulator: step at 1/60 s, with a cap on steps per frame so a slow frame can't spiral. It's app-layer code, and it makes the stability tests deterministic.
 
 **Why iterate rather than solve each group exactly:** resolving a group of touching contacts at once means solving a linear complementarity problem (LCP): every contact either pushes with zero relative velocity, or separates with zero impulse. Direct LCP solvers cost roughly the cube of the number of contacts and get unreliable with friction, and a settled pyramid is one group with thousands of contacts. Sequential impulses with accumulated, clamped impulses is projected Gauss–Seidel, the standard iterative method for this problem, used by Box2D, Bullet, PhysX and Rapier. Exact solves are kept for tiny blocks only (step 7). The owner chose iteration.
 
 **Expected gain:** the narrow phase goes from about 25× per pair to 1×, and each iteration becomes a few multiply-adds per contact point. I'd expect the solver to get roughly 5–20× faster. That is an estimate to confirm with phase 0's numbers.
 
-**Risk:** it changes behaviour. Bounces, friction and stacking will feel different. Restitution applied once means things bounce less than now, which is the correct behaviour. Covered by the tests in "Testing" below and a side-by-side visual check against `dev`.
+**Target:** the browser benchmark update is under 16.7 ms. The solver is 97% of the step, so phase 1 has to deliver most of the gain. If it lands at 16.7 ms or above, find what's slow (iteration counts, the block solver, contact storage) before moving on, rather than counting on phases 2–3 to make up the rest.
 
-**Fixes along the way:** the three correctness issues above. The new effective-mass and clamping code replaces the lines that have them.
+**Risk:** it changes behaviour, and the owner accepted that (decision 4). Bounces, friction and stacking will feel different:
+
+| Change | Today | After phase 1 |
+| --- | --- | --- |
+| Bounce | Applied on all 25 passes | Applied once per collision; a ball with restitution r reaches about r² of its drop height |
+| Restitution threshold | None | No bounce below `restitutionThreshold` |
+| Restitution combine | Harmonic mean, NaN when both are 0 | `max(a, b)` |
+| Friction combine | `min(a, b)` | `√(a·b)` |
+| Friction limit | Normal impulse, from above only, scaled by `(restitution + 1)` | Coulomb, within `±μ × normal impulse` |
+| Damping | After the position update | In velocity integration |
+| Contact points | One per pair | Up to two |
+
+What must not change: stacks are at least as stable as on `dev` (the anti-goal), checked by the stability tests and a side-by-side visual check against `dev`. If the demo scene feels dead afterwards, retuning its material values is a follow-up outside phase 1, so the phase 1 comparison stays fair.
+
+**Fixes along the way:** all four correctness issues above, inside phase 1 (decision 8), each with a test. The new effective-mass and clamping code replaces the lines that have them.
 
 ### Phase 2: real sleeping
 
@@ -172,7 +193,7 @@ Phases are ordered by expected gain and by what each one depends on. Every phase
 
 **Systems:**
 
-- **Sleep update system**, last in the update schedule (after position correction). For each `[SleepTimer, Velocity]` body without `NeverSleep` or `Asleep`: if linear and angular speed are below the thresholds, add `deltaTime` to `sleepTime`, otherwise reset it to 0. When `sleepTime ≥ timeout`, defer: zero the velocity, clear the force accumulator, add `Asleep`.
+- **Sleep update system**, last in the update schedule (after collider transforms). For each `[SleepTimer, Velocity]` body without `NeverSleep` or `Asleep`: if linear and angular speed are below the thresholds, add `deltaTime` to `sleepTime`, otherwise reset it to 0. When `sleepTime ≥ timeout`, defer: zero the velocity, clear the force accumulator, add `Asleep`.
 - **Systems that skip sleepers** (`without: [Asleep]`): gravity, wind, joint forces, velocity integration, position integration, collider transforms and the sleep update. A sleeping body doesn't move, so its world vertices and bounds stay valid.
 - **The broad phase still inserts sleepers**, so awake bodies can find them. Pairs where neither body can move (static or asleep) aren't emitted (phase 3).
 - **The solver treats a sleeper as immovable** for the current step (inverse mass and inertia 0 in that contact) and defers waking it. It moves from the next step, which is invisible at 60 steps a second.
@@ -351,8 +372,10 @@ Speed-ups in a solver are easy to get by quietly breaking it, so phase 1 adds te
 - **Resting contact:** a box on the ground settles and stays within a small depth of the surface after N seconds, without drifting or sinking.
 - **Stack:** a column of boxes (e.g. 10) stays standing for N seconds, and the top box's sideways drift stays under a tolerance.
 - **Pyramid:** the benchmark pyramid, or a smaller one, stays standing after settling.
-- **Restitution:** a ball dropped with restitution r reaches about r² of its drop height. Restitution 0 doesn't bounce and doesn't produce NaN.
-- **Friction:** a box on a slope steeper than `atan(μ)` slides, and one on a shallower slope doesn't. That covers the negative-tangent and clamp fixes.
+- **Restitution:** a ball dropped with restitution r reaches about r² of its drop height. Restitution 0 doesn't bounce and doesn't produce NaN. A contact closing slower than `restitutionThreshold` doesn't bounce.
+- **Friction:** a box on a slope steeper than `atan(μ)` slides, and one on a shallower slope doesn't. That covers the negative-tangent and clamp fixes. Friction is the same for two materials that differ only in restitution, which covers the `(restitution + 1)` fix.
+- **Split impulses:** resolving an overlap adds no velocity. A box placed slightly into the ground, with no gravity, moves out to within `slop` over a few steps, and its velocity stays zero throughout.
+- **Fixed timestep:** the accumulator steps at 1/60 s whatever the frame time, and never runs more than the per-frame cap.
 - **Momentum:** two bodies colliding in empty space conserve linear momentum within a tolerance.
 - **Sleeping (phase 2):** a body falls asleep after the timeout and wakes on contact, joint force, mouse drag and a direct velocity change. A body with `NeverSleep` never gets `Asleep`. A dynamic body without `SleepTimer` is still integrated. With `SleepSettings.enabled` false, nothing sleeps. A sleeper touched by a `NeverSleep` body wakes. With islands, a pile touching a `NeverSleep` body stays awake.
 - **Waking without motion (phase 2):** destroying the bottom body of a sleeping stack makes the bodies above wake and fall; destroying a jointed body wakes the body on the other end; moving a static body through the helper wakes the sleepers it overlapped; changing gravity, wind or the collision matrix wakes every sleeper.
@@ -370,15 +393,15 @@ Under AGENTS.md rules 3 and 4, each phase updates in the same change:
 
 ## Open decisions (to talk through)
 
-1. **Position correction:** Baumgarte bias, split impulses, or a separate position pass (phase 1, step 4).
-2. **Step order:** split rigid-body integration into velocity and position halves around the collision systems (phase 1, step 9), or keep today's order? Recommended: split.
-3. **Iteration count:** start at 8 velocity iterations, or tune from tests and benchmarks?
-4. **Behaviour change:** is it fine for bounces and stacks to feel different, given restitution will be applied once instead of up to 25 times? If not, which current behaviour should be kept?
+1. **Position correction:** decided: split impulses, with pseudo-velocities in solver scratch arrays (phase 1, step 4). Baumgarte is ruled out.
+2. **Step order:** decided: split integration, with collider transforms last and two solver systems, `velocitySolve` and `pseudoVelocitySolve` (phase 1, step 9).
+3. **Iteration count:** decided: a `SolverSettings` resource starting at 8 velocity and 3 pseudo-velocity passes, β 0.2, slop 0.5 px, tuned against the stability tests (phase 1, step 4).
+4. **Behaviour change:** decided: accepted, along with `max` restitution and `√(a·b)` friction combine rules, a restitution threshold in `SolverSettings`, and a fixed-step accumulator in `main.ts` (phase 1, steps 10–11 and Risk).
 5. **Sleeping representation:** decided: `NeverSleep` and `Asleep` tags, a `SleepTimer` component and a `SleepSettings` resource (phase 2).
 6. **Sleep timeout:** about 0.5 s in `SleepSettings`. Is a world-wide value enough, or does anything need its own?
 7. **Islands:** decided: part of phase 2, as the grouping for sleeping and solving, with iteration inside each island. Parallel solving (Web Workers, graph colouring) is a separate issue later.
-8. **Correctness fixes:** fix the restitution NaN, friction direction and friction clamp as separate bug issues first, or inside phase 1?
-9. **Targets:** is under 16.7 ms enough, or is under 8 ms the real goal?
+8. **Correctness fixes:** decided: all four are fixed inside phase 1, each with a test. The NaN fix waits for phase 1.
+9. **Targets:** decided: phase 1's bar is a browser benchmark update under 16.7 ms. The goal for phases 1–3 together is under 8 ms for the settled pyramid and under 16.7 ms during the collapse.
 
 ## References
 
