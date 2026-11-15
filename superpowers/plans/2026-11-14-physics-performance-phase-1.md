@@ -92,11 +92,11 @@ These pin "at least as stable as `dev`" before anything changes. They must pass 
   - `inheritImpulses(manifold: number): void` — finds last step's manifold with the same *full* entities (index and generation); for each point whose `featureId` equals a previous point's, copies `normalImpulse` and `tangentImpulse`. Never `pseudoImpulse`.
 - `class PseudoVelocities { x: Float64Array; y: Float64Array; angular: Float64Array; ensureCapacity(count: number): void; clear(): void }`, `PseudoVelocitiesResource`. Indexed by `Velocity` store slot.
 
-- [ ] **Step 1: Failing tests:** defaults equal the spec values; `add` 300 manifolds from capacity 64 keeps every entity pair readable; `inheritImpulses` copies by matching feature ID and zeroes a non-matching one; a pair re-added with the same index but a different generation inherits nothing; `pseudoImpulse` is never inherited; `PseudoVelocities.ensureCapacity(100)` gives arrays of length ≥ 100, all zero after `clear()`.
-- [ ] **Step 2:** Run, expect FAIL.
-- [ ] **Step 3:** Implement. Use `entityIndex` from `src/ecs/Entity.ts`.
-- [ ] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
-- [ ] **Step 5:** Commit `feat: add solver settings, contact manifolds and pseudo-velocity resources (#22)`.
+- [x] **Step 1: Failing tests:** defaults equal the spec values; `add` 300 manifolds from capacity 64 keeps every entity pair readable; `inheritImpulses` copies by matching feature ID and zeroes a non-matching one; a pair re-added with the same index but a different generation inherits nothing; `pseudoImpulse` is never inherited; `PseudoVelocities.ensureCapacity(100)` gives arrays of length ≥ 100, all zero after `clear()`.
+- [x] **Step 2:** Run, expect FAIL.
+- [x] **Step 3:** Implement. Use `entityIndex` from `src/ecs/Entity.ts`.
+- [x] **Step 4:** Run, expect PASS; READMEs; lint/typecheck/build/test.
+- [x] **Step 5:** Commit `feat: add solver settings, contact manifolds and pseudo-velocity resources (#22)`.
 
 ### Task 5: Two-point manifolds from the narrow phase
 
