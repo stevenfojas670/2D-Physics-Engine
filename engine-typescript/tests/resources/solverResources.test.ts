@@ -5,6 +5,7 @@ import {
 	MAX_MANIFOLD_POINTS,
 } from "@/resources/ContactManifolds"
 import { PseudoVelocities } from "@/resources/PseudoVelocities"
+import { createSleepSettings } from "@/resources/SleepSettings"
 import { createSolverSettings } from "@/resources/SolverSettings"
 
 const FIRST = packEntity(1, 0)
@@ -33,6 +34,17 @@ describe("solver settings", () => {
 			beta: 0.2,
 			slop: 0.5,
 			restitutionThreshold: 20,
+		})
+	})
+})
+
+describe("sleep settings", () => {
+	test("defaults match the spec", () => {
+		expect(createSleepSettings()).toEqual({
+			enabled: true,
+			linearThreshold: 1,
+			angularThreshold: 0.035,
+			timeout: 0.5,
 		})
 	})
 })

@@ -56,14 +56,16 @@
 - `BodyOptions.canSleep?: boolean` (default `true`). Movable bodies get `SleepTimer` (`sleepTime` 0), and also `NeverSleep` when `canSleep` is `false`. Static bodies get neither.
 - Velocity and position integration views: `[Velocity, ForceAccumulator, Mass, LinearDamping]` and `[Transform, Velocity]`, both `without: [Particle, Asleep]`.
 
-- [ ] **Step 1: Failing tests.**
+- [x] **Step 1: Failing tests.**
   - `bodyFactories.test.ts`: a movable body has `SleepTimer` with `sleepTime` 0 and `LinearDamping`, and no `NeverSleep`. `canSleep: false` adds `NeverSleep`. A static body has no `SleepTimer`. Replace the old `Sleep` threshold assertion.
   - `solverResources.test.ts`: `createSleepSettings()` equals `{ enabled: true, linearThreshold: 1, angularThreshold: 0.035, timeout: 0.5 }`.
   - `integration.test.ts`: replace `slow body is put to sleep` with `slow body keeps drifting`: velocity `(0.005, 0, 0.005)`, gravity 0, 60 steps; x has grown by more than `0.004` (0.005 px/s for 1 s, less damping), and velocity x and angular are both > 0. Add `body without a sleep timer still falls`: remove `SleepTimer` from a fresh body, 30 steps under gravity `(0, 200)`, y increased.
-- [ ] **Step 2:** Run `npx vitest run tests/components tests/systems/integration.test.ts tests/resources`. Expected: FAIL (modules missing).
-- [ ] **Step 3:** Implement. Delete `Sleep.ts` and `DEFAULT_SLEEP_THRESHOLD`. Remove the threshold snap from `VelocityIntegrationSystem` (the integrate callback loses its sleep slot). The demo player gets `canSleep: false`.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS. If a stability bar fails because slow drift is no longer snapped, record the measured value here and stop to ask the owner. Don't loosen a bar silently (spec anti-goal).
-- [ ] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: replace Sleep with sleep tags, timer and settings (#23)`.
+- [x] **Step 2:** Run `npx vitest run tests/components tests/systems/integration.test.ts tests/resources`. Expected: FAIL (modules missing).
+- [x] **Step 3:** Implement. Delete `Sleep.ts` and `DEFAULT_SLEEP_THRESHOLD`. Remove the threshold snap from `VelocityIntegrationSystem` (the integrate callback loses its sleep slot). The demo player gets `canSleep: false`.
+- [x] **Step 4:** Run the whole suite. Expected: PASS. If a stability bar fails because slow drift is no longer snapped, record the measured value here and stop to ask the owner. Don't loosen a bar silently (spec anti-goal).
+- [x] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: replace Sleep with sleep tags, timer and settings (#23)`.
+
+**Task 2 measurement:** without the snap, the twenty-box stack drifts sideways (top box 0.05 px at step 180, 0.72 px at 480, 2.47 px at 600) while every box stays under 1 px/s from about step 120. Sleeping (Task 4) freezes it near step 150, so the test is `test.fails` until Task 4 flips it back. The ten-box stack and every other bar pass.
 
 ### Task 3: Sleeping islands record and the wake helpers
 

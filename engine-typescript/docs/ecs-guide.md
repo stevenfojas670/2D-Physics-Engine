@@ -58,11 +58,11 @@ From `src/systems/WindSystem.ts`.
 
 Spawn bodies through `src/components/bodyFactories.ts` instead of adding components one by one. Each returns the new entity; add your own components afterwards.
 
-| Factory                                                              | Adds                                                                                                                                  | Defaults                                                                                                                                                                                          |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spawnRigidBody(world, shape, x, y, mass, options?)` with `mass > 0` | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`, `Velocity`, `ForceAccumulator`, `LinearDamping`, `Sleep` | angle 0; group `GROUP0`; default restitution and friction from `materials/materialDefaults.ts`; colour `"black"`; linear and angular damping 0.999; sleep thresholds 0.01; inertia from the shape |
-| `spawnStaticBody(world, shape, x, y, options?)`                      | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`                                                           | the same, with mass and inverse mass 0. No `Velocity`, `ForceAccumulator`, `LinearDamping` or `Sleep`, so force systems skip it                                                                   |
-| `spawnParticle(world, x, y, mass, options?)`                         | `Transform`, `Velocity`, `ForceAccumulator`, `Mass`, `Particle`, `Acceleration`, `ParticleDamping`                                    | no collider, no rotation; acceleration 0; damping 1 (none)                                                                                                                                        |
+| Factory                                                              | Adds                                                                                                                                                                                 | Defaults                                                                                                                                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spawnRigidBody(world, shape, x, y, mass, options?)` with `mass > 0` | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`, `Velocity`, `ForceAccumulator`, `LinearDamping`, `SleepTimer`, plus `NeverSleep` with `canSleep: false` | angle 0; group `GROUP0`; default restitution and friction from `materials/materialDefaults.ts`; colour `"black"`; linear and angular damping 0.999; sleep time 0; inertia from the shape |
+| `spawnStaticBody(world, shape, x, y, options?)`                      | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`                                                                                                          | the same, with mass and inverse mass 0. No `Velocity`, `ForceAccumulator`, `LinearDamping` or `SleepTimer`, so force systems skip it                                                     |
+| `spawnParticle(world, x, y, mass, options?)`                         | `Transform`, `Velocity`, `ForceAccumulator`, `Mass`, `Particle`, `Acceleration`, `ParticleDamping`                                                                                   | no collider, no rotation; acceleration 0; damping 1 (none)                                                                                                                               |
 
 `options` for rigid and static bodies is `{ group?, color? }`; for particles it is `{ damping?, accelerationX?, accelerationY? }`. Shapes come from `createCircleShape(radius)` and `createRectangleShape(width, height)` in `src/shapes/colliderShapes.ts`.
 
@@ -82,13 +82,12 @@ From `src/app/SandboxScene.ts`.
 - `view.find(predicate)` returns the first entity the predicate accepts, or `undefined`. `view.contains(entity)` checks one entity. `view.slot(entity, Component)` gives that entity's slot for one listed component.
 
 ```ts
-const bodies = world.view(
-	[Transform, Velocity, ForceAccumulator, Mass, LinearDamping, Sleep],
-	{ without: [Particle] },
-)
+const bodies = world.view([Velocity, ForceAccumulator, Mass, LinearDamping], {
+	without: [Particle, Asleep],
+})
 ```
 
-From `src/systems/VelocityIntegrationSystem.ts`; its callback takes six slots in that order.
+From `src/systems/VelocityIntegrationSystem.ts`; its callback takes four slots in that order.
 
 ## 6. Resources
 
@@ -97,7 +96,7 @@ From `src/systems/VelocityIntegrationSystem.ts`; its callback takes six slots in
 - Declare the key with `defineResource<T>(name)` in its own file, exported as `<Name>Resource` next to the value's type and any default. Physics resources go in `src/resources/`; app-only ones (input) in `src/app/`; rendering ones in `src/rendering/`.
 - `world.setResource(key, value)` sets it, `world.resource(key)` reads it and throws `Missing resource <name>` if nothing set it, and `world.hasResource(key)` checks.
 - Read resources **inside the step**, not in the factory, so a scene can replace them later (the sandbox replaces the wind after `installWorldResources` sets the default).
-- Who installs what: `main.ts` sets the input and rendering resources (`ControllerKeysResource`, `MouseInputResource`, `RenderContextResource`, `DebugOptionsResource`). `installWorldResources` in `src/app/DemoScene.ts` sets the physics ones (`WorldSizeResource`, `GravityResource`, `WindResource`, `CollisionSettingsResource`, `BroadPhaseResource`, `ContactsResource`, `MouseDragResource`). Every scene calls it. `BroadPhaseSystem` creates `CandidatePairsResource` itself.
+- Who installs what: `main.ts` sets the input and rendering resources (`ControllerKeysResource`, `MouseInputResource`, `RenderContextResource`, `DebugOptionsResource`). `installWorldResources` in `src/app/DemoScene.ts` sets the physics ones (`WorldSizeResource`, `GravityResource`, `WindResource`, `CollisionSettingsResource`, `BroadPhaseResource`, `ContactsResource`, `MouseDragResource`, `SolverSettingsResource`, `SleepSettingsResource`). Every scene calls it. `BroadPhaseSystem` creates `CandidatePairsResource` itself.
 
 ```ts
 interface Wind {

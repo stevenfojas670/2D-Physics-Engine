@@ -16,6 +16,10 @@ import { ContactLog, ContactsResource } from "@/resources/ContactLog"
 import { DEFAULT_GRAVITY, GravityResource } from "@/resources/Gravity"
 import { MouseDragResource, createMouseDrag } from "@/resources/MouseDrag"
 import {
+	createSleepSettings,
+	SleepSettingsResource,
+} from "@/resources/SleepSettings"
+import {
 	createSolverSettings,
 	SolverSettingsResource,
 } from "@/resources/SolverSettings"
@@ -67,6 +71,7 @@ function installWorldResources(
 	world.setResource(ContactsResource, new ContactLog())
 	world.setResource(MouseDragResource, createMouseDrag())
 	world.setResource(SolverSettingsResource, createSolverSettings())
+	world.setResource(SleepSettingsResource, createSleepSettings())
 }
 
 function wallPlacements(width: number, height: number): WallPlacement[] {
@@ -105,6 +110,7 @@ function buildDemoScene(
 		1,
 		{
 			group: CollisionGroups.GROUP1,
+			canSleep: false,
 		},
 	)
 	world.add(player, PlayerControlled)

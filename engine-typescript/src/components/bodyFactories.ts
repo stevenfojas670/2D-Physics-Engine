@@ -15,24 +15,25 @@ import { CollisionGroup } from "./CollisionGroup"
 import { ForceAccumulator } from "./ForceAccumulator"
 import { LinearDamping } from "./LinearDamping"
 import { Mass } from "./Mass"
+import { NeverSleep } from "./NeverSleep"
 import { Material } from "./Material"
 import { Particle } from "./Particle"
 import { ParticleDamping } from "./ParticleDamping"
 import { Renderable } from "./Renderable"
-import { Sleep } from "./Sleep"
+import { SleepTimer } from "./SleepTimer"
 import { Transform } from "./Transform"
 import { Velocity } from "./Velocity"
 
 const MINIMUM_INVERTIBLE_INERTIA = 0.00001
 const DEFAULT_LINEAR_DAMPING = 0.999
 const DEFAULT_ANGULAR_DAMPING = 0.999
-const DEFAULT_SLEEP_THRESHOLD = 0.01
 const DEFAULT_COLOR = "black"
 const NO_PARTICLE_DAMPING = 1
 
 interface BodyOptions {
 	readonly group?: CollisionGroupInfo
 	readonly color?: string
+	readonly canSleep?: boolean
 }
 
 interface ParticleOptions {
@@ -82,10 +83,10 @@ function spawnRigidBody(
 			linear: DEFAULT_LINEAR_DAMPING,
 			angular: DEFAULT_ANGULAR_DAMPING,
 		})
-		world.add(entity, Sleep, {
-			linearThreshold: DEFAULT_SLEEP_THRESHOLD,
-			angularThreshold: DEFAULT_SLEEP_THRESHOLD,
-		})
+		world.add(entity, SleepTimer)
+		if (options.canSleep === false) {
+			world.add(entity, NeverSleep)
+		}
 	}
 	return entity
 }
