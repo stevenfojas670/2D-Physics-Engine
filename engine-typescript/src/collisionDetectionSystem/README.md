@@ -2,12 +2,12 @@
 
 Narrow-phase collision detection and collision response over component data. Layer: physics.
 
-| File                   | Purpose                                                                                                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BodyColumns.ts`       | Bundles the transform, velocity, mass, material and collider stores that contact detection reads                                                                                                                                      |
-| `ContactManifold.ts`   | Reusable scratch result of a collision test: the normal from A to B and up to two contact points, each with a depth and a feature ID                                                                                                  |
-| `narrowPhase.ts`       | Exact collision tests on collider data that write a `ContactManifold` without allocating: one point for circle pairs, and up to two for polygon pairs by clipping the incident edge against the reference edge                        |
-| `sequentialImpulse.ts` | Solver passes over stored manifolds: effective masses and bounce targets, warm starting, velocity passes with accumulated and clamped normal and Coulomb friction impulses, split-impulse pseudo-velocity passes, and friction arrows |
+| File                   | Purpose                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BodyColumns.ts`       | Bundles the transform, velocity, mass, material and collider stores that contact detection reads                                                                                                                                                                                                                 |
+| `ContactManifold.ts`   | Reusable scratch result of a collision test: the normal from A to B and up to two contact points, each with a depth and a feature ID                                                                                                                                                                             |
+| `narrowPhase.ts`       | Exact collision tests on collider data that write a `ContactManifold` without allocating: one point for circle pairs, and up to two for polygon pairs by clipping the incident edge against the reference edge                                                                                                   |
+| `sequentialImpulse.ts` | Solver passes over stored manifolds: effective masses and bounce targets, warm starting, velocity passes with accumulated and clamped normal and Coulomb friction impulses (two-point manifolds solve both normal impulses together as one 2×2 block), split-impulse pseudo-velocity passes, and friction arrows |
 
 ## References
 

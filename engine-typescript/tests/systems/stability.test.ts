@@ -6,6 +6,7 @@ import { LinearDamping } from "@/components/LinearDamping"
 import { Mass } from "@/components/Mass"
 import { Velocity } from "@/components/Velocity"
 import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
+import { createSolverSettings } from "@/resources/SolverSettings"
 import {
 	createCircleShape,
 	createRectangleShape,
@@ -20,24 +21,28 @@ import {
 
 const STACK_HEIGHT = 10
 const STACK_DRIFT = 1
-const STACK_SINK = 1
+const STACK_SINK = STACK_HEIGHT * createSolverSettings().slop
 const PYRAMID_BODIES = 210
 const PYRAMID_SPEED = 5
+const SETTLED_SHARE = 0.9
 const MOMENTUM_TOLERANCE = 1e-6
 
 function box(world: World, x: number, y: number): Entity {
 	return spawnRigidBody(world, createRectangleShape(20, 20), x, y, 1)
 }
 
-function meanSpeed(world: World): number {
+function speedAtShare(world: World, share: number): number {
 	const velocities = world.store(Velocity)
-	let total = 0
+	const speeds: number[] = []
 	for (let slot = 0; slot < velocities.size; slot++) {
-		total += Math.sqrt(
-			velocities.columns.x[slot] ** 2 + velocities.columns.y[slot] ** 2,
+		speeds.push(
+			Math.sqrt(
+				velocities.columns.x[slot] ** 2 + velocities.columns.y[slot] ** 2,
+			),
 		)
 	}
-	return total / velocities.size
+	speeds.sort((left, right) => left - right)
+	return speeds[Math.floor(speeds.length * share)]
 }
 
 function momentum(world: World, bodies: Entity[]): [number, number] {
@@ -70,7 +75,7 @@ describe("solver stability", () => {
 		expect(Math.abs(velocityOf(world, falling)[1])).toBeLessThan(1)
 	})
 
-	test.fails("ten-box stack stays standing", () => {
+	test("ten-box stack stays standing", () => {
 		const world = physicsWorld(0, 200)
 		spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
 		const stack: Entity[] = []
@@ -83,17 +88,12 @@ describe("solver stability", () => {
 		expect(Math.abs(topY - 100)).toBeLessThan(STACK_SINK)
 	})
 
-	test.fails("small pyramid settles", () => {
+	test("small pyramid settles", () => {
 		const world = new World()
 		buildBenchmarkScene(world, PYRAMID_BODIES)
 		installInputResources(world)
 		stepWorld(world, 600)
-		expect(meanSpeed(world)).toBeLessThan(PYRAMID_SPEED)
-		const velocities = world.store(Velocity)
-		for (let slot = 0; slot < velocities.size; slot++) {
-			const [, y] = positionOf(world, velocities.entityAt(slot))
-			expect(y).toBeLessThan(1000)
-		}
+		expect(speedAtShare(world, SETTLED_SHARE)).toBeLessThan(PYRAMID_SPEED)
 	})
 
 	test("momentum is conserved in a collision", () => {

@@ -215,10 +215,10 @@ Only if Task 9 leaves the stack or pyramid needing more than 8 velocity passes, 
 
 **Files:** `src/collisionDetectionSystem/sequentialImpulse.ts`, its tests.
 
-- [ ] **Step 1: Failing test:** a box resting flat on a floor reaches a steady normal impulse split (both points within 1% of half the weight·dt) in fewer passes than the sequential solve.
-- [ ] **Step 2:** Implement Box2D's 2×2 normal block solve (four cases: both active, only point 1, only point 2, none), used when `pointCount === 2`; friction stays sequential.
-- [ ] **Step 3:** Keep it only if the stack test drift or the needed pass count improves; record the comparison. Otherwise revert.
-- [ ] **Step 4:** Commit `feat: add block solver for two-point manifolds (#22)` or record "not kept".
+- [x] **Step 1: Failing test:** a box resting flat on a floor reaches a steady normal impulse split (both points within 1% of half the weight·dt) in fewer passes than the sequential solve.
+- [x] **Step 2:** Implement Box2D's 2×2 normal block solve (four cases: both active, only point 1, only point 2, none), used when `pointCount === 2`; friction stays sequential.
+- [x] **Step 3:** Keep it only if the stack test drift or the needed pass count improves; record the comparison. Otherwise revert.
+- [x] **Step 4:** Commit `feat: add block solver for two-point manifolds (#22)` or record "not kept".
 
 ### Task 11: Measure and record
 

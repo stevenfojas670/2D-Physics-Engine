@@ -259,3 +259,39 @@ describe("split impulses", () => {
 		expect(pseudo.y[setup.manifolds.columns.velocitySlotB[0]]).toBe(0)
 	})
 })
+
+describe("block solver", () => {
+	test("a box resting flat splits its weight evenly in one pass", () => {
+		const world = new World()
+		const floor = world.createEntity()
+		const box = world.createEntity()
+		const step = 1 / 60
+		const fallSpeed = 200 * step
+		world.add(box, Velocity, { x: 0, y: fallSpeed, angular: 0 })
+		const velocities = world.store(Velocity)
+		const manifolds = new ContactManifolds()
+		manifolds.beginStep()
+		const manifold = manifolds.add(floor, box)
+		const columns = manifolds.columns
+		columns.velocitySlotA[manifold] = -1
+		columns.velocitySlotB[manifold] = velocities.slotOf(box)
+		columns.inverseMassB[manifold] = 1
+		columns.inverseInertiaB[manifold] = 12 / (20 * 20 + 20 * 20)
+		columns.normalX[manifold] = 0
+		columns.normalY[manifold] = -1
+		columns.pointCount[manifold] = 2
+		const first = manifold * MAX_MANIFOLD_POINTS
+		columns.anchorBX[first] = -10
+		columns.anchorBY[first] = 10
+		columns.anchorBX[first + 1] = 10
+		columns.anchorBY[first + 1] = 10
+		prepareContacts(manifolds, velocities.columns, createSolverSettings())
+		solveVelocities(manifolds, velocities.columns)
+		const half = fallSpeed / 2
+		expect(columns.normalImpulse[first]).toBeCloseTo(half, 9)
+		expect(columns.normalImpulse[first + 1]).toBeCloseTo(half, 9)
+		const slot = velocities.slotOf(box)
+		expect(velocities.columns.y[slot]).toBeCloseTo(0, 9)
+		expect(velocities.columns.angular[slot]).toBeCloseTo(0, 9)
+	})
+})
