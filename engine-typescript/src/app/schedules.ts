@@ -17,11 +17,13 @@ import { createSleepSystem } from "@/systems/SleepSystem"
 import { createVelocityIntegrationSystem } from "@/systems/VelocityIntegrationSystem"
 import { createVelocitySolveSystem } from "@/systems/VelocitySolveSystem"
 import { createWindSystem } from "@/systems/WindSystem"
+import { createWorldChangeWakeSystem } from "@/systems/WorldChangeWakeSystem"
 import { createMouseDragSystem } from "./MouseDragSystem"
 import { createPlayerInputSystem } from "./PlayerInputSystem"
 
 function createUpdateSchedule(world: World): Schedule {
 	return new Schedule()
+		.add("wakeOnWorldChange", createWorldChangeWakeSystem(world))
 		.add("playerInput", createPlayerInputSystem(world))
 		.add("mouseDrag", createMouseDragSystem(world))
 		.add("intentForce", createIntentForceSystem(world))

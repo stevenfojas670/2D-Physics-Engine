@@ -163,7 +163,7 @@
 - `CollisionSettings.version: number` (getter), incremented by `enableCollision` and `disableCollision`.
 - `createWorldChangeWakeSystem(world: World): System` remembers gravity x/y, wind x/y, the `CollisionSettings` object and its `version`, and `SleepSettings.enabled`. On the first run it only records them. On later runs it calls `wakeAllBodies` when any of them has changed (including `enabled` going from true to false).
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `destroying the bottom of a sleeping stack drops the rest`: a 3-box stack (as in `stability.test.ts`) asleep, `destroyBody` on the bottom box. Within 120 steps both other boxes are lower than before.
   - `destroying the floor wakes what rests on it`: the box asleep on the floor, `destroyBody(floor)`. After 30 steps the box has fallen.
   - `destroying a jointed body wakes the other end`: two sleeping boxes joined by a `SpringJoint`, far apart. `destroyBody` on one; after a flush the other is awake.
@@ -171,10 +171,10 @@
   - `setCollisionGroup wakes overlapping sleepers`: after the call and a flush, the box on the floor is awake.
   - `changing gravity, wind or the collision matrix wakes every sleeper`: three cases (`setResource(GravityResource, { x: 0, y: -200 })`, wind `{ x: 50, y: 0 }`, `disableCollision(GROUP0, GROUP1)`). One step after each change, no body has `Asleep`.
   - `switching sleeping off wakes every sleeper`: `enabled = false`; after 1 step no body has `Asleep`.
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS.
-- [ ] **Step 5:** READMEs; add to `engine-typescript/docs/ecs-guide.md` a "Sleeping" section: which tags and resource exist, that code changing a body's velocity, position or force calls `wakeBody`, and that destroying or moving bodies goes through `destroyBody`, `moveStaticBody` and `setCollisionGroup`. Replace any mention of the `Sleep` component and update the step order it describes. Lint, typecheck, build, test. Commit `feat: wake sleepers when the world changes without motion (#23)`.
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3:** Implement.
+- [x] **Step 4:** Run the whole suite. Expected: PASS.
+- [x] **Step 5:** READMEs; add to `engine-typescript/docs/ecs-guide.md` a "Sleeping" section: which tags and resource exist, that code changing a body's velocity, position or force calls `wakeBody`, and that destroying or moving bodies goes through `destroyBody`, `moveStaticBody` and `setCollisionGroup`. Replace any mention of the `Sleep` component and update the step order it describes. Lint, typecheck, build, test. Commit `feat: wake sleepers when the world changes without motion (#23)`.
 
 ### Task 7: Debug colour for sleepers
 

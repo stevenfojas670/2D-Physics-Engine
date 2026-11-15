@@ -6,7 +6,7 @@ Per-world singleton values (resources) the physics systems share. Each file defi
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BroadPhase.ts`        | Resource key for the world's broad-phase grid                                                                                                                    |
 | `CandidatePairs.ts`    | The step's deduplicated broad-phase pairs, stored flat in a growable `Uint32Array` and reused every step                                                         |
-| `CollisionSettings.ts` | The collision matrix and group names for one world, with enable, disable and can-collide checks                                                                  |
+| `CollisionSettings.ts` | The collision matrix and group names for one world, with enable, disable and can-collide checks, and a version that counts matrix changes                        |
 | `ContactLog.ts`        | Contacts and friction arrows recorded by the solver each step, for debug drawing                                                                                 |
 | `ContactManifolds.ts`  | The step's contact manifolds in flat typed-array columns (up to two points each), with last step's impulses kept by entity pair and feature ID for warm starting |
 | `Gravity.ts`           | Gravity acceleration, default (0, 200)                                                                                                                           |

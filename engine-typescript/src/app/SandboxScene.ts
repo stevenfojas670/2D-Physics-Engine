@@ -10,6 +10,7 @@ import {
 	createCircleShape,
 	createRectangleShape,
 } from "@/shapes/colliderShapes"
+import { destroyBody } from "@/sleeping/worldEdits"
 import { installWorldResources } from "./DemoScene"
 
 const SANDBOX_WIDTH = 1200
@@ -98,7 +99,7 @@ function createSandboxRespawnSystem(world: World): System {
 		const y = RESPAWN_FIRST_Y + (index % RESPAWN_ROWS) * RESPAWN_ROW_SPACING
 		respawnCount++
 		world.defer((deferredWorld) => {
-			deferredWorld.destroyEntity(entity)
+			destroyBody(deferredWorld, entity)
 			spawnSandboxBody(deferredWorld, index, RESPAWN_X, y, exposure)
 		})
 	}

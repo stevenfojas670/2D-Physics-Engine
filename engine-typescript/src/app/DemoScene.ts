@@ -32,6 +32,7 @@ import {
 	createRectangleShape,
 } from "@/shapes/colliderShapes"
 import type { ColliderShape } from "@/shapes/colliderShapes"
+import { wakeAllBodies } from "@/sleeping/wakeBodies"
 
 type Walls = [Entity, Entity, Entity, Entity]
 
@@ -155,6 +156,7 @@ function resizeDemoWorld(
 	}
 	world.setResource(WorldSizeResource, { width, height })
 	world.resource(BroadPhaseResource).resize(width, height)
+	wakeAllBodies(world)
 }
 
 function spawnDemoObject(

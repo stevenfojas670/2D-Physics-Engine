@@ -1,15 +1,22 @@
 import { describe, expect, test } from "vitest"
+import type { Schedule } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { createUpdateSchedule } from "@/app/schedules"
 import type { Entity } from "@/ecs/Entity"
 import { SpringJoint } from "@/components/SpringJoint"
 import { Velocity } from "@/components/Velocity"
 import { MouseInputResource } from "@/app/MouseInput"
 import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
 import type { BodyOptions } from "@/components/bodyFactories"
+import { CollisionGroups } from "@/optimizations/CollisionGroups"
+import { CollisionSettingsResource } from "@/resources/CollisionSettings"
+import { GravityResource } from "@/resources/Gravity"
 import { SleepSettingsResource } from "@/resources/SleepSettings"
+import { WindResource } from "@/resources/Wind"
 import { createRectangleShape } from "@/shapes/colliderShapes"
 import { wakeBody } from "@/sleeping/wakeBodies"
 import {
+	PHYSICS_STEP,
 	isAsleep,
 	physicsWorld,
 	positionOf,
@@ -172,5 +179,53 @@ describe("waking", () => {
 		wakeBody(world, box)
 		stepWorld(world, 1)
 		expect(positionOf(world, box)[0]).toBeGreaterThan(startX)
+	})
+})
+
+describe("waking on world changes", () => {
+	const changes: Record<string, (world: World) => void> = {
+		gravity: (world) => {
+			world.setResource(GravityResource, { x: 0, y: -200 })
+		},
+		wind: (world) => {
+			world.setResource(WindResource, { x: 50, y: 0 })
+		},
+		"collision matrix": (world) => {
+			world
+				.resource(CollisionSettingsResource)
+				.disableCollision(CollisionGroups.GROUP0, CollisionGroups.GROUP1)
+		},
+		"sleeping switch": (world) => {
+			world.resource(SleepSettingsResource).enabled = false
+		},
+	}
+
+	function runSteps(schedule: Schedule, world: World, steps: number): void {
+		for (let step = 0; step < steps; step++) {
+			schedule.run(world, PHYSICS_STEP)
+		}
+	}
+
+	function sleepingBoxWithSchedule(): RestingBox & { schedule: Schedule } {
+		const resting = restingBox()
+		const schedule = createUpdateSchedule(resting.world)
+		runSteps(schedule, resting.world, 300)
+		expect(isAsleep(resting.world, resting.box)).toBe(true)
+		return { ...resting, schedule }
+	}
+
+	for (const [name, change] of Object.entries(changes)) {
+		test(`changing the ${name} wakes every sleeper`, () => {
+			const { world, box, schedule } = sleepingBoxWithSchedule()
+			change(world)
+			runSteps(schedule, world, 1)
+			expect(isAsleep(world, box)).toBe(false)
+		})
+	}
+
+	test("an unchanged world keeps sleepers asleep", () => {
+		const { world, box, schedule } = sleepingBoxWithSchedule()
+		runSteps(schedule, world, 60)
+		expect(isAsleep(world, box)).toBe(true)
 	})
 })

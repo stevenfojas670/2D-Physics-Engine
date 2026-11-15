@@ -143,26 +143,28 @@ function createWindSystem(world: World): System {
 
 **The update schedule** (`createUpdateSchedule`), in order:
 
-| #   | System                      | Why it is here                                                                          |
-| --- | --------------------------- | --------------------------------------------------------------------------------------- |
-| 1   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                               |
-| 2   | `MouseDragSystem`           | Adds the drag force; needs last step's broad-phase grid to pick a body                  |
-| 3   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                       |
-| 4   | `GravitySystem`             | Adds gravity force                                                                      |
-| 5   | `WindSystem`                | Adds wind force                                                                         |
-| 6   | `JointForceSystem`          | Adds spring and joint forces from current positions                                     |
-| 7   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it   |
-| 8   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                      |
-| 9   | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                            |
-| 10  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds                    |
-| 11  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                |
-| 12  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion |
-| 13  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                           |
-| 14  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase       |
+| #   | System                      | Why it is here                                                                                                    |
+| --- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1   | `WorldChangeWakeSystem`     | Wakes every sleeper when gravity, wind, the collision matrix or `SleepSettings.enabled` changed since last step   |
+| 2   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                                                         |
+| 3   | `MouseDragSystem`           | Adds the drag force and keeps the held body awake; needs last step's broad-phase grid to pick a body              |
+| 4   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                                                 |
+| 5   | `GravitySystem`             | Adds gravity force                                                                                                |
+| 6   | `WindSystem`                | Adds wind force                                                                                                   |
+| 7   | `JointForceSystem`          | Adds spring and joint forces from current positions                                                               |
+| 8   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it                             |
+| 9   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                                                |
+| 10  | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                                                      |
+| 11  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds; treats sleepers as immovable and wakes them |
+| 12  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                          |
+| 13  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                           |
+| 14  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                     |
+| 15  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                 |
+| 16  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                   |
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
-A new force system goes anywhere after `MouseDragSystem` (2) and before `VelocityIntegrationSystem` (7), because velocity integration consumes and clears the forces. Anything that needs final positions for the frame goes after 14, or in the render schedule.
+A new force system goes anywhere after `MouseDragSystem` (3) and before `VelocityIntegrationSystem` (8), because velocity integration consumes and clears the forces. Give it `without: [Asleep]` so sleepers stay still. Anything that needs final positions for the frame goes after 15, or in the render schedule.
 
 ## 8. Deferred commands
 
@@ -177,14 +179,24 @@ const index = respawnCount
 const y = RESPAWN_FIRST_Y + (index % RESPAWN_ROWS) * RESPAWN_ROW_SPACING
 respawnCount++
 world.defer((deferredWorld) => {
-	deferredWorld.destroyEntity(entity)
+	destroyBody(deferredWorld, entity)
 	spawnSandboxBody(deferredWorld, index, RESPAWN_X, y, exposure)
 })
 ```
 
 From `createSandboxRespawnSystem` in `src/app/SandboxScene.ts`.
 
-## 9. Worked example: wind
+## 9. Sleeping
+
+Bodies that stay still are taken out of the step until something disturbs them. Design and reasons: Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md`.
+
+- **Pieces:** the `Asleep` tag (the body sleeps), the `NeverSleep` tag (it may never sleep), the `SleepTimer` component (seconds it has been still) and the `SleepSettings` resource (`enabled`, `linearThreshold` 1 px/s, `angularThreshold` 0.035 rad/s, `timeout` 0.5 s). `spawnRigidBody` adds `SleepTimer` to every movable body; `canSleep: false` adds `NeverSleep`.
+- **Active systems skip sleepers** with `without: [Asleep]`. A sleeper's world vertices and bounds stay valid because it doesn't move. Contact detection treats it as immovable.
+- **Waking** goes through `src/sleeping/wakeBodies.ts`. `wakeBody(world, entity)` resets the timer at once and defers removing `Asleep` from every body that fell asleep with it. Contacts, joints, mouse drag and movement intent call it already.
+- **Code that sets a body's velocity, position or force directly calls `wakeBody`** after doing so, or a sleeper ignores the change.
+- **Code that changes the world without motion uses `src/sleeping/worldEdits.ts`:** `destroyBody` instead of `world.destroyEntity` for bodies, `moveStaticBody` to move a static body, and `setCollisionGroup` to change a body's group. Changing the gravity, wind or collision matrix resources needs no call: `WorldChangeWakeSystem` wakes everything.
+
+## 10. Worked example: wind
 
 Wind was added to the engine in four steps; follow the same steps for any new force.
 
@@ -195,7 +207,7 @@ Wind was added to the engine in four steps; follow the same steps for any new fo
 
 Tests: `tests/systems/wind.test.ts` runs the system on its own; `tests/app/app.test.ts` checks the default wind and that the update schedule applies it. Update the READMEs of every folder you touched.
 
-## 10. Adding a scene
+## 11. Adding a scene
 
 1. Write `buildXScene(world)` in `src/app/XScene.ts`. Call `installWorldResources(world, width, height)` first, replace any resources the scene changes, then spawn bodies with the factories.
 2. Put scene-only systems in the same file as factories, like `createSandboxRespawnSystem`.
