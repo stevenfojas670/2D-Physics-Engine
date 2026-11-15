@@ -83,17 +83,17 @@
   - `wakeBodiesOverlapping(world: World, minX: number, minY: number, maxX: number, maxY: number): void` calls `wakeBody` for each `[Asleep, Collider]` body whose bounds overlap the rectangle grown by `WAKE_MARGIN = 1` px.
   - `fallAsleep(world: World, members: readonly Entity[]): void` defers: for each alive member, zero `Velocity` and `ForceAccumulator`, add `Asleep`; then `record` the alive members.
 
-- [ ] **Step 1: Failing tests** (`tests/sleeping/wakeBodies.test.ts`; bodies from `spawnRigidBody`, then `world.flushDeferred()` where needed):
+- [x] **Step 1: Failing tests** (`tests/sleeping/wakeBodies.test.ts`; bodies from `spawnRigidBody`, then `world.flushDeferred()` where needed):
   - `fallAsleep zeroes motion and tags the group`: two bodies with velocity and force; after flush both have `Asleep`, zero velocity and force, and `SleepingIslands.count` is 1.
   - `waking one member wakes the whole group`: `fallAsleep([a, b, c])`, flush, set every `sleepTime` to 0.4; `wakeBody(world, b)`, flush. None has `Asleep`, every `sleepTime` is 0, `count` is 0.
   - `wakeBody resets the timer before the flush`: an awake body with `sleepTime` 0.4 reads 0 straight after `wakeBody`, with no flush.
   - `a recycled entity is not woken`: `fallAsleep([a, b])`, flush, `world.destroyEntity(a)`, create a body `c` (reuses `a`'s index), `world.add(c, Asleep)`; `wakeBody(world, b)`, flush. `b` is awake and `c` still has `Asleep`.
   - `wakeAllBodies wakes every sleeper`: two separate groups asleep; after `wakeAllBodies` and a flush, no body has `Asleep` and `count` is 0.
   - `wakeBodiesOverlapping wakes only overlapping sleepers`: two sleeping 10×10 boxes at x 0 and x 100; a rectangle around x 0 wakes only the first. A rectangle ending 0.5 px short of a box still wakes it (margin).
-- [ ] **Step 2:** Run `npx vitest run tests/sleeping`. Expected: FAIL.
-- [ ] **Step 3:** Implement. `src/sleeping/README.md` follows the other folder READMEs (one-line folder purpose + `Layer: physics`, then the file table).
-- [ ] **Step 4:** Run the tests again. Expected: PASS. Then lint (layer map and README checks), typecheck, build, test.
-- [ ] **Step 5:** Commit `feat: add sleeping islands record and wake helpers (#23)`.
+- [x] **Step 2:** Run `npx vitest run tests/sleeping`. Expected: FAIL.
+- [x] **Step 3:** Implement. `src/sleeping/README.md` follows the other folder READMEs (one-line folder purpose + `Layer: physics`, then the file table).
+- [x] **Step 4:** Run the tests again. Expected: PASS. Then lint (layer map and README checks), typecheck, build, test.
+- [x] **Step 5:** Commit `feat: add sleeping islands record and wake helpers (#23)`.
 
 ### Task 4: The sleep system, and active systems skip sleepers
 

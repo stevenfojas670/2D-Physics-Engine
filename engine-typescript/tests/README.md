@@ -12,5 +12,6 @@ Vitest tests for the engine. The folders mirror `src/`. Run them with `npm run t
 - [`ecs/`](ecs/README.md) — Tests for the ECS core
 - [`rendering/`](rendering/README.md) — Tests for draw batching and the render systems
 - [`resources/`](resources/README.md) — Tests for the solver resources
+- [`sleeping/`](sleeping/README.md) — Tests for sleeping and waking helpers
 - [`shapes/`](shapes/README.md) — Tests for collider geometry
 - [`systems/`](systems/README.md) — Tests for the physics systems

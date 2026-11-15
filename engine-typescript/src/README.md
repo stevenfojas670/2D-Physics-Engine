@@ -20,6 +20,7 @@ Engine source code. Imports across folders use the `@/` alias. Each file belongs
 - [`optimizations/`](optimizations/README.md) — Collision groups and entity-based broad-phase grids
 - [`rendering/`](rendering/README.md) — Render systems that batch Canvas 2D drawing
 - [`resources/`](resources/README.md) — Per-world shared values used by the physics systems
+- [`sleeping/`](sleeping/README.md) — Putting bodies to sleep and waking them
 - [`shapes/`](shapes/README.md) — Collider geometry as functions over component data
 - [`systems/`](systems/README.md) — Physics systems that run each step
 - [`types/`](types/README.md) — Shared type aliases
