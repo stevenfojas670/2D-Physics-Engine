@@ -107,17 +107,19 @@
 - Produces: `createSleepSystem(world: World): System`. It calls `installSleepResources` when created. Each step, if `enabled`, for each `[SleepTimer, Velocity]` body `without: [NeverSleep, Asleep, Particle]`: when `|v| < linearThreshold` and `|ω| < angularThreshold`, add `deltaTime` to `sleepTime`, otherwise set it to 0. A body whose `sleepTime ≥ timeout` goes to `fallAsleep(world, [entity])`. Part B replaces this per-body decision with islands.
 - Produces (`physicsWorld.ts`): `isAsleep(world: World, entity: Entity): boolean`.
 
-- [ ] **Step 1: Failing tests** (`tests/systems/sleeping.test.ts`, gravity `(0, 200)`, floor `createRectangleShape(400, 20)` static at (0, 100), 20×20 box mass 1 at (0, 40), as in `stability.test.ts`):
+- [x] **Step 1: Failing tests** (`tests/systems/sleeping.test.ts`, gravity `(0, 200)`, floor `createRectangleShape(400, 20)` static at (0, 100), 20×20 box mass 1 at (0, 40), as in `stability.test.ts`):
   - `a resting box falls asleep`: within 300 steps the box has `Asleep` and zero velocity; record the step it first sleeps in this plan.
   - `a sleeper is not integrated`: once asleep, its position is identical over 120 more steps.
   - `a thrown body never sleeps in mid-air`: gravity `(0, 200)`, no floor, velocity `(0, -100, 0)`; over 120 steps (the apex is at 0.5 s), `isAsleep` is false at every step.
   - `a body that can't sleep never does`: the resting box spawned with `canSleep: false`, 600 steps, never `Asleep`.
   - `nothing sleeps when sleeping is disabled`: `SleepSettings.enabled = false`, 600 steps, never `Asleep`.
   - `stacks still stand with sleeping`: no new test; the stability suite still passes.
-- [ ] **Step 2:** Run `npx vitest run tests/systems/sleeping.test.ts`. Expected: FAIL.
-- [ ] **Step 3:** Implement and add the system to the schedule after `colliderTransform`.
-- [ ] **Step 4:** Run the whole suite. Expected: PASS.
-- [ ] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: put still bodies to sleep and skip them in the step (#23)`.
+- [x] **Step 2:** Run `npx vitest run tests/systems/sleeping.test.ts`. Expected: FAIL.
+- [x] **Step 3:** Implement and add the system to the schedule after `colliderTransform`.
+- [x] **Step 4:** Run the whole suite. Expected: PASS.
+- [x] **Step 5:** READMEs; lint, typecheck, build, test. Commit `feat: put still bodies to sleep and skip them in the step (#23)`.
+
+**Task 4 measurement:** the resting box first sleeps at step 138. The twenty-box stack sleeps whole; its top box ends 0.037 px sideways and 5.59 px low (bar 9), so the test is back to `test`. Contact detection treating `Asleep` as immovable moved here from Task 5 (without it, awake boxes resting on a sleeper lose their support).
 
 ### Task 5: Waking on contact, joints, mouse drag and intent
 

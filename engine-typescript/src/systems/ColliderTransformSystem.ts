@@ -2,6 +2,7 @@ import type { Entity } from "@/ecs/Entity"
 import { entityIndex } from "@/ecs/Entity"
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { Collider } from "@/components/Collider"
 import { Transform } from "@/components/Transform"
 import { transformCollider } from "@/shapes/colliderGeometry"
@@ -9,7 +10,7 @@ import { transformCollider } from "@/shapes/colliderGeometry"
 function createColliderTransformSystem(world: World): System {
 	const transforms = world.store(Transform).columns
 	const colliders = world.store(Collider).columns
-	const bodies = world.view([Transform, Collider])
+	const bodies = world.view([Transform, Collider], { without: [Asleep] })
 	let lastAngles = new Float64Array(0)
 
 	const growLastAngles = (capacity: number): void => {

@@ -4,6 +4,7 @@ import { ControllerKeysResource } from "@/app/ControllerKeys"
 import { installWorldResources } from "@/app/DemoScene"
 import { MouseInputResource, createMouseInput } from "@/app/MouseInput"
 import { createUpdateSchedule } from "@/app/schedules"
+import { Asleep } from "@/components/Asleep"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
 import { GravityResource } from "@/resources/Gravity"
@@ -60,9 +61,14 @@ function velocityOf(world: World, entity: Entity): [number, number, number] {
 	]
 }
 
+function isAsleep(world: World, entity: Entity): boolean {
+	return world.has(entity, Asleep)
+}
+
 export {
 	PHYSICS_STEP,
 	installInputResources,
+	isAsleep,
 	physicsWorld,
 	positionOf,
 	stepWorld,

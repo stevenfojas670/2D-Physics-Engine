@@ -14,5 +14,5 @@ Wiring between the browser, input and the ECS: input resources and systems, the 
 | `PlayerInputSystem.ts` | Turns held keys into `MovementIntent` on `PlayerControlled` entities                                                                                                                 |
 | `SandboxScene.ts`      | Builds the wind sandbox: a fixed 1200×700 world with floor and ceiling, wind-exposed bodies, and a respawn system that replaces bodies leaving either side through deferred commands |
 | `sceneSelection.ts`    | Reads the `scene` query parameter and picks `demo`, `benchmark` or `sandbox`, defaulting to `demo`                                                                                   |
-| `schedules.ts`         | Builds the update schedule (input, forces, integration, collision) and the render schedule (draw systems, then the flush), naming each system                                        |
+| `schedules.ts`         | Builds the update schedule (input, forces, integration, collision, sleeping) and the render schedule (draw systems, then the flush), naming each system                              |
 | `SystemTimer.ts`       | Averages each named system's time over a fixed number of frames after a warm-up, slowest first, with each one's share of the total                                                   |

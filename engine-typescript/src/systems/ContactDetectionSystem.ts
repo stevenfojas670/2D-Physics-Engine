@@ -1,6 +1,7 @@
 import type { Entity } from "@/ecs/Entity"
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { BodyColumns } from "@/collisionDetectionSystem/BodyColumns"
 import { ContactManifold } from "@/collisionDetectionSystem/ContactManifold"
 import { testCollision } from "@/collisionDetectionSystem/narrowPhase"
@@ -31,9 +32,10 @@ function createContactDetectionSystem(world: World): System {
 	const materials = bodies.materials
 	const velocities = bodies.velocities
 	const scratch = new ContactManifold()
+	const asleep = world.store(Asleep)
 
 	const movableMassSlot = (entity: Entity): number =>
-		velocities.slotOf(entity) === MISSING_SLOT
+		velocities.slotOf(entity) === MISSING_SLOT || asleep.has(entity)
 			? MISSING_SLOT
 			: masses.slotOf(entity)
 

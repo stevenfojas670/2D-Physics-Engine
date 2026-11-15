@@ -1,5 +1,6 @@
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { WindExposure } from "@/components/WindExposure"
 import { WindResource } from "@/resources/Wind"
@@ -7,7 +8,9 @@ import { WindResource } from "@/resources/Wind"
 function createWindSystem(world: World): System {
 	const forces = world.store(ForceAccumulator).columns
 	const exposures = world.store(WindExposure).columns
-	const exposedBodies = world.view([ForceAccumulator, WindExposure])
+	const exposedBodies = world.view([ForceAccumulator, WindExposure], {
+		without: [Asleep],
+	})
 	let windX = 0
 	let windY = 0
 

@@ -1,5 +1,6 @@
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { Mass } from "@/components/Mass"
 import { GravityResource } from "@/resources/Gravity"
@@ -7,7 +8,7 @@ import { GravityResource } from "@/resources/Gravity"
 function createGravitySystem(world: World): System {
 	const forces = world.store(ForceAccumulator).columns
 	const masses = world.store(Mass).columns
-	const bodies = world.view([ForceAccumulator, Mass])
+	const bodies = world.view([ForceAccumulator, Mass], { without: [Asleep] })
 	let gravityX = 0
 	let gravityY = 0
 

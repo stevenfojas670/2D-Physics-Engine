@@ -13,6 +13,7 @@ import { createJointForceSystem } from "@/systems/JointForceSystem"
 import { createParticleIntegrationSystem } from "@/systems/ParticleIntegrationSystem"
 import { createPositionIntegrationSystem } from "@/systems/PositionIntegrationSystem"
 import { createPseudoVelocitySolveSystem } from "@/systems/PseudoVelocitySolveSystem"
+import { createSleepSystem } from "@/systems/SleepSystem"
 import { createVelocityIntegrationSystem } from "@/systems/VelocityIntegrationSystem"
 import { createVelocitySolveSystem } from "@/systems/VelocitySolveSystem"
 import { createWindSystem } from "@/systems/WindSystem"
@@ -35,6 +36,7 @@ function createUpdateSchedule(world: World): Schedule {
 		.add("pseudoVelocitySolve", createPseudoVelocitySolveSystem(world))
 		.add("positionIntegration", createPositionIntegrationSystem(world))
 		.add("colliderTransform", createColliderTransformSystem(world))
+		.add("sleep", createSleepSystem(world))
 }
 
 function createRenderSchedule(world: World): Schedule {
