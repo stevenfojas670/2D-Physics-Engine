@@ -1,0 +1,116 @@
+import { describe, expect, test } from "vitest"
+import { World } from "@/ecs/World"
+import type { Entity } from "@/ecs/Entity"
+import { buildBenchmarkScene } from "@/app/BenchmarkScene"
+import { LinearDamping } from "@/components/LinearDamping"
+import { Mass } from "@/components/Mass"
+import { Velocity } from "@/components/Velocity"
+import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
+import {
+	createCircleShape,
+	createRectangleShape,
+} from "@/shapes/colliderShapes"
+import {
+	installInputResources,
+	physicsWorld,
+	positionOf,
+	stepWorld,
+	velocityOf,
+} from "./physicsWorld"
+
+const STACK_HEIGHT = 10
+const STACK_DRIFT = 1
+const STACK_SINK = 1
+const PYRAMID_BODIES = 210
+const PYRAMID_SPEED = 5
+const MOMENTUM_TOLERANCE = 1e-6
+
+function box(world: World, x: number, y: number): Entity {
+	return spawnRigidBody(world, createRectangleShape(20, 20), x, y, 1)
+}
+
+function meanSpeed(world: World): number {
+	const velocities = world.store(Velocity)
+	let total = 0
+	for (let slot = 0; slot < velocities.size; slot++) {
+		total += Math.sqrt(
+			velocities.columns.x[slot] ** 2 + velocities.columns.y[slot] ** 2,
+		)
+	}
+	return total / velocities.size
+}
+
+function momentum(world: World, bodies: Entity[]): [number, number] {
+	const masses = world.store(Mass)
+	let momentumX = 0
+	let momentumY = 0
+	for (const body of bodies) {
+		const mass = masses.columns.mass[masses.slotOf(body)]
+		const [velocityX, velocityY] = velocityOf(world, body)
+		momentumX += mass * velocityX
+		momentumY += mass * velocityY
+	}
+	return [momentumX, momentumY]
+}
+
+describe("solver stability", () => {
+	test("resting box stays on the floor", () => {
+		const world = physicsWorld(0, 200)
+		spawnStaticBody(world, createRectangleShape(400, 20), 0, 100)
+		const falling = box(world, 0, 40)
+		const heights: number[] = []
+		stepWorld(world, 300, (step) => {
+			if (step >= 240) {
+				heights.push(positionOf(world, falling)[1])
+			}
+		})
+		expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.5)
+		expect(positionOf(world, falling)[1]).toBeGreaterThan(75)
+		expect(positionOf(world, falling)[1]).toBeLessThan(81)
+		expect(Math.abs(velocityOf(world, falling)[1])).toBeLessThan(1)
+	})
+
+	test.fails("ten-box stack stays standing", () => {
+		const world = physicsWorld(0, 200)
+		spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
+		const stack: Entity[] = []
+		for (let level = 0; level < STACK_HEIGHT; level++) {
+			stack.push(box(world, 0, 290 - 10 - 20.1 * level))
+		}
+		stepWorld(world, 600)
+		const [topX, topY] = positionOf(world, stack[STACK_HEIGHT - 1])
+		expect(Math.abs(topX)).toBeLessThan(STACK_DRIFT)
+		expect(Math.abs(topY - 100)).toBeLessThan(STACK_SINK)
+	})
+
+	test.fails("small pyramid settles", () => {
+		const world = new World()
+		buildBenchmarkScene(world, PYRAMID_BODIES)
+		installInputResources(world)
+		stepWorld(world, 600)
+		expect(meanSpeed(world)).toBeLessThan(PYRAMID_SPEED)
+		const velocities = world.store(Velocity)
+		for (let slot = 0; slot < velocities.size; slot++) {
+			const [, y] = positionOf(world, velocities.entityAt(slot))
+			expect(y).toBeLessThan(1000)
+		}
+	})
+
+	test("momentum is conserved in a collision", () => {
+		const world = physicsWorld(0, 0)
+		const light = spawnRigidBody(world, createCircleShape(10), 0, 0, 1)
+		const heavy = spawnRigidBody(world, createCircleShape(10), 25, 4, 3)
+		const bodies = [light, heavy]
+		for (const body of bodies) {
+			world.add(body, LinearDamping, { linear: 1, angular: 1 })
+		}
+		world.add(light, Velocity, { x: 50, y: 0 })
+		world.add(heavy, Velocity, { x: -10, y: 0 })
+		const [startX, startY] = momentum(world, bodies)
+		stepWorld(world, 60)
+		const [endX, endY] = momentum(world, bodies)
+		expect(Math.abs(endX - startX)).toBeLessThan(MOMENTUM_TOLERANCE)
+		expect(Math.abs(endY - startY)).toBeLessThan(MOMENTUM_TOLERANCE)
+		expect(velocityOf(world, light)[0]).toBeLessThan(50)
+	})
+})

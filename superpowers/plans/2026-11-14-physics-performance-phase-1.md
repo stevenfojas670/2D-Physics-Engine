@@ -53,16 +53,16 @@ These pin "at least as stable as `dev`" before anything changes. They must pass 
 - `stepWorld(world: World, steps: number, onStep?: (step: number) => void): void` — builds `createUpdateSchedule(world)` once, runs it at `1/60`.
 - `positionOf(world, entity): [number, number]`, `velocityOf(world, entity): [number, number, number]`.
 
-- [ ] **Step 1: Write the tests** (all use `stepWorld`, gravity `(0, 200)` unless stated):
+- [x] **Step 1: Write the tests** (all use `stepWorld`, gravity `(0, 200)` unless stated):
   - `resting box stays on the floor`: floor `createRectangleShape(400, 20)` static at (0, 100); 20×20 box mass 1 at (0, 40); 300 steps. Over steps 240–299 y spread `< 0.5`; final y in `(75, 81)`; `|vy| < 1`.
   - `ten-box stack stays standing`: floor as above at (0, 300); floor top is y 290; boxes 20×20 mass 1 at x 0, y `290 − 10 − 20.1·i` for i 0..9 (0.1 px gaps); 600 steps. Top box `|x| < STACK_DRIFT` and `|y − 100| < STACK_SINK` (100 = resting centre of box 9).
   - `small pyramid settles`: `buildBenchmarkScene(world, 210)` (it installs its own resources; add ControllerKeys/MouseInput); 600 steps. Mean speed over all `Velocity` bodies in the last step `< PYRAMID_SPEED`; every body's y `< 1000` (inside the walls).
   - `momentum is conserved in a collision`: gravity 0; circles radius 10, mass 1 at (0,0) with v (50,0) and mass 3 at (25, 4) with v (−10, 0); 60 steps. `m1·v1 + m2·v2` in x and y within `1e-6` of the start.
-- [ ] **Step 2:** Run `npx vitest run tests/systems/stability.test.ts` on the current solver. Set `STACK_DRIFT`, `STACK_SINK`, `PYRAMID_SPEED` to the measured values rounded up by ~20% and record the measured numbers in this plan under "Task 2 baseline". Expected: PASS.
-- [ ] **Step 3:** Update `tests/systems/README.md`; run lint, typecheck, test.
-- [ ] **Step 4:** Commit `test: add solver stability regression tests (#22)`.
+- [x] **Step 2:** Run `npx vitest run tests/systems/stability.test.ts` on the current solver. Set `STACK_DRIFT`, `STACK_SINK`, `PYRAMID_SPEED` to the measured values rounded up by ~20% and record the measured numbers in this plan under "Task 2 baseline". Expected: PASS.
+- [x] **Step 3:** Update `tests/systems/README.md`; run lint, typecheck, test.
+- [x] **Step 4:** Commit `test: add solver stability regression tests (#22)`.
 
-**Task 2 baseline:** _(fill in: stack drift, stack sink, pyramid mean speed on `dev`)_
+**Task 2 baseline:** on `dev` the resting box and momentum tests pass. The ten-box stack collapses (top box ends 130.8 px sideways and 180.0 px below its resting centre, i.e. on the floor) and the 210-body pyramid never settles (mean speed 55.5 px/s after 600 steps). Those two use the spec bars instead (`STACK_DRIFT` 1, `STACK_SINK` 1, `PYRAMID_SPEED` 5) and are `test.fails` until Task 8 flips them to `test`.
 
 ### Task 3: Fixed-step accumulator
 
