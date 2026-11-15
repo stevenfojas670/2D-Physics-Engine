@@ -37,7 +37,7 @@ import {
 	buildSandboxScene,
 	createSandboxRespawnSystem,
 } from "@/app/SandboxScene"
-import { selectScene } from "@/app/sceneSelection"
+import { selectBenchmarkWindow, selectScene } from "@/app/sceneSelection"
 import { createUpdateSchedule } from "@/app/schedules"
 
 const STEP = 1 / 60
@@ -338,6 +338,16 @@ describe("scene selection", () => {
 		expect(selectScene("?scene=benchmark")).toBe("benchmark")
 		expect(selectScene("?scene=sandbox")).toBe("sandbox")
 		expect(selectScene("?scene=nope")).toBe("demo")
+	})
+
+	test("window query picks the benchmark window, defaulting to collapse", () => {
+		expect(selectBenchmarkWindow("?scene=benchmark")).toBe("collapse")
+		expect(selectBenchmarkWindow("?scene=benchmark&window=settled")).toBe(
+			"settled",
+		)
+		expect(selectBenchmarkWindow("?scene=benchmark&window=nope")).toBe(
+			"collapse",
+		)
 	})
 })
 

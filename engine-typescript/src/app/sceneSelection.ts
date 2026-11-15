@@ -1,4 +1,5 @@
 type SceneName = "demo" | "benchmark" | "sandbox"
+type BenchmarkWindow = "collapse" | "settled"
 
 const SELECTABLE_SCENES: readonly SceneName[] = ["benchmark", "sandbox"]
 
@@ -11,5 +12,11 @@ function selectScene(search: string): SceneName {
 	return isSelectableScene(requested) ? requested : "demo"
 }
 
-export type { SceneName }
-export { selectScene }
+function selectBenchmarkWindow(search: string): BenchmarkWindow {
+	return new URLSearchParams(search).get("window") === "settled"
+		? "settled"
+		: "collapse"
+}
+
+export type { BenchmarkWindow, SceneName }
+export { selectBenchmarkWindow, selectScene }

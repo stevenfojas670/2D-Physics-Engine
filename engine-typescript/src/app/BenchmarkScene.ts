@@ -16,6 +16,7 @@ const HALF_BODY_SPACING = 7
 const CIRCLE_RADIUS = 6
 const BOX_SIZE = 12
 const BODY_MASS = 1
+const BENCHMARK_SETTLED_WARMUP_FRAMES = 1800
 
 function buildBenchmarkScene(
 	world: World,
@@ -38,4 +39,9 @@ function buildBenchmarkScene(
 	}
 }
 
-export { BENCHMARK_WIDTH, BENCHMARK_HEIGHT, buildBenchmarkScene }
+export {
+	BENCHMARK_WIDTH,
+	BENCHMARK_HEIGHT,
+	BENCHMARK_SETTLED_WARMUP_FRAMES,
+	buildBenchmarkScene,
+}

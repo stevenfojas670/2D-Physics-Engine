@@ -197,13 +197,13 @@
 - `BENCHMARK_SETTLED_WARMUP_FRAMES: number` exported from `BenchmarkScene.ts`.
 - `main.ts`: the benchmark's `FrameTimer` warm-up is 60 frames for `collapse` and `BENCHMARK_SETTLED_WARMUP_FRAMES` for `settled`, with 300 sample frames either way. The summary line names the window and the share of bodies asleep at the end of the sample.
 
-- [ ] **Step 1: Failing tests** (`app.test.ts`): `selectBenchmarkWindow("?scene=benchmark")` is `"collapse"`, `"?scene=benchmark&window=settled"` is `"settled"`, and an unknown value is `"collapse"`.
-- [ ] **Step 2:** Run. Expected: FAIL. Implement `selectBenchmarkWindow`. Run again. Expected: PASS.
-- [ ] **Step 3: Measure the settle time.** In the bench file, add a test `steps until the pyramid sleeps` that steps the benchmark world and logs the first step at which 95% of `SleepTimer` bodies are asleep. If 95% is never reached within 3,600 steps, log the best share and the step it was reached at. Set `BENCHMARK_SETTLED_WARMUP_FRAMES` to that step rounded up to the next 60, or to 1,800 if the pyramid never reaches 95%. Record the result here.
-- [ ] **Step 4:** Add a `per-system step times, settled` bench test: warm up `BENCHMARK_SETTLED_WARMUP_FRAMES` steps, then the same table as the existing per-system test, plus the asleep share. Wire `main.ts`.
-- [ ] **Step 5:** READMEs (Scenes section included); lint, typecheck, build, test. Commit `feat: add a settled benchmark window (#23)`.
+- [x] **Step 1: Failing tests** (`app.test.ts`): `selectBenchmarkWindow("?scene=benchmark")` is `"collapse"`, `"?scene=benchmark&window=settled"` is `"settled"`, and an unknown value is `"collapse"`.
+- [x] **Step 2:** Run. Expected: FAIL. Implement `selectBenchmarkWindow`. Run again. Expected: PASS.
+- [x] **Step 3: Measure the settle time.** In the bench file, add a test `steps until the pyramid sleeps` that steps the benchmark world and logs the first step at which 95% of `SleepTimer` bodies are asleep. If 95% is never reached within 3,600 steps, log the best share and the step it was reached at. Set `BENCHMARK_SETTLED_WARMUP_FRAMES` to that step rounded up to the next 60, or to 1,800 if the pyramid never reaches 95%. Record the result here.
+- [x] **Step 4:** Add a `per-system step times, settled` bench test: warm up `BENCHMARK_SETTLED_WARMUP_FRAMES` steps, then the same table as the existing per-system test, plus the asleep share. Wire `main.ts`.
+- [x] **Step 5:** READMEs (Scenes section included); lint, typecheck, build, test. Commit `feat: add a settled benchmark window (#23)`.
 
-**Task 8 measurement:** _(fill in)_
+**Task 8 measurement:** per-body sleeping never reaches 95% asleep within 3,600 steps (headless). Share asleep: step 600 33.0%, 1200 38.9%, 1800 38.3%, 2400 34.8%, 3000 43.0%, 3600 45.9%; best 58.3% at step 3205. Bodies keep waking and re-sleeping, so `BENCHMARK_SETTLED_WARMUP_FRAMES` is the 1,800 fallback. Part B (islands) and Task 13 (thresholds) revisit it.
 
 ### Task 9: Part A measurement and handoff checkpoint
 
