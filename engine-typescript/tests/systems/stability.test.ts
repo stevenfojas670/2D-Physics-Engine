@@ -19,9 +19,8 @@ import {
 	velocityOf,
 } from "./physicsWorld"
 
-const STACK_HEIGHT = 10
 const STACK_DRIFT = 1
-const STACK_SINK = STACK_HEIGHT * createSolverSettings().slop
+const SLOP = createSolverSettings().slop
 const PYRAMID_BODIES = 210
 const PYRAMID_SPEED = 5
 const SETTLED_SHARE = 0.9
@@ -43,6 +42,20 @@ function speedAtShare(world: World, share: number): number {
 	}
 	speeds.sort((left, right) => left - right)
 	return speeds[Math.floor(speeds.length * share)]
+}
+
+function expectStackStands(height: number): void {
+	const world = physicsWorld(0, 200)
+	spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
+	const stack: Entity[] = []
+	for (let level = 0; level < height; level++) {
+		stack.push(box(world, 0, 290 - 10 - 20.1 * level))
+	}
+	stepWorld(world, 600)
+	const [topX, topY] = positionOf(world, stack[height - 1])
+	const restingTopY = 290 - 10 - 20 * (height - 1)
+	expect(Math.abs(topX)).toBeLessThan(STACK_DRIFT)
+	expect(Math.abs(topY - restingTopY)).toBeLessThan(height * SLOP)
 }
 
 function momentum(world: World, bodies: Entity[]): [number, number] {
@@ -76,16 +89,11 @@ describe("solver stability", () => {
 	})
 
 	test("ten-box stack stays standing", () => {
-		const world = physicsWorld(0, 200)
-		spawnStaticBody(world, createRectangleShape(400, 20), 0, 300)
-		const stack: Entity[] = []
-		for (let level = 0; level < STACK_HEIGHT; level++) {
-			stack.push(box(world, 0, 290 - 10 - 20.1 * level))
-		}
-		stepWorld(world, 600)
-		const [topX, topY] = positionOf(world, stack[STACK_HEIGHT - 1])
-		expect(Math.abs(topX)).toBeLessThan(STACK_DRIFT)
-		expect(Math.abs(topY - 100)).toBeLessThan(STACK_SINK)
+		expectStackStands(10)
+	})
+
+	test("twenty-box stack stays standing", () => {
+		expectStackStands(20)
 	})
 
 	test("small pyramid settles", () => {

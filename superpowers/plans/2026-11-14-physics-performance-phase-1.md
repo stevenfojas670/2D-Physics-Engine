@@ -202,12 +202,30 @@ Per step: `contacts.clear()`; `colliders.columns.touching.fill(0)`; `manifolds.b
 
 **Files:** Modify `src/resources/SolverSettings.ts` (only if values change), the plan's "Task 9 results".
 
-- [ ] **Step 1:** In the browser (`?scene=benchmark`, Brave) and `npm run bench`, record solver system times at the defaults.
-- [ ] **Step 2:** Lower `velocityIterations` one at a time until a stability or behaviour test fails or the benchmark pyramid visibly jitters; set the default to that value + 2 (never above 8 without a recorded reason). Same for `pseudoVelocityIterations` (+1 margin). Try `beta` 0.2/0.4/0.8 against the stack test; keep the most stable. Set `restitutionThreshold` to the lowest value where the resting-box test shows no bounce.
-- [ ] **Step 3:** Record each tried value and its result here; run the full suite.
-- [ ] **Step 4:** Commit `perf: tune solver settings (#22)`.
+- [x] **Step 1:** In the browser (`?scene=benchmark`, Brave) and `npm run bench`, record solver system times at the defaults.
+- [x] **Step 2:** Lower `velocityIterations` one at a time until a stability or behaviour test fails or the benchmark pyramid visibly jitters; set the default to that value + 2 (never above 8 without a recorded reason). Same for `pseudoVelocityIterations` (+1 margin). Try `beta` 0.2/0.4/0.8 against the stack test; keep the most stable. Set `restitutionThreshold` to the lowest value where the resting-box test shows no bounce.
+- [x] **Step 3:** Record each tried value and its result here; run the full suite.
+- [x] **Step 4:** Commit `perf: tune solver settings (#22)`.
 
-**Task 9 results:** _(fill in)_
+**Task 9 results** (with the Task 10 block solver in; headless, 1/60 s steps):
+
+- The existing tests pass at every velocity count from 1 to 8, so they can't pick the count. A twenty-box stack and a 465-body pyramid measured over 600–900 steps can:
+
+  | velocity / pseudo / β | 20-stack top drift px | 20-stack sink px | top-box jitter px/step | pyramid p98 speed px/s |
+  | --- | --- | --- | --- | --- |
+  | 8 / 3 / 0.2 | 0.29 | 5.80 | 0.029 | 0.07 |
+  | 6 / 3 / 0.2 | 3.27 | 5.36 | 0.055 | 0.11 |
+  | 4 / 3 / 0.2 | 0.40 | 4.80 | 0.119 | 0.00 |
+  | 3 / 3 / 0.2 | 95.6 (collapses) | 21.1 | 0.369 | 0.02 |
+  | 2 / 3 / 0.2 | 833 (collapses) | 1585 | 10.9 | 0.02 |
+  | 4 / 2 / 0.2 | 114 (collapses) | 25.5 | 0.510 | 0.53 |
+  | 4 / 1 / 0.2 | 0.17 | 4.87 | 0.122 | 0.00 |
+  | 4 / 3 / 0.4 | 0.52 | 4.66 | 0.120 | 0.10 |
+  | 4 / 3 / 0.8 | 13.3 | 4.70 | 0.119 | 0.29 |
+
+  The tall stack is close to its limit: results jump around between neighbouring settings, it collapses at 3 velocity passes, and the jitter rises steadily as passes drop. **Kept 8 velocity, 3 pseudo-velocity, β 0.2.** The twenty-box stack is now a test.
+- Restitution threshold: a resting body closes at g·dt = 3.33 px/s per step. Below about 4 a box resting in contact bounces; at 5 a dropped box falls into a bounce loop (one step airborne gives 6.67 px/s, above the threshold); 10 and 12 fail a system test; 8, 15 and 20 pass. **Kept 20 px/s.**
+- Browser timings are left for Task 11.
 
 ### Task 10 (optional): Block solver for two-point manifolds
 
