@@ -186,7 +186,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 ### Phase 2: real sleeping
 
-**Status:** planned. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-2.md`. Issue #23. Branch: `feature/sleeping`.
+**Status:** done. Sleeping works: the standing benchmark (210 crates) is 100% asleep and updates in 0.43 ms. The 2,000-box falling pyramid never sleeps, because the position correction keeps its pile creeping (see "Phase 2 split"); fixing that is the first item of phase 3. Plan: `superpowers/plans/2026-11-14-physics-performance-phase-2.md`. Issue #23. Branch: `feature/sleeping`. Numbers are under Results and "Phase 2 split".
 
 **What:** bodies that stay still are taken out of the step until something disturbs them.
 
@@ -203,6 +203,8 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 - **`LinearDamping` stays required** for a dynamic body to integrate. `spawnRigidBody` always adds it; a test checks that it does.
 - **The option is `BodyOptions.canSleep`** on `spawnRigidBody` (there is no `spawnDynamicBody`).
 - **One plan, two parts:** part A is per-body sleeping, waking and the benchmark windows; part B is islands. A handoff checkpoint sits between them.
+- **A sleeper wakes before the hit that wakes it is solved** (found in the demo after the plan). Contact detection first wakes every sleeper whose bounds touch a disturbing body, with `wakeBodyNow`, then builds the manifolds, so the woken island is movable in that same step. Treating the sleeper as immovable for the waking step stopped the hitting body like a wall, and the woken stack was only pushed gently afterwards.
+- **The benchmark pyramid is all 12×12 boxes, and a standing benchmark is added** (owner's decision after the plan). Circles made it hard to see what slept. `?scene=benchmark&pyramid=standing` builds 210 30×30 crates in 20 rows resting on the floor, which stand and fall asleep; a 2,000-box standing pyramid collapses under its own weight with 8 velocity passes. The demo gets a three-crate stack so waking can be checked by hand.
 
 **Design: tags for eligibility and state, a resource for settings, one component for the timer.** (The owner chose this over making "has a `Sleep` component" the rule for which bodies can sleep.)
 
@@ -227,11 +229,11 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 - **Island system** (part B), right after contact detection. Union-find over awake dynamic bodies, linked by this step's manifolds and by joints.
 - **Systems that skip sleepers** (`without: [Asleep]`): gravity, wind, velocity integration, position integration, collider transforms and the sleep update. The joint force system skips joints whose ends both can't move. A sleeping body doesn't move, so its world vertices and bounds stay valid.
 - **The broad phase still inserts sleepers**, so awake bodies can find them. Pairs where neither body can move (static or asleep) aren't emitted (phase 3).
-- **The solver treats a sleeper as immovable** for the current step (inverse mass and inertia 0 in that contact) and defers waking it. Contact detection checks `Asleep` for this, because a sleeper keeps its `Velocity` and today "immovable" means "has no `Velocity`". The sleeper moves from the next step, which is invisible at 60 steps a second. Wakes queued before velocity integration (mouse drag, joints, intent forces) take effect in the same step, because `Schedule` flushes deferred commands after every system.
+- **The solver treats a sleeper as immovable** (inverse mass and inertia 0 in that contact). Contact detection checks `Asleep` for this, because a sleeper keeps its `Velocity` and "immovable" otherwise means "has no `Velocity`". Before building any manifold, contact detection wakes every sleeper whose bounds touch a disturbing body, at once, so the hit that wakes it also moves it (see "Phase 2 decisions"). Wakes queued before velocity integration (mouse drag, joints, intent forces) take effect in the same step, because `Schedule` flushes deferred commands after every system.
 
 **Waking** removes `Asleep` and resets `sleepTime` to 0, through one helper, `wakeBody(world, entity)`. It resets the timer at once and defers removing `Asleep` from every member of the body's recorded island. It's called when:
 
-- an awake dynamic body has a contact with a sleeper (contact detection);
+- an awake dynamic body's bounds touch a sleeper's (contact detection, through `wakeBodyNow`, which wakes the island at once instead of deferring);
 - a joint links an awake dynamic body to a sleeper (joint force system);
 - the mouse drag holds a body, every step it's held, so a held body never falls asleep (`MouseDragSystem`);
 - a body's movement intent is non-zero (`IntentForceSystem`);
@@ -268,13 +270,37 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 **Risk:** bodies that sleep in mid-air or never wake. It needs tests for waking on contact, joint, drag and direct velocity changes.
 
-### Phase 3: broad-phase trimming
+#### Handoff: phase 2 done, phase 3 next
+
+**State.** Every task in `superpowers/plans/2026-11-14-physics-performance-phase-2.md` is built or ruled on, on `feature/sleeping`. Lint, typecheck, build and all tests pass. Don't redo any of it.
+
+**Done before the pull request into `dev`:**
+
+1. Done: browser numbers for both pyramids and both windows in Results row 2 and "Phase 2 split".
+2. Done: visual check. Sleepers turn grey in the standing benchmark, and the demo's crates sleep and are knocked over by the player's first hit.
+3. Done: Status set to done.
+4. Open, moved to phase 3: the falling pile never sleeps because of the split-impulse position correction (Phase 3, first item).
+
+**Deferred minors from the final review** (fix when convenient, none changes behaviour): per-step allocations in `Islands` and the sleep system; contact detection looks up a body's mass and sleep state several times per manifold; a `NeverSleep` tag added at runtime keeps a non-zero timer, so that body stops disturbing sleepers; the sleep system's readiness check does two lookups per body per step.
+
+**Resume prompt (phase 3):**
+
+> Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 2 done, phase 3 next" and "Phase 2 split"). Review phase 3 (issue #24), starting with its first item, position correction that lets piles rest. Talk through the choice between nonlinear Gauss–Seidel and a soft step with me, then plan phase 3 with superpowers:writing-plans.
+
+### Phase 3: position correction and broad-phase trimming
 
 **Status:** not planned. Issue #24.
 
-**What:** produce fewer candidate pairs, and do less work per step to produce them.
+**What:** first, let piles come to rest so they can sleep; then produce fewer candidate pairs, and do less work per step to produce them.
 
-**How:**
+**First item: position correction that lets piles rest** (owner's decision at the end of phase 2).
+
+- **Problem:** the 2,000-box falling pyramid collapses into a pile that never stops creeping, so it never sleeps (0% asleep after a minute, update 11.79 ms in the settled window). Measured on the box pile: over 10 s, 1,600 boxes moved more than 1 px, outward on average (2.2 px at friction 0.1, 3.7 px at friction 0.6), while 196–467 contact points sat deeper than 1 px (up to 4.5 px, against a 0.5 px slop).
+- **Cause:** phase 1's split-impulse pass (`pseudoVelocitySolve`) pushes those points apart along their normals with no friction, and between tilted boxes the normals point partly sideways. Gravity pulls the boxes back, so every step ratchets them outward, and the restored velocities keep some bodies above the 1 px/s sleep threshold. With that pass switched off after 30 s, the same pile stopped completely and all 2,000 boxes fell asleep. 16 velocity passes, β 0.1 or a 1 px slop each still ended 0.0–0.1% asleep.
+- **Options to evaluate:** nonlinear Gauss–Seidel position correction (Box2D 2.x: re-measure the overlap from current positions on every correction pass, so correction can't overshoot), or Box2D 3's soft step (soft constraints with relax passes that drop the bias). Either changes how every stack behaves, so the stability tests and a visual check against `dev` gate it.
+- **Done when:** the falling benchmark pile falls asleep within about 30 s of settling, the stability tests pass, and stacks look no worse than on `dev`.
+
+**Then the broad phase:**
 
 - **Skip static and sleeping pairs:** emit a pair only if **at least one body is awake and dynamic**. The check runs once per step in the broad phase instead of 25 times in the solver. Sleepers stay in the grid, so awake bodies still find them.
 
@@ -290,7 +316,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
   Anything that changes the world without motion (destroying a body, moving a static body, changing gravity, wind or collision rules) is handled by phase 2's "waking without motion" rules, not by the broad phase.
 
 - **Separate static grid:** insert static bodies such as the walls once, into their own grid. Each step, only moving bodies are re-inserted, and each is checked against both grids.
-- **Cell size:** benchmark bodies are 12 px wide (circle radius 6, box size 12) and cells are 20 px. Tune with phase 0's timings. Too small and each body covers many cells; too large and each cell holds many bodies.
+- **Cell size:** falling-benchmark bodies are 12×12 boxes, standing-benchmark crates 30×30, and cells are 20 px. Tune with phase 0's timings. Too small and each body covers many cells; too large and each cell holds many bodies.
 - **Pair slots:** store each pair's collider, transform, mass, velocity and material slots in `CandidatePairs`, so the solver doesn't call `slotOf` in its loops (item 7 above).
 - **Alternative to evaluate, not adopt:** sweep-and-prune (sort bounds along one axis) or a dynamic AABB tree. Only worth trying if the broad phase is still a large share of the time after phases 1–2.
 
@@ -316,7 +342,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
    - **Direction:** `computeNormals` sets `normal = (dirY, −dirX)`, so the edge direction is `(−normalY, normalX)`, read from the stored world normals.
    - **Length:** rotation and translation never change an edge's length, so store each polygon's edge lengths once at spawn (a new `edgeLengths` collider field).
 
-   The benchmark is a pyramid of circles and boxes, so circle–polygon tests are common.
+   Since phase 2 the benchmark is all boxes, so circle–polygon tests only matter for scenes with circles (the sandbox); measure there.
 
 4. **Cache the separating axis per pair.** SAT exits as soon as an edge separates the shapes (`deepestContact` returns `false` when no vertex lies behind the edge), but in the worst case it tries every edge of both polygons first (up to 8 edge tests for two boxes, each against 4 vertices). Neighbouring bodies rarely change arrangement between steps, so store per pair which polygon and edge separated them last step, and test that edge first. If it still separates, the test ends after 1 edge instead of up to 8. For touching pairs, store the reference edge instead. Phase 1's clipping starts from it, and it's part of the contact's feature ID for warm starting. It lives in the same per-pair store phase 1 adds, keyed by the entity pair. It mostly helps pairs that are near but not touching, so measure it before keeping it.
 5. **`Math.hypot` → `Math.sqrt(x * x + y * y)` in hot paths.** V8's `Math.hypot` guards against overflow and underflow that engine-scale numbers never reach, and it is noticeably slower. Items 2 and 3 remove the calls in collider transforms and the narrow phase. Switch the rest that run per contact or per step, such as friction tangent normalisation in the solver and joint lengths, and leave one-off uses (shape construction) alone.
@@ -349,7 +375,7 @@ Only if phases 1–4 aren't enough:
 Phase 0 (measure)
   └─ Phase 1 (cached contacts, sequential impulses, warm starting)
        ├─ Phase 2 (sleeping, then islands)
-       └─ Phase 3 (broad-phase trimming)      can run in parallel with phase 2
+       └─ Phase 3 (position correction, then broad-phase trimming)
             └─ Phase 4 (narrow-phase details)  only if numbers still call for it
 ```
 
@@ -360,6 +386,7 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 - **Browser:** `?scene=benchmark` gives update ms, render ms and draw calls, and per-system ms after phase 0. Use the same browser and machine for before and after, and note them.
 - **Headless:** `npm run bench` (`tests/benchmark/physicsStep.bench.ts`) for numbers that don't depend on the browser.
 - **Two moments:** the benchmark samples a fixed window after 60 warm-up frames. That window (frames 60–360) is the pyramid's collapse and settling: heavy contact, little asleep. Once sleeping exists, `?scene=benchmark&window=settled` samples 300 frames after the pyramid has settled, so sleeping's gain is measured and doesn't hide a slow solver. `npm run bench` reports both.
+- **Two pyramids (since phase 2):** the default `pyramid=falling` drops 2,000 12×12 boxes, which collapse into a pile; `pyramid=standing` builds 210 30×30 crates resting on the floor, which stand and sleep. Both windows work with both. Only the falling pyramid is comparable with earlier rows, and phases 0–1 used a pyramid of circles and boxes, so it is heavier than theirs.
 
 ### Results
 
@@ -368,7 +395,7 @@ Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request 
 | Baseline (ECS, PR #12) | 46.25             |                  |           |                | Brave, 2,000 bodies. Per-system numbers come from phase 0                                                                                                                                                                                |
 | 0                      | 47.52             | 164.67 / 242.38  | 46.14     | 0.99           | Brave, Windows 11, same machine as the baseline. Render 1.73 ms, 6 draw calls. Headless: Node v24.14.1, Vitest 5.1.0, two `npm run bench` runs that disagreed by about 47%. The browser solver and broad-phase numbers are the reference |
 | 1                      | 7.42              | 16.10 / 16.39    | 3.45      | 1.08           | Brave, Windows 11, same machine as phase 0. Render 2.00 ms, 6 draw calls. Solver is velocity solve 3.00 + pseudo-velocity solve 0.44 ms, against 46.14 for phase 0's `collisionSolver`. Update is 6.4× faster and under the 16.7 ms bar. Headless: two `npm run bench` runs, Node v24.14.1 |
-| 2                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
+| 2                      | 10.62 / 11.79     | 29.70 / 31.33    | 5.85      | 1.01           | Brave, Windows 11, same machine. Falling pyramid of 2,000 boxes, collapse / settled window; 0% asleep in both, because the pile never stops creeping (see "Phase 2 split"). Not comparable with row 1: the pyramid is now all boxes. Before the switch, the circle-and-box pyramid measured 7.48 / 8.09 ms, against phase 1's 7.42. Standing pyramid (210 crates): 0.52 / 0.43 ms, 100% asleep. Headless: one `npm run bench` run, Node v24.14.1 |
 | 3                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 | 4                      |                   |                  |           |                |                                                                                                                                                                                                                                          |
 
@@ -422,6 +449,35 @@ What this shows:
 - **The 8 ms goal for phases 1–3 is met in this window already.** Frames 60–360 cover the pyramid while it is still settling, so the settled pyramid should be cheaper still. Phases 2–3 now add headroom rather than close a gap. Re-measure a settled window and the collapse before deciding how much of them is worth building.
 - **Solver settings:** the tuning in the plan's Task 9 kept 8 velocity and 3 pseudo-velocity passes, β 0.2 and a 20 px/s restitution threshold. The Box2D-style 2×2 block solver for two-point manifolds was kept: without it a ten-box stack swayed 2.7 px at 8 passes, with it 0.000 px from 4 passes up.
 - **Known gap, not new:** a small fast circle can tunnel into the floor during the pyramid's collapse (about 480 px/s, more than its radius per step). `dev` loses a body the same way at the same moment. Continuous collision is a non-goal, so it is tracked on its own in issue #28.
+
+#### Phase 2 split
+
+Browser: Brave, from the console tables. Collapse is frames 60–360, settled is 300 frames after 1,800 warm-up frames. Headless: one `npm run bench` run, falling pyramid, steps 120–420 and after 1,800 steps.
+
+| System              | Falling, collapse | Falling, settled | Standing, collapse | Standing, settled | Headless collapse | Headless settled |
+| ------------------- | ----------------- | ---------------- | ------------------ | ----------------- | ----------------- | ---------------- |
+| velocitySolve       | 5.138             | 5.695            | 0.108              | 0.001             | 8.440             | 9.303            |
+| contactDetection    | 3.035             | 3.416            | 0.095              | 0.061             | 12.160            | 12.429           |
+| broadPhase          | 1.010             | 1.073            | 0.249              | 0.307             | 4.706             | 4.955            |
+| pseudoVelocitySolve | 0.715             | 0.864            | 0.013              | 0.001             | 1.196             | 1.346            |
+| colliderTransform   | 0.334             | 0.333            | 0.011              | 0.008             | 0.702             | 0.687            |
+| islands             | 0.129             | 0.141            | 0.010              | 0.007             | 1.117             | 1.190            |
+| velocityIntegration | 0.079             | 0.079            | 0.009              | 0.011             | 0.467             | 0.471            |
+| sleep               | 0.065             | 0.070            | 0.007              | 0.007             | 0.434             | 0.466            |
+| positionIntegration | 0.050             | 0.055            | 0.006              | 0.007             | 0.275             | 0.284            |
+| gravity             | 0.048             | 0.049            | 0.002              | 0.005             | 0.186             | 0.194            |
+| others              | < 0.01            | < 0.01           | < 0.01             | < 0.01            | < 0.01            | < 0.01           |
+| **update**          | 10.62             | 11.79            | 0.52               | 0.43              | 29.70             | 31.33            |
+| **asleep**          | 0%                | 0%               | 100%               | 100%              | 0%                | 0%               |
+
+What this shows:
+
+- **Sleeping works when a pile comes to rest.** The standing pyramid is fully asleep in both windows. Settled, both solves drop to about 0.001 ms and the update is 0.43 ms. What is left is the broad phase (0.31 ms, 73%), which still treats sleeping pairs like awake ones; phase 3's pair skipping removes that.
+- **The falling pile never sleeps, and that is a solver problem, not a sleeping one.** The split-impulse pass keeps pushing deep contacts apart sideways, so the pile creeps outward by a few pixels every 10 s. Switching that pass off made the same pile stop and fall fully asleep. This is the first item of phase 3.
+- **Sleeping's own cost is small.** `islands` and `sleep` together take 0.19–0.21 ms in the browser on 2,000 awake bodies. Headless they take 1.5–1.7 ms, because Vitest's per-call overhead lands on their per-body lookups. On the circle-and-box pyramid, before the switch to boxes, the update was 7.48 ms against phase 1's 7.42.
+- **Boxes are heavier than the old mix.** Box contacts have more points, so velocity solve and detection rose: the falling-box collapse is 10.62 ms against 7.48 ms for the old pyramid. Later rows compare against row 2, not row 1.
+- **Targets:** the collapse stays under 16.7 ms (10.62). The settled goal of under 8 ms is met by the standing pyramid (0.43 ms) but not by the falling pile (11.79 ms), which needs phase 3's position correction to settle.
+- **Wake on the first hit** (found during the visual check): a sleeper is now woken before the contact that wakes it is built, so a hit knocks a sleeping stack over at once instead of stopping against it.
 
 ## Testing
 

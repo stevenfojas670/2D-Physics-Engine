@@ -208,7 +208,7 @@
 ### Task 9: Part A measurement and handoff checkpoint
 
 - [x] **Step 1:** Run `npm run bench` twice. Record both per-system tables (collapse and settled) under "Part A results" below.
-- [ ] **Step 2 (moved to Task 13):** Ask the owner to run `?scene=benchmark` and `?scene=benchmark&window=settled` in Brave and paste both console tables. Record them below. Also ask for a visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox`: sleepers turn grey and wake when hit, dragged or left without support.
+- [x] **Step 2 (moved to Task 13, done there):** Ask the owner to run `?scene=benchmark` and `?scene=benchmark&window=settled` in Brave and paste both console tables. Record them below. Also ask for a visual check of `?scene=demo`, `?scene=benchmark` and `?scene=sandbox`: sleepers turn grey and wake when hit, dragged or left without support.
 - [x] **Step 3:** Write the handoff below: state, deviations from this plan, measured numbers, and the resume prompt. Commit `docs: record part A sleeping results and handoff (#23)`.
 
 **Part A results:** headless, `npm run bench`, Node v24.14.1, two runs.
@@ -301,9 +301,9 @@ Keep only if measured to help (spec, "Solving per island").
 ### Task 13: Tune, measure and close phase 2
 
 - [x] **Step 1: Tune `SleepSettings` on the settled pyramid.** Re-run Task 8's settle-time test. If the pyramid doesn't reach 95% asleep, raise `linearThreshold` and `angularThreshold` in steps of 2× (up to 4 px/s and 0.14 rad/s) until it does or the limit is reached, and check after each step that the stability suite and the sleeping tests still pass. Record each try. Update `createSleepSettings`, the spec's values and `BENCHMARK_SETTLED_WARMUP_FRAMES` if they change.
-- [ ] **Step 2:** Run `npm run bench` twice and ask the owner for both browser windows and the visual check (as in Task 9). Fill in the spec's Results row 2 and add a "Phase 2 split" next to "Phase 1 split", with both windows. Check them against the targets: settled pyramid under 8 ms, collapse under 16.7 ms.
-- [ ] **Step 3:** Set the spec's Phase 2 Status to done, and add "Handoff: phase 2 done, phase 3 next" with a resume prompt for phase 3 (#24), in the same style as the phase 1 handoff.
-- [ ] **Step 4:** Lint, typecheck, build, test. Commit `docs: record phase 2 results and mark it done (#23)`.
+- [x] **Step 2:** Run `npm run bench` twice and ask the owner for both browser windows and the visual check (as in Task 9). Fill in the spec's Results row 2 and add a "Phase 2 split" next to "Phase 1 split", with both windows. Check them against the targets: settled pyramid under 8 ms, collapse under 16.7 ms.
+- [x] **Step 3:** Set the spec's Phase 2 Status to done, and add "Handoff: phase 2 done, phase 3 next" with a resume prompt for phase 3 (#24), in the same style as the phase 1 handoff.
+- [x] **Step 4:** Lint, typecheck, build, test. Commit `docs: record phase 2 results and mark it done (#23)`.
 
 **Task 13 measurement (headless, two `npm run bench` runs):**
 
@@ -315,3 +315,10 @@ Pyramid sleep with islands: best 0.1% asleep within 3,600 steps at the default t
 | Settled (after 1,800 steps) | 19.26 / 22.17 | 8.28 / 9.95 | 4.62 / 5.00 | 3.30 / 3.74 | 0.79 / 0.93 | 0.26 / 0.31 | 0.1% |
 
 Phase 1's headless total was 16.26 / 17.35 ms. On the benchmark, phase 2 adds the `islands` and `sleep` systems (about 1.1 ms headless) and saves nothing, because nothing sleeps. Separate piles (demo, tests) do sleep. Steps 2–4 wait on the owner: browser numbers, the visual check, and a decision on the benchmark result.
+
+**Task 13 outcome (after the owner's review):**
+
+- **Benchmark changes (owner's decisions):** the benchmark pyramid is all 12×12 boxes, and `pyramid=standing` adds 210 30×30 crates standing on the floor. The demo gets a three-crate stack for checking waking by hand.
+- **Fix from the visual check:** the player's first hit didn't knock the demo crates over, because contact detection treated the sleeper as immovable for the waking step. Sleepers touched by a disturbing body now wake before any manifold is built (`wakeBodyNow`). Tests "a hit pushes a sleeper as hard as an awake body" and the demo crate test, both RED→GREEN.
+- **Why the falling pile never sleeps:** the split-impulse pass pushes deep contacts apart sideways, so the pile creeps outward. Switching it off made the pile sleep fully; 16 velocity passes, β 0.1 and a 1 px slop didn't help. The owner moved the fix to phase 3's first item.
+- **Numbers:** one headless run instead of two (the browser split is the reference). See the spec's Results row 2 and "Phase 2 split".
