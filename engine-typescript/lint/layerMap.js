@@ -16,6 +16,7 @@ const layers = [
 			"joints/**",
 			"materials/**",
 			"optimizations/**",
+			"sleeping/**",
 		],
 	},
 ]

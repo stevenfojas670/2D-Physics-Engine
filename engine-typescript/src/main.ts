@@ -4,7 +4,9 @@ import { Controller } from "@/Controller"
 import { World } from "@/ecs/World"
 import {
 	BENCHMARK_HEIGHT,
+	BENCHMARK_SETTLED_WARMUP_FRAMES,
 	BENCHMARK_WIDTH,
+	STANDING_PYRAMID_BODIES,
 	buildBenchmarkScene,
 } from "@/app/BenchmarkScene"
 import { ControllerKeysResource } from "@/app/ControllerKeys"
@@ -20,9 +22,15 @@ import {
 	buildSandboxScene,
 	createSandboxRespawnSystem,
 } from "@/app/SandboxScene"
-import { selectScene } from "@/app/sceneSelection"
+import {
+	selectBenchmarkLayout,
+	selectBenchmarkWindow,
+	selectScene,
+} from "@/app/sceneSelection"
 import { createRenderSchedule, createUpdateSchedule } from "@/app/schedules"
 import type { SystemTime } from "@/app/SystemTimer"
+import { Asleep } from "@/components/Asleep"
+import { SleepTimer } from "@/components/SleepTimer"
 import {
 	DebugOptionsResource,
 	createDebugOptions,
@@ -39,11 +47,15 @@ const LEFT_BUTTON = 0
 const TOP_SYSTEM_COUNT = 5
 const SYSTEM_LINES_TOP = 60
 const LINE_HEIGHT = 15
+const COLLAPSE_WARMUP_FRAMES = 60
+const SAMPLE_FRAMES = 300
 
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement
 const ctx = canvas.getContext("2d")!
 const scene = selectScene(location.search)
 const isBenchmark = scene === "benchmark"
+const benchmarkWindow = selectBenchmarkWindow(location.search)
+const benchmarkLayout = selectBenchmarkLayout(location.search)
 
 const world = new World()
 const controller = new Controller(false)
@@ -58,7 +70,11 @@ let demoHandles: DemoHandles | null = null
 if (scene === "benchmark") {
 	canvas.width = BENCHMARK_WIDTH
 	canvas.height = BENCHMARK_HEIGHT
-	buildBenchmarkScene(world)
+	buildBenchmarkScene(
+		world,
+		benchmarkLayout === "standing" ? STANDING_PYRAMID_BODIES : undefined,
+		benchmarkLayout,
+	)
 } else if (scene === "sandbox") {
 	canvas.width = SANDBOX_WIDTH
 	canvas.height = SANDBOX_HEIGHT
@@ -73,7 +89,14 @@ if (scene === "sandbox") {
 	update.add("sandboxRespawn", createSandboxRespawnSystem(world))
 }
 const draw = createRenderSchedule(world)
-const frameTimer = new FrameTimer(update.names)
+const frameTimer = new FrameTimer(
+	update.names,
+	benchmarkWindow === "settled"
+		? BENCHMARK_SETTLED_WARMUP_FRAMES
+		: COLLAPSE_WARMUP_FRAMES,
+	SAMPLE_FRAMES,
+)
+let asleepAtSampleEnd = 0
 const fixedStep = new FixedStep()
 let lastTime = performance.now()
 let summaryLogged = false
@@ -170,12 +193,13 @@ function drawBenchmarkSummary(): void {
 		drawText("measuring...", 40)
 		return
 	}
-	drawText(benchmarkText(summary), 40)
-	drawSystemLines(summary.systems)
 	if (!summaryLogged) {
+		asleepAtSampleEnd = asleepShare()
 		logBenchmarkSummary(summary)
 		summaryLogged = true
 	}
+	drawText(benchmarkText(summary), 40)
+	drawSystemLines(summary.systems)
 }
 
 function logBenchmarkSummary(summary: FrameSummary): void {
@@ -189,8 +213,13 @@ function logBenchmarkSummary(summary: FrameSummary): void {
 	)
 }
 
+function asleepShare(): number {
+	const sleepers = world.store(SleepTimer).size
+	return sleepers === 0 ? 0 : world.store(Asleep).size / sleepers
+}
+
 function benchmarkText(summary: FrameSummary): string {
-	return `update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
+	return `${benchmarkLayout} · ${benchmarkWindow} · ${Math.round(asleepAtSampleEnd * 100)}% asleep · update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
 }
 
 function drawText(text: string, y: number): void {

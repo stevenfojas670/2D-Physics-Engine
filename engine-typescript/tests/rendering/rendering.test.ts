@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { World } from "@/ecs/World"
 import { Schedule } from "@/ecs/Schedule"
+import { Asleep } from "@/components/Asleep"
 import { Collider } from "@/components/Collider"
 import { spawnRigidBody, spawnStaticBody } from "@/components/bodyFactories"
 import { ContactLog, ContactsResource } from "@/resources/ContactLog"
@@ -8,7 +9,10 @@ import {
 	createCircleShape,
 	createRectangleShape,
 } from "@/shapes/colliderShapes"
-import { createColliderRenderSystem } from "@/rendering/ColliderRenderSystem"
+import {
+	SLEEPING_COLOR,
+	createColliderRenderSystem,
+} from "@/rendering/ColliderRenderSystem"
 import { createDebugDrawSystem } from "@/rendering/DebugDrawSystem"
 import {
 	DebugOptionsResource,
@@ -188,5 +192,43 @@ describe("render systems", () => {
 		renderSchedule(world).run(world, 1 / 60)
 		expect(canvas.strokeColors).toContain("gray")
 		expect(canvas.strokeColors).not.toContain("red")
+	})
+})
+
+describe("sleeping colour", () => {
+	function drawColors(sleepingLayer: boolean): string[] {
+		const canvas = fakeCanvas()
+		const world = renderWorld(canvas)
+		world.resource(DebugOptionsResource).sleeping = sleepingLayer
+		spawnRigidBody(world, createRectangleShape(10, 10), 0, 0, 1, {
+			color: "blue",
+		})
+		const sleeper = spawnRigidBody(
+			world,
+			createRectangleShape(10, 10),
+			50,
+			0,
+			1,
+			{ color: "green" },
+		)
+		world.add(sleeper, Asleep)
+		new Schedule()
+			.add("colliderRender", createColliderRenderSystem(world))
+			.add("drawFlush", createDrawFlushSystem(world))
+			.run(world, 1 / 60)
+		return canvas.strokeColors
+	}
+
+	test("sleepers are drawn in the sleeping colour", () => {
+		const colors = drawColors(true)
+		expect(colors).toContain(SLEEPING_COLOR)
+		expect(colors).toContain("blue")
+		expect(colors).not.toContain("green")
+	})
+
+	test("with the layer off, sleepers keep their colour", () => {
+		const colors = drawColors(false)
+		expect(colors).toContain("green")
+		expect(colors).not.toContain(SLEEPING_COLOR)
 	})
 })

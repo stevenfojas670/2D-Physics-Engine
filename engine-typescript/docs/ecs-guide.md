@@ -58,11 +58,11 @@ From `src/systems/WindSystem.ts`.
 
 Spawn bodies through `src/components/bodyFactories.ts` instead of adding components one by one. Each returns the new entity; add your own components afterwards.
 
-| Factory                                                              | Adds                                                                                                                                  | Defaults                                                                                                                                                                                          |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spawnRigidBody(world, shape, x, y, mass, options?)` with `mass > 0` | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`, `Velocity`, `ForceAccumulator`, `LinearDamping`, `Sleep` | angle 0; group `GROUP0`; default restitution and friction from `materials/materialDefaults.ts`; colour `"black"`; linear and angular damping 0.999; sleep thresholds 0.01; inertia from the shape |
-| `spawnStaticBody(world, shape, x, y, options?)`                      | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`                                                           | the same, with mass and inverse mass 0. No `Velocity`, `ForceAccumulator`, `LinearDamping` or `Sleep`, so force systems skip it                                                                   |
-| `spawnParticle(world, x, y, mass, options?)`                         | `Transform`, `Velocity`, `ForceAccumulator`, `Mass`, `Particle`, `Acceleration`, `ParticleDamping`                                    | no collider, no rotation; acceleration 0; damping 1 (none)                                                                                                                                        |
+| Factory                                                              | Adds                                                                                                                                                                                 | Defaults                                                                                                                                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spawnRigidBody(world, shape, x, y, mass, options?)` with `mass > 0` | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`, `Velocity`, `ForceAccumulator`, `LinearDamping`, `SleepTimer`, plus `NeverSleep` with `canSleep: false` | angle 0; group `GROUP0`; default restitution and friction from `materials/materialDefaults.ts`; colour `"black"`; linear and angular damping 0.999; sleep time 0; inertia from the shape |
+| `spawnStaticBody(world, shape, x, y, options?)`                      | `Transform`, `Collider`, `CollisionGroup`, `Material`, `Renderable`, `Mass`                                                                                                          | the same, with mass and inverse mass 0. No `Velocity`, `ForceAccumulator`, `LinearDamping` or `SleepTimer`, so force systems skip it                                                     |
+| `spawnParticle(world, x, y, mass, options?)`                         | `Transform`, `Velocity`, `ForceAccumulator`, `Mass`, `Particle`, `Acceleration`, `ParticleDamping`                                                                                   | no collider, no rotation; acceleration 0; damping 1 (none)                                                                                                                               |
 
 `options` for rigid and static bodies is `{ group?, color? }`; for particles it is `{ damping?, accelerationX?, accelerationY? }`. Shapes come from `createCircleShape(radius)` and `createRectangleShape(width, height)` in `src/shapes/colliderShapes.ts`.
 
@@ -82,13 +82,12 @@ From `src/app/SandboxScene.ts`.
 - `view.find(predicate)` returns the first entity the predicate accepts, or `undefined`. `view.contains(entity)` checks one entity. `view.slot(entity, Component)` gives that entity's slot for one listed component.
 
 ```ts
-const bodies = world.view(
-	[Transform, Velocity, ForceAccumulator, Mass, LinearDamping, Sleep],
-	{ without: [Particle] },
-)
+const bodies = world.view([Velocity, ForceAccumulator, Mass, LinearDamping], {
+	without: [Particle, Asleep],
+})
 ```
 
-From `src/systems/VelocityIntegrationSystem.ts`; its callback takes six slots in that order.
+From `src/systems/VelocityIntegrationSystem.ts`; its callback takes four slots in that order.
 
 ## 6. Resources
 
@@ -97,7 +96,7 @@ From `src/systems/VelocityIntegrationSystem.ts`; its callback takes six slots in
 - Declare the key with `defineResource<T>(name)` in its own file, exported as `<Name>Resource` next to the value's type and any default. Physics resources go in `src/resources/`; app-only ones (input) in `src/app/`; rendering ones in `src/rendering/`.
 - `world.setResource(key, value)` sets it, `world.resource(key)` reads it and throws `Missing resource <name>` if nothing set it, and `world.hasResource(key)` checks.
 - Read resources **inside the step**, not in the factory, so a scene can replace them later (the sandbox replaces the wind after `installWorldResources` sets the default).
-- Who installs what: `main.ts` sets the input and rendering resources (`ControllerKeysResource`, `MouseInputResource`, `RenderContextResource`, `DebugOptionsResource`). `installWorldResources` in `src/app/DemoScene.ts` sets the physics ones (`WorldSizeResource`, `GravityResource`, `WindResource`, `CollisionSettingsResource`, `BroadPhaseResource`, `ContactsResource`, `MouseDragResource`). Every scene calls it. `BroadPhaseSystem` creates `CandidatePairsResource` itself.
+- Who installs what: `main.ts` sets the input and rendering resources (`ControllerKeysResource`, `MouseInputResource`, `RenderContextResource`, `DebugOptionsResource`). `installWorldResources` in `src/app/DemoScene.ts` sets the physics ones (`WorldSizeResource`, `GravityResource`, `WindResource`, `CollisionSettingsResource`, `BroadPhaseResource`, `ContactsResource`, `MouseDragResource`, `SolverSettingsResource`, `SleepSettingsResource`). Every scene calls it. `BroadPhaseSystem` creates `CandidatePairsResource` itself.
 
 ```ts
 interface Wind {
@@ -144,26 +143,29 @@ function createWindSystem(world: World): System {
 
 **The update schedule** (`createUpdateSchedule`), in order:
 
-| #   | System                      | Why it is here                                                                          |
-| --- | --------------------------- | --------------------------------------------------------------------------------------- |
-| 1   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                               |
-| 2   | `MouseDragSystem`           | Adds the drag force; needs last step's broad-phase grid to pick a body                  |
-| 3   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                       |
-| 4   | `GravitySystem`             | Adds gravity force                                                                      |
-| 5   | `WindSystem`                | Adds wind force                                                                         |
-| 6   | `JointForceSystem`          | Adds spring and joint forces from current positions                                     |
-| 7   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it   |
-| 8   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                      |
-| 9   | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                            |
-| 10  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds                    |
-| 11  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                |
-| 12  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion |
-| 13  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                           |
-| 14  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase       |
+| #   | System                      | Why it is here                                                                                                                                                                       |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `WorldChangeWakeSystem`     | Wakes every sleeper when gravity, wind, the collision matrix or `SleepSettings.enabled` changed since last step                                                                      |
+| 2   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                                                                                                                            |
+| 3   | `MouseDragSystem`           | Adds the drag force and keeps the held body awake; needs last step's broad-phase grid to pick a body                                                                                 |
+| 4   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                                                                                                                    |
+| 5   | `GravitySystem`             | Adds gravity force                                                                                                                                                                   |
+| 6   | `WindSystem`                | Adds wind force                                                                                                                                                                      |
+| 7   | `JointForceSystem`          | Adds spring and joint forces from current positions                                                                                                                                  |
+| 8   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it                                                                                                |
+| 9   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                                                                                                                   |
+| 10  | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                                                                                                                         |
+| 11  | `ContactDetectionSystem`    | First wakes every sleeper whose bounds touch a disturbing body, then runs the narrow phase once per pair and stores the contact manifolds; treats sleepers still asleep as immovable |
+| 12  | `IslandSystem`              | Groups awake bodies linked by contacts and joints into islands for sleeping                                                                                                          |
+| 13  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                                                                                             |
+| 14  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                                                                                              |
+| 15  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                                                                                        |
+| 16  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                                                                                    |
+| 17  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                                                                                      |
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
-A new force system goes anywhere after `MouseDragSystem` (2) and before `VelocityIntegrationSystem` (7), because velocity integration consumes and clears the forces. Anything that needs final positions for the frame goes after 14, or in the render schedule.
+A new force system goes anywhere after `MouseDragSystem` (3) and before `VelocityIntegrationSystem` (8), because velocity integration consumes and clears the forces. Give it `without: [Asleep]` so sleepers stay still. Anything that needs final positions for the frame goes after 16, or in the render schedule.
 
 ## 8. Deferred commands
 
@@ -178,14 +180,25 @@ const index = respawnCount
 const y = RESPAWN_FIRST_Y + (index % RESPAWN_ROWS) * RESPAWN_ROW_SPACING
 respawnCount++
 world.defer((deferredWorld) => {
-	deferredWorld.destroyEntity(entity)
+	destroyBody(deferredWorld, entity)
 	spawnSandboxBody(deferredWorld, index, RESPAWN_X, y, exposure)
 })
 ```
 
 From `createSandboxRespawnSystem` in `src/app/SandboxScene.ts`.
 
-## 9. Worked example: wind
+## 9. Sleeping
+
+Bodies that stay still are taken out of the step until something disturbs them. Design and reasons: Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md`.
+
+- **Pieces:** the `Asleep` tag (the body sleeps), the `NeverSleep` tag (it may never sleep), the `SleepTimer` component (seconds it has been still) and the `SleepSettings` resource (`enabled`, `linearThreshold` 1 px/s, `angularThreshold` 0.035 rad/s, `timeout` 0.5 s). `spawnRigidBody` adds `SleepTimer` to every movable body; `canSleep: false` adds `NeverSleep`.
+- **Islands sleep together.** Bodies linked by contacts or joints form an island (`IslandSystem`), and an island sleeps only when every member can sleep and has been still for the timeout. One `NeverSleep` body keeps its whole island awake. Waking any member wakes the whole island.
+- **Active systems skip sleepers** with `without: [Asleep]`. A sleeper's world vertices and bounds stay valid because it doesn't move. Contact detection treats it as immovable, but first wakes any sleeper whose bounds touch a disturbing body, with `wakeBodyNow`, so the hit that wakes a sleeper also moves it in the same step.
+- **Waking** goes through `src/sleeping/wakeBodies.ts`. `wakeBody(world, entity)` resets the timer at once and defers removing `Asleep` from every body that fell asleep with it. Contacts, joints, mouse drag and movement intent call it already.
+- **Code that sets a body's velocity, position or force directly calls `wakeBody`** after doing so, or a sleeper ignores the change.
+- **Code that changes the world without motion uses `src/sleeping/worldEdits.ts`:** `destroyBody` instead of `world.destroyEntity` for bodies, `moveStaticBody` to move a static body, and `setCollisionGroup` to change a body's group. Changing the gravity, wind or collision matrix resources needs no call: `WorldChangeWakeSystem` wakes everything.
+
+## 10. Worked example: wind
 
 Wind was added to the engine in four steps; follow the same steps for any new force.
 
@@ -196,7 +209,7 @@ Wind was added to the engine in four steps; follow the same steps for any new fo
 
 Tests: `tests/systems/wind.test.ts` runs the system on its own; `tests/app/app.test.ts` checks the default wind and that the update schedule applies it. Update the READMEs of every folder you touched.
 
-## 10. Adding a scene
+## 11. Adding a scene
 
 1. Write `buildXScene(world)` in `src/app/XScene.ts`. Call `installWorldResources(world, width, height)` first, replace any resources the scene changes, then spawn bodies with the factories.
 2. Put scene-only systems in the same file as factories, like `createSandboxRespawnSystem`.

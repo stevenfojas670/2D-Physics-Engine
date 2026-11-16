@@ -9,7 +9,8 @@ import { Material } from "@/components/Material"
 import { Particle } from "@/components/Particle"
 import { ParticleDamping } from "@/components/ParticleDamping"
 import { Renderable } from "@/components/Renderable"
-import { Sleep } from "@/components/Sleep"
+import { NeverSleep } from "@/components/NeverSleep"
+import { SleepTimer } from "@/components/SleepTimer"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
 import {
@@ -38,10 +39,11 @@ describe("body factories", () => {
 			Velocity,
 			ForceAccumulator,
 			LinearDamping,
-			Sleep,
+			SleepTimer,
 		]) {
 			expect(world.has(body, component)).toBe(true)
 		}
+		expect(world.has(body, NeverSleep)).toBe(false)
 		const transforms = world.store(Transform)
 		const slot = transforms.slotOf(body)
 		expect(transforms.columns.x[slot]).toBe(300)
@@ -62,6 +64,7 @@ describe("body factories", () => {
 		)
 		expect(world.has(wall, Velocity)).toBe(false)
 		expect(world.has(wall, ForceAccumulator)).toBe(false)
+		expect(world.has(wall, SleepTimer)).toBe(false)
 		const masses = world.store(Mass)
 		const slot = masses.slotOf(wall)
 		expect(masses.columns.inverseMass[slot]).toBe(0)
@@ -82,9 +85,9 @@ describe("body factories", () => {
 		expect(
 			world.store(LinearDamping).columns.linear[slotIn(LinearDamping)],
 		).toBeCloseTo(0.999)
-		expect(
-			world.store(Sleep).columns.linearThreshold[slotIn(Sleep)],
-		).toBeCloseTo(0.01)
+		expect(world.store(SleepTimer).columns.sleepTime[slotIn(SleepTimer)]).toBe(
+			0,
+		)
 		expect(
 			world.store(CollisionGroup).columns.group[slotIn(CollisionGroup)],
 		).toBe(CollisionGroups.GROUP0.id)
@@ -114,6 +117,15 @@ describe("body factories", () => {
 		)
 		const renderables = world.store(Renderable)
 		expect(renderables.columns.color[renderables.slotOf(body)]).toBe("red")
+	})
+
+	test("a body that can't sleep gets NeverSleep", () => {
+		const world = new World()
+		const body = spawnRigidBody(world, createCircleShape(5), 0, 0, 1, {
+			canSleep: false,
+		})
+		expect(world.has(body, NeverSleep)).toBe(true)
+		expect(world.has(body, SleepTimer)).toBe(true)
 	})
 
 	test("particle defaults to no damping", () => {

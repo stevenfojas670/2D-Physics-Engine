@@ -16,6 +16,10 @@ import { ContactLog, ContactsResource } from "@/resources/ContactLog"
 import { DEFAULT_GRAVITY, GravityResource } from "@/resources/Gravity"
 import { MouseDragResource, createMouseDrag } from "@/resources/MouseDrag"
 import {
+	createSleepSettings,
+	SleepSettingsResource,
+} from "@/resources/SleepSettings"
+import {
 	createSolverSettings,
 	SolverSettingsResource,
 } from "@/resources/SolverSettings"
@@ -28,12 +32,14 @@ import {
 	createRectangleShape,
 } from "@/shapes/colliderShapes"
 import type { ColliderShape } from "@/shapes/colliderShapes"
+import { wakeAllBodies } from "@/sleeping/wakeBodies"
 
 type Walls = [Entity, Entity, Entity, Entity]
 
 interface DemoHandles {
 	walls: Walls
 	player: Entity
+	crates: Entity[]
 }
 
 interface WallPlacement {
@@ -48,6 +54,10 @@ const BOUNDARY_THICKNESS = 50
 const GRID_KIND = "hash"
 const GRID_CELL_SIZE = 20
 const DEMO_OBJECT_MASS = 10
+const CRATE_SIZE = 40
+const CRATE_STACK_X = 450
+const CRATE_COUNT = 3
+const CRATE_MASS = 1
 
 function installWorldResources(
 	world: World,
@@ -67,6 +77,7 @@ function installWorldResources(
 	world.setResource(ContactsResource, new ContactLog())
 	world.setResource(MouseDragResource, createMouseDrag())
 	world.setResource(SolverSettingsResource, createSolverSettings())
+	world.setResource(SleepSettingsResource, createSleepSettings())
 }
 
 function wallPlacements(width: number, height: number): WallPlacement[] {
@@ -105,6 +116,7 @@ function buildDemoScene(
 		1,
 		{
 			group: CollisionGroups.GROUP1,
+			canSleep: false,
 		},
 	)
 	world.add(player, PlayerControlled)
@@ -112,13 +124,24 @@ function buildDemoScene(
 
 	spawnStaticBody(world, createRectangleShape(100, 400), 300, 300)
 	spawnStaticBody(world, createRectangleShape(50, 100), 200, 200)
+	const crates = spawnCrateStack(world, height)
 
 	const settings = world.resource(CollisionSettingsResource)
 	settings.setGroupName(CollisionGroups.GROUP1, "Kinematic Objects")
 	settings.setGroupName(CollisionGroups.GROUP2, "Static Objects")
 	settings.disableCollision(CollisionGroups.GROUP1, CollisionGroups.GROUP2)
 
-	return { walls, player }
+	return { walls, player, crates }
+}
+
+function spawnCrateStack(world: World, floorY: number): Entity[] {
+	const crate = createRectangleShape(CRATE_SIZE, CRATE_SIZE)
+	const crates: Entity[] = []
+	for (let level = 0; level < CRATE_COUNT; level++) {
+		const y = floorY - CRATE_SIZE / 2 - level * CRATE_SIZE
+		crates.push(spawnRigidBody(world, crate, CRATE_STACK_X, y, CRATE_MASS))
+	}
+	return crates
 }
 
 function resizeDemoWorld(
@@ -149,6 +172,7 @@ function resizeDemoWorld(
 	}
 	world.setResource(WorldSizeResource, { width, height })
 	world.resource(BroadPhaseResource).resize(width, height)
+	wakeAllBodies(world)
 }
 
 function spawnDemoObject(

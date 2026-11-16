@@ -1,4 +1,6 @@
 type SceneName = "demo" | "benchmark" | "sandbox"
+type BenchmarkWindow = "collapse" | "settled"
+type BenchmarkLayout = "falling" | "standing"
 
 const SELECTABLE_SCENES: readonly SceneName[] = ["benchmark", "sandbox"]
 
@@ -11,5 +13,17 @@ function selectScene(search: string): SceneName {
 	return isSelectableScene(requested) ? requested : "demo"
 }
 
-export type { SceneName }
-export { selectScene }
+function selectBenchmarkWindow(search: string): BenchmarkWindow {
+	return new URLSearchParams(search).get("window") === "settled"
+		? "settled"
+		: "collapse"
+}
+
+function selectBenchmarkLayout(search: string): BenchmarkLayout {
+	return new URLSearchParams(search).get("pyramid") === "standing"
+		? "standing"
+		: "falling"
+}
+
+export type { BenchmarkLayout, BenchmarkWindow, SceneName }
+export { selectBenchmarkLayout, selectBenchmarkWindow, selectScene }

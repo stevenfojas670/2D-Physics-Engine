@@ -8,14 +8,20 @@ import type { CollisionGroup } from "@/types/collisionGroups/collisionGroups.typ
 class CollisionSettings {
 	private readonly matrix: Map<number, number>
 	private readonly names: Map<number, string>
+	private changes: number
 
 	constructor() {
 		this.matrix = new Map()
 		this.names = new Map()
+		this.changes = 0
 		for (const group of Object.values(CollisionGroups)) {
 			this.matrix.set(group.id, DEFAULT_COLLISION)
 			this.names.set(group.id, group.name)
 		}
+	}
+
+	get version(): number {
+		return this.changes
 	}
 
 	canCollide(groupA: number, groupB: number): boolean {
@@ -25,11 +31,13 @@ class CollisionSettings {
 	enableCollision(groupA: CollisionGroup, groupB: CollisionGroup): void {
 		this.matrix.set(groupA.id, (this.matrix.get(groupA.id) ?? 0) | groupB.id)
 		this.matrix.set(groupB.id, (this.matrix.get(groupB.id) ?? 0) | groupA.id)
+		this.changes++
 	}
 
 	disableCollision(groupA: CollisionGroup, groupB: CollisionGroup): void {
 		this.matrix.set(groupA.id, (this.matrix.get(groupA.id) ?? 0) & ~groupB.id)
 		this.matrix.set(groupB.id, (this.matrix.get(groupB.id) ?? 0) & ~groupA.id)
+		this.changes++
 	}
 
 	setGroupName(group: CollisionGroup, name: string): void {

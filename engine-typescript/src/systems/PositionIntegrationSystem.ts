@@ -1,7 +1,7 @@
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { Particle } from "@/components/Particle"
-import { Sleep } from "@/components/Sleep"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
 import {
@@ -16,8 +16,8 @@ function createPositionIntegrationSystem(world: World): System {
 	const velocityStore = world.store(Velocity)
 	const transforms = world.store(Transform).columns
 	const velocities = velocityStore.columns
-	const bodies = world.view([Transform, Velocity, Sleep], {
-		without: [Particle],
+	const bodies = world.view([Transform, Velocity], {
+		without: [Particle, Asleep],
 	})
 	let pseudo = world.resource(PseudoVelocitiesResource)
 	let stepDeltaTime = 0

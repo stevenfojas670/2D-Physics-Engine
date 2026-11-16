@@ -1,31 +1,41 @@
+import type { Entity } from "@/ecs/Entity"
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { Collider } from "@/components/Collider"
 import { Particle } from "@/components/Particle"
 import { Renderable } from "@/components/Renderable"
 import { Transform } from "@/components/Transform"
 import { ColliderKind } from "@/shapes/colliderShapes"
+import { DebugOptionsResource } from "./DebugOptions"
 import type { DrawBatches } from "./DrawBatches"
 import { RenderContextResource } from "./RenderContext"
 
 const CENTROID_RADIUS = 5
 const FALLBACK_COLOR = "black"
+const SLEEPING_COLOR = "rgb(160, 160, 160)"
 
 function createColliderRenderSystem(world: World): System {
 	const transforms = world.store(Transform).columns
 	const colliders = world.store(Collider).columns
 	const renderables = world.store(Renderable).columns
+	const asleep = world.store(Asleep)
 	const drawable = world.view([Transform, Collider, Renderable], {
 		without: [Particle],
 	})
 	let batches: DrawBatches
+	let showSleeping = false
 
 	const drawCollider = (
 		transformSlot: number,
 		colliderSlot: number,
 		renderableSlot: number,
+		entity: Entity,
 	): void => {
-		const color = renderables.color[renderableSlot] ?? FALLBACK_COLOR
+		const color =
+			showSleeping && asleep.has(entity)
+				? SLEEPING_COLOR
+				: (renderables.color[renderableSlot] ?? FALLBACK_COLOR)
 		const x = transforms.x[transformSlot]
 		const y = transforms.y[transformSlot]
 		if (colliders.kind[colliderSlot] === ColliderKind.CIRCLE) {
@@ -60,8 +70,11 @@ function createColliderRenderSystem(world: World): System {
 
 	return () => {
 		batches = world.resource(RenderContextResource).batches
+		showSleeping =
+			world.hasResource(DebugOptionsResource) &&
+			world.resource(DebugOptionsResource).sleeping
 		drawable.each(drawCollider)
 	}
 }
 
-export { createColliderRenderSystem }
+export { SLEEPING_COLOR, createColliderRenderSystem }

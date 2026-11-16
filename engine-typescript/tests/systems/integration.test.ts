@@ -5,6 +5,7 @@ import { Schedule } from "@/ecs/Schedule"
 import { Collider } from "@/components/Collider"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { MovementIntent } from "@/components/MovementIntent"
+import { SleepTimer } from "@/components/SleepTimer"
 import { Transform } from "@/components/Transform"
 import { Velocity } from "@/components/Velocity"
 import {
@@ -63,14 +64,30 @@ describe("rigid-body integration", () => {
 		expect(forces.columns.y[forces.slotOf(body)]).toBe(0)
 	})
 
-	test("slow body is put to sleep", () => {
+	test("slow body keeps drifting", () => {
 		const world = new World()
 		const body = spawnRigidBody(world, createRectangleShape(10, 10), 0, 0, 1)
 		world.add(body, Velocity, { x: 0.005, y: 0, angular: 0.005 })
 		rigidBodyIntegration(world)(0.016)
-		expect(velocityOf(world, body)).toEqual([0, 0])
+		expect(velocityOf(world, body)[0]).toBeGreaterThan(0)
 		const velocities = world.store(Velocity)
-		expect(velocities.columns.angular[velocities.slotOf(body)]).toBe(0)
+		expect(velocities.columns.angular[velocities.slotOf(body)]).toBeGreaterThan(
+			0,
+		)
+		expect(positionOf(world, body)[0]).toBeGreaterThan(0)
+	})
+
+	test("body without a sleep timer still falls", () => {
+		const world = worldWithGravity()
+		const body = spawnRigidBody(world, createRectangleShape(10, 10), 0, 0, 1)
+		world.remove(body, SleepTimer)
+		const schedule = new Schedule()
+			.add("gravity", createGravitySystem(world))
+			.add("rigidBodyIntegration", rigidBodyIntegration(world))
+		for (let step = 0; step < 30; step++) {
+			schedule.run(world, 1 / 60)
+		}
+		expect(positionOf(world, body)[1]).toBeGreaterThan(0)
 	})
 
 	test("torque spins the body", () => {

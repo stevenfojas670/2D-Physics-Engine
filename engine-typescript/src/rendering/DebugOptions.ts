@@ -7,6 +7,7 @@ interface DebugOptions {
 	mouseDrag: boolean
 	contacts: boolean
 	gridCells: boolean
+	sleeping: boolean
 }
 
 function createDebugOptions(): DebugOptions {
@@ -17,6 +18,7 @@ function createDebugOptions(): DebugOptions {
 		mouseDrag: true,
 		contacts: false,
 		gridCells: false,
+		sleeping: true,
 	}
 }
 

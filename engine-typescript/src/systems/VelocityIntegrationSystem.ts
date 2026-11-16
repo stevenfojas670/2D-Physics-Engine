@@ -1,10 +1,10 @@
 import type { System } from "@/ecs/Schedule"
 import type { World } from "@/ecs/World"
+import { Asleep } from "@/components/Asleep"
 import { ForceAccumulator } from "@/components/ForceAccumulator"
 import { LinearDamping } from "@/components/LinearDamping"
 import { Mass } from "@/components/Mass"
 import { Particle } from "@/components/Particle"
-import { Sleep } from "@/components/Sleep"
 import { Velocity } from "@/components/Velocity"
 
 function createVelocityIntegrationSystem(world: World): System {
@@ -12,11 +12,9 @@ function createVelocityIntegrationSystem(world: World): System {
 	const forces = world.store(ForceAccumulator).columns
 	const masses = world.store(Mass).columns
 	const dampings = world.store(LinearDamping).columns
-	const sleeps = world.store(Sleep).columns
-	const bodies = world.view(
-		[Velocity, ForceAccumulator, Mass, LinearDamping, Sleep],
-		{ without: [Particle] },
-	)
+	const bodies = world.view([Velocity, ForceAccumulator, Mass, LinearDamping], {
+		without: [Particle, Asleep],
+	})
 	let stepDeltaTime = 0
 
 	const integrate = (
@@ -24,7 +22,6 @@ function createVelocityIntegrationSystem(world: World): System {
 		forceSlot: number,
 		massSlot: number,
 		dampingSlot: number,
-		sleepSlot: number,
 	): void => {
 		const deltaTime = stepDeltaTime
 		const inverseMass = masses.inverseMass[massSlot]
@@ -39,18 +36,6 @@ function createVelocityIntegrationSystem(world: World): System {
 		velocityX *= dampings.linear[dampingSlot]
 		velocityY *= dampings.linear[dampingSlot]
 		angularVelocity *= dampings.angular[dampingSlot]
-
-		const linearThreshold = sleeps.linearThreshold[sleepSlot]
-		if (
-			velocityX * velocityX + velocityY * velocityY <
-			linearThreshold * linearThreshold
-		) {
-			velocityX = 0
-			velocityY = 0
-		}
-		if (Math.abs(angularVelocity) < sleeps.angularThreshold[sleepSlot]) {
-			angularVelocity = 0
-		}
 
 		velocities.x[velocitySlot] = velocityX
 		velocities.y[velocitySlot] = velocityY
