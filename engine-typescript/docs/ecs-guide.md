@@ -143,25 +143,25 @@ function createWindSystem(world: World): System {
 
 **The update schedule** (`createUpdateSchedule`), in order:
 
-| #   | System                      | Why it is here                                                                                                    |
-| --- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 1   | `WorldChangeWakeSystem`     | Wakes every sleeper when gravity, wind, the collision matrix or `SleepSettings.enabled` changed since last step   |
-| 2   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                                                         |
-| 3   | `MouseDragSystem`           | Adds the drag force and keeps the held body awake; needs last step's broad-phase grid to pick a body              |
-| 4   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                                                 |
-| 5   | `GravitySystem`             | Adds gravity force                                                                                                |
-| 6   | `WindSystem`                | Adds wind force                                                                                                   |
-| 7   | `JointForceSystem`          | Adds spring and joint forces from current positions                                                               |
-| 8   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it                             |
-| 9   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                                                |
-| 10  | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                                                      |
-| 11  | `ContactDetectionSystem`    | Runs the narrow phase once per pair and stores the contact manifolds; treats sleepers as immovable and wakes them |
-| 12  | `IslandSystem`              | Groups awake bodies linked by contacts and joints into islands for sleeping                                       |
-| 13  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                          |
-| 14  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                           |
-| 15  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                     |
-| 16  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                 |
-| 17  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                   |
+| #   | System                      | Why it is here                                                                                                                                                                       |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `WorldChangeWakeSystem`     | Wakes every sleeper when gravity, wind, the collision matrix or `SleepSettings.enabled` changed since last step                                                                      |
+| 2   | `PlayerInputSystem`         | Turns keys into `MovementIntent` before anything reads it                                                                                                                            |
+| 3   | `MouseDragSystem`           | Adds the drag force and keeps the held body awake; needs last step's broad-phase grid to pick a body                                                                                 |
+| 4   | `IntentForceSystem`         | Turns `MovementIntent` into force                                                                                                                                                    |
+| 5   | `GravitySystem`             | Adds gravity force                                                                                                                                                                   |
+| 6   | `WindSystem`                | Adds wind force                                                                                                                                                                      |
+| 7   | `JointForceSystem`          | Adds spring and joint forces from current positions                                                                                                                                  |
+| 8   | `VelocityIntegrationSystem` | Turns all forces into velocity and clears them; every force system must run before it                                                                                                |
+| 9   | `ParticleIntegrationSystem` | Integrates particles in one go; they don't collide                                                                                                                                   |
+| 10  | `BroadPhaseSystem`          | Finds candidate pairs from last step's final collider bounds                                                                                                                         |
+| 11  | `ContactDetectionSystem`    | First wakes every sleeper whose bounds touch a disturbing body, then runs the narrow phase once per pair and stores the contact manifolds; treats sleepers still asleep as immovable |
+| 12  | `IslandSystem`              | Groups awake bodies linked by contacts and joints into islands for sleeping                                                                                                          |
+| 13  | `VelocitySolveSystem`       | Warm-starts the contacts, then fixes velocities with sequential impulses                                                                                                             |
+| 14  | `PseudoVelocitySolveSystem` | Pushes overlapping bodies apart through pseudo-velocities that never become real motion                                                                                              |
+| 15  | `PositionIntegrationSystem` | Moves bodies by velocity plus pseudo-velocity                                                                                                                                        |
+| 16  | `ColliderTransformSystem`   | Moves colliders to the final positions, for rendering and next step's broad phase                                                                                                    |
+| 17  | `SleepSystem`               | Counts how long each body has been still and puts it to sleep after the timeout                                                                                                      |
 
 **The render schedule** (`createRenderSchedule`): `ColliderRenderSystem`, `JointRenderSystem`, `DebugDrawSystem` each add to the draw batches, then `DrawFlushSystem` draws them, so it must be last.
 
@@ -193,7 +193,7 @@ Bodies that stay still are taken out of the step until something disturbs them. 
 
 - **Pieces:** the `Asleep` tag (the body sleeps), the `NeverSleep` tag (it may never sleep), the `SleepTimer` component (seconds it has been still) and the `SleepSettings` resource (`enabled`, `linearThreshold` 1 px/s, `angularThreshold` 0.035 rad/s, `timeout` 0.5 s). `spawnRigidBody` adds `SleepTimer` to every movable body; `canSleep: false` adds `NeverSleep`.
 - **Islands sleep together.** Bodies linked by contacts or joints form an island (`IslandSystem`), and an island sleeps only when every member can sleep and has been still for the timeout. One `NeverSleep` body keeps its whole island awake. Waking any member wakes the whole island.
-- **Active systems skip sleepers** with `without: [Asleep]`. A sleeper's world vertices and bounds stay valid because it doesn't move. Contact detection treats it as immovable.
+- **Active systems skip sleepers** with `without: [Asleep]`. A sleeper's world vertices and bounds stay valid because it doesn't move. Contact detection treats it as immovable, but first wakes any sleeper whose bounds touch a disturbing body, with `wakeBodyNow`, so the hit that wakes a sleeper also moves it in the same step.
 - **Waking** goes through `src/sleeping/wakeBodies.ts`. `wakeBody(world, entity)` resets the timer at once and defers removing `Asleep` from every body that fell asleep with it. Contacts, joints, mouse drag and movement intent call it already.
 - **Code that sets a body's velocity, position or force directly calls `wakeBody`** after doing so, or a sleeper ignores the change.
 - **Code that changes the world without motion uses `src/sleeping/worldEdits.ts`:** `destroyBody` instead of `world.destroyEntity` for bodies, `moveStaticBody` to move a static body, and `setCollisionGroup` to change a body's group. Changing the gravity, wind or collision matrix resources needs no call: `WorldChangeWakeSystem` wakes everything.

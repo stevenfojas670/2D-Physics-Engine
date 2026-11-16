@@ -59,10 +59,21 @@ function wakeBody(world: World, entity: Entity): void {
 		return
 	}
 	world.defer((deferredWorld) => {
-		installSleepResources(deferredWorld)
-		const islands = deferredWorld.resource(SleepingIslandsResource)
-		wakeMembers(deferredWorld, islands.take(entity))
+		wakeBodyNow(deferredWorld, entity)
 	})
+}
+
+function wakeBodyNow(world: World, entity: Entity): void {
+	if (!world.isAlive(entity)) {
+		return
+	}
+	resetSleepTime(world, entity)
+	if (!world.has(entity, Asleep)) {
+		return
+	}
+	installSleepResources(world)
+	const islands = world.resource(SleepingIslandsResource)
+	wakeMembers(world, islands.take(entity))
 }
 
 function wakeAllBodies(world: World): void {
@@ -138,4 +149,5 @@ export {
 	wakeAllBodies,
 	wakeBodiesOverlapping,
 	wakeBody,
+	wakeBodyNow,
 }

@@ -260,7 +260,7 @@ describe("scenes", () => {
 		}
 	})
 
-	test("demo crates fall asleep and wake when the player pushes them", () => {
+	test("demo crates fall asleep and the player's first hit knocks them over", () => {
 		const world = inputWorld(800, 600)
 		const handles = buildDemoScene(world, 800, 600)
 		const update = createUpdateSchedule(world)
@@ -273,12 +273,17 @@ describe("scenes", () => {
 		const keys = releasedKeys()
 		keys.KeyD = true
 		world.setResource(ControllerKeysResource, keys)
-		for (let step = 0; step < 300; step++) {
+		const [bottomCrate] = handles.crates
+		while (world.has(bottomCrate, Asleep)) {
 			update.run(world, STEP)
 		}
 		for (const crate of handles.crates) {
 			expect(world.has(crate, Asleep)).toBe(false)
 		}
+		for (let step = 0; step < 30; step++) {
+			update.run(world, STEP)
+		}
+		expect(positionOf(world, bottomCrate)[0]).toBeGreaterThan(550)
 	})
 })
 

@@ -9,7 +9,10 @@ import {
 	DEFAULT_FRICTION,
 	DEFAULT_RESTITUTION,
 } from "@/materials/materialDefaults"
-import { CandidatePairsResource } from "@/resources/CandidatePairs"
+import {
+	CandidatePairs,
+	CandidatePairsResource,
+} from "@/resources/CandidatePairs"
 import { ContactsResource } from "@/resources/ContactLog"
 import {
 	ContactManifolds,
@@ -17,7 +20,7 @@ import {
 	MAX_MANIFOLD_POINTS,
 } from "@/resources/ContactManifolds"
 import { aabbOverlap } from "@/shapes/colliderGeometry"
-import { disturbs, wakeBody } from "@/sleeping/wakeBodies"
+import { disturbs, wakeBodyNow } from "@/sleeping/wakeBodies"
 
 const MISSING_SLOT = -1
 const TOUCHING = 1
@@ -112,10 +115,39 @@ function createContactDetectionSystem(world: World): System {
 		manifolds.inheritImpulses(manifold)
 	}
 
+	const wakeIfDisturbed = (sleeper: Entity, other: Entity): void => {
+		if (
+			asleep.has(sleeper) &&
+			inverseMassOf(other) > 0 &&
+			disturbs(world, other)
+		) {
+			wakeBodyNow(world, sleeper)
+		}
+	}
+
+	const wakeTouchedSleepers = (pairs: CandidatePairs): void => {
+		for (let pair = 0; pair < pairs.count && asleep.size > 0; pair++) {
+			const entityA = pairs.entityA(pair)
+			const entityB = pairs.entityB(pair)
+			const colliderSlotA = colliders.slotOf(entityA)
+			const colliderSlotB = colliders.slotOf(entityB)
+			if (
+				colliderSlotA === MISSING_SLOT ||
+				colliderSlotB === MISSING_SLOT ||
+				!aabbOverlap(colliders.columns, colliderSlotA, colliderSlotB)
+			) {
+				continue
+			}
+			wakeIfDisturbed(entityB, entityA)
+			wakeIfDisturbed(entityA, entityB)
+		}
+	}
+
 	return () => {
 		const pairs = world.resource(CandidatePairsResource)
 		const contacts = world.resource(ContactsResource)
 		const manifolds = world.resource(ContactManifoldsResource)
+		wakeTouchedSleepers(pairs)
 		contacts.clear()
 		colliders.columns.touching.fill(0)
 		manifolds.beginStep()
@@ -167,12 +199,6 @@ function createContactDetectionSystem(world: World): System {
 				centerBX,
 				centerBY,
 			)
-			if (inverseMassA > 0 && asleep.has(entityB) && disturbs(world, entityA)) {
-				wakeBody(world, entityB)
-			}
-			if (inverseMassB > 0 && asleep.has(entityA) && disturbs(world, entityB)) {
-				wakeBody(world, entityA)
-			}
 			for (let index = 0; index < scratch.pointCount; index++) {
 				contacts.recordContact(
 					scratch.pointX[index],

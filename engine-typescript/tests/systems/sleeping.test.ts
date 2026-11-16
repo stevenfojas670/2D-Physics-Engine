@@ -121,7 +121,28 @@ describe("sleeping", () => {
 	})
 })
 
+function crateAfterHit(canSleep: boolean): [number, number] {
+	const world = physicsWorld(0, 0)
+	const crate = spawnRigidBody(world, createRectangleShape(20, 20), 0, 0, 1, {
+		canSleep,
+	})
+	stepWorld(world, 60)
+	expect(isAsleep(world, crate)).toBe(canSleep)
+	const mover = spawnRigidBody(world, createRectangleShape(20, 20), -60, 0, 1)
+	world.add(mover, Velocity, { x: 300, y: 0, angular: 0 })
+	stepWorld(world, 30)
+	return [positionOf(world, crate)[0], velocityOf(world, crate)[0]]
+}
+
 describe("waking", () => {
+	test("a hit pushes a sleeper as hard as an awake body", () => {
+		const [awakeX, awakeSpeed] = crateAfterHit(false)
+		const [sleeperX, sleeperSpeed] = crateAfterHit(true)
+		expect(awakeSpeed).toBeGreaterThan(50)
+		expect(Math.abs(sleeperSpeed - awakeSpeed)).toBeLessThan(1)
+		expect(Math.abs(sleeperX - awakeX)).toBeLessThan(1)
+	})
+
 	test("a falling box wakes a sleeper", () => {
 		const { world, box } = sleepingBox()
 		const falling = spawnRigidBody(
