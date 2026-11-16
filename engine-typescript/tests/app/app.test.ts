@@ -17,7 +17,10 @@ import { WindResource } from "@/resources/Wind"
 import { WorldSizeResource } from "@/resources/WorldSize"
 import { ColliderKind, createRectangleShape } from "@/shapes/colliderShapes"
 import type { ControllerKeys } from "@/types/controller/controller.types"
-import { buildBenchmarkScene } from "@/app/BenchmarkScene"
+import {
+	STANDING_PYRAMID_BODIES,
+	buildBenchmarkScene,
+} from "@/app/BenchmarkScene"
 import { ControllerKeysResource } from "@/app/ControllerKeys"
 import {
 	buildDemoScene,
@@ -226,15 +229,20 @@ describe("scenes", () => {
 		expect(world.store(Velocity).size).toBe(2000)
 	})
 
-	test("standing pyramid rests on the floor", () => {
+	test("standing pyramid is twenty rows of 30 px crates on the floor", () => {
 		const world = new World()
-		buildBenchmarkScene(world, 2000, "standing")
-		expect(world.store(Velocity).size).toBe(2000)
+		buildBenchmarkScene(world, STANDING_PYRAMID_BODIES, "standing")
+		expect(STANDING_PYRAMID_BODIES).toBe(210)
+		expect(world.store(Velocity).size).toBe(210)
 		const colliders = world.store(Collider)
 		const velocities = world.store(Velocity)
 		let lowestBottom = 0
 		for (let slot = 0; slot < velocities.size; slot++) {
 			const colliderSlot = colliders.slotOf(velocities.entityAt(slot))
+			expect(
+				colliders.columns.maxX[colliderSlot] -
+					colliders.columns.minX[colliderSlot],
+			).toBe(30)
 			lowestBottom = Math.max(
 				lowestBottom,
 				colliders.columns.maxY[colliderSlot],

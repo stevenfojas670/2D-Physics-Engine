@@ -6,6 +6,7 @@ import {
 	BENCHMARK_HEIGHT,
 	BENCHMARK_SETTLED_WARMUP_FRAMES,
 	BENCHMARK_WIDTH,
+	STANDING_PYRAMID_BODIES,
 	buildBenchmarkScene,
 } from "@/app/BenchmarkScene"
 import { ControllerKeysResource } from "@/app/ControllerKeys"
@@ -69,7 +70,11 @@ let demoHandles: DemoHandles | null = null
 if (scene === "benchmark") {
 	canvas.width = BENCHMARK_WIDTH
 	canvas.height = BENCHMARK_HEIGHT
-	buildBenchmarkScene(world, undefined, benchmarkLayout)
+	buildBenchmarkScene(
+		world,
+		benchmarkLayout === "standing" ? STANDING_PYRAMID_BODIES : undefined,
+		benchmarkLayout,
+	)
 } else if (scene === "sandbox") {
 	canvas.width = SANDBOX_WIDTH
 	canvas.height = SANDBOX_HEIGHT

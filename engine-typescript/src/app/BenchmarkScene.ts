@@ -13,7 +13,9 @@ const PYRAMID_TOP_Y = 60
 const BODY_SPACING = 14
 const HALF_BODY_SPACING = 7
 const BOX_SIZE = 12
-const STANDING_SPACING = 13
+const STANDING_PYRAMID_BODIES = 210
+const CRATE_SIZE = 30
+const CRATE_SPACING = 31
 const BODY_MASS = 1
 const BENCHMARK_SETTLED_WARMUP_FRAMES = 1800
 
@@ -24,10 +26,11 @@ function buildBenchmarkScene(
 ): void {
 	installWorldResources(world, BENCHMARK_WIDTH, BENCHMARK_HEIGHT)
 	spawnWalls(world, BENCHMARK_WIDTH, BENCHMARK_HEIGHT)
-	const box = createRectangleShape(BOX_SIZE, BOX_SIZE)
 	if (layout === "standing") {
-		spawnStandingPyramid(world, box, bodyCount)
+		const crate = createRectangleShape(CRATE_SIZE, CRATE_SIZE)
+		spawnStandingPyramid(world, crate, bodyCount)
 	} else {
+		const box = createRectangleShape(BOX_SIZE, BOX_SIZE)
 		spawnFallingPyramid(world, box, bodyCount)
 	}
 }
@@ -59,24 +62,18 @@ function standingBaseWidth(bodyCount: number): number {
 
 function spawnStandingPyramid(
 	world: World,
-	box: ColliderShape,
+	crate: ColliderShape,
 	bodyCount: number,
 ): void {
 	const baseWidth = standingBaseWidth(bodyCount)
-	const bottomY = BENCHMARK_HEIGHT - BOX_SIZE / 2
+	const bottomY = BENCHMARK_HEIGHT - CRATE_SIZE / 2
 	let spawned = 0
 	for (let level = 0; spawned < bodyCount; level++) {
 		const rowWidth = baseWidth - level
-		const leftX = PYRAMID_CENTER_X - ((rowWidth - 1) * STANDING_SPACING) / 2
-		const y = bottomY - level * BOX_SIZE
+		const leftX = PYRAMID_CENTER_X - ((rowWidth - 1) * CRATE_SPACING) / 2
+		const y = bottomY - level * CRATE_SIZE
 		for (let column = 0; column < rowWidth && spawned < bodyCount; column++) {
-			spawnRigidBody(
-				world,
-				box,
-				leftX + column * STANDING_SPACING,
-				y,
-				BODY_MASS,
-			)
+			spawnRigidBody(world, crate, leftX + column * CRATE_SPACING, y, BODY_MASS)
 			spawned++
 		}
 	}
@@ -86,5 +83,6 @@ export {
 	BENCHMARK_WIDTH,
 	BENCHMARK_HEIGHT,
 	BENCHMARK_SETTLED_WARMUP_FRAMES,
+	STANDING_PYRAMID_BODIES,
 	buildBenchmarkScene,
 }
