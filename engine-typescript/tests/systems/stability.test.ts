@@ -12,6 +12,7 @@ import {
 } from "@/shapes/colliderShapes"
 import {
 	installInputResources,
+	isAsleep,
 	physicsWorld,
 	positionOf,
 	stepWorld,
@@ -24,6 +25,8 @@ const TWENTY_BOX_SINK = 9
 const PYRAMID_BODIES = 210
 const PYRAMID_SPEED = 5
 const SETTLED_SHARE = 0.9
+const STANDING_DRIFT = 2
+const STANDING_SAG = 8
 const MOMENTUM_TOLERANCE = 1e-6
 
 function box(world: World, x: number, y: number): Entity {
@@ -102,6 +105,26 @@ describe("solver stability", () => {
 		installInputResources(world)
 		stepWorld(world, 600)
 		expect(speedAtShare(world, SETTLED_SHARE)).toBeLessThan(PYRAMID_SPEED)
+	})
+
+	test("small standing pyramid stays up and falls asleep", () => {
+		const world = new World()
+		buildBenchmarkScene(world, PYRAMID_BODIES, "standing")
+		installInputResources(world)
+		const velocities = world.store(Velocity)
+		const bodies: Entity[] = []
+		for (let slot = 0; slot < velocities.size; slot++) {
+			bodies.push(velocities.entityAt(slot))
+		}
+		const starts = bodies.map((body) => positionOf(world, body))
+		stepWorld(world, 600)
+		bodies.forEach((body, index) => {
+			const [x, y] = positionOf(world, body)
+			expect(Math.abs(x - starts[index][0])).toBeLessThan(STANDING_DRIFT)
+			expect(Math.abs(y - starts[index][1])).toBeLessThan(STANDING_SAG)
+		})
+		const asleep = bodies.filter((body) => isAsleep(world, body)).length
+		expect(asleep).toBe(bodies.length)
 	})
 
 	test("momentum is conserved in a collision", () => {

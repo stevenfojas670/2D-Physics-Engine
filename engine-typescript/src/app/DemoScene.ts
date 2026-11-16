@@ -39,6 +39,7 @@ type Walls = [Entity, Entity, Entity, Entity]
 interface DemoHandles {
 	walls: Walls
 	player: Entity
+	crates: Entity[]
 }
 
 interface WallPlacement {
@@ -53,6 +54,10 @@ const BOUNDARY_THICKNESS = 50
 const GRID_KIND = "hash"
 const GRID_CELL_SIZE = 20
 const DEMO_OBJECT_MASS = 10
+const CRATE_SIZE = 40
+const CRATE_STACK_X = 450
+const CRATE_COUNT = 3
+const CRATE_MASS = 1
 
 function installWorldResources(
 	world: World,
@@ -119,13 +124,24 @@ function buildDemoScene(
 
 	spawnStaticBody(world, createRectangleShape(100, 400), 300, 300)
 	spawnStaticBody(world, createRectangleShape(50, 100), 200, 200)
+	const crates = spawnCrateStack(world, height)
 
 	const settings = world.resource(CollisionSettingsResource)
 	settings.setGroupName(CollisionGroups.GROUP1, "Kinematic Objects")
 	settings.setGroupName(CollisionGroups.GROUP2, "Static Objects")
 	settings.disableCollision(CollisionGroups.GROUP1, CollisionGroups.GROUP2)
 
-	return { walls, player }
+	return { walls, player, crates }
+}
+
+function spawnCrateStack(world: World, floorY: number): Entity[] {
+	const crate = createRectangleShape(CRATE_SIZE, CRATE_SIZE)
+	const crates: Entity[] = []
+	for (let level = 0; level < CRATE_COUNT; level++) {
+		const y = floorY - CRATE_SIZE / 2 - level * CRATE_SIZE
+		crates.push(spawnRigidBody(world, crate, CRATE_STACK_X, y, CRATE_MASS))
+	}
+	return crates
 }
 
 function resizeDemoWorld(

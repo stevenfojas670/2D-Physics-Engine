@@ -21,7 +21,11 @@ import {
 	buildSandboxScene,
 	createSandboxRespawnSystem,
 } from "@/app/SandboxScene"
-import { selectBenchmarkWindow, selectScene } from "@/app/sceneSelection"
+import {
+	selectBenchmarkLayout,
+	selectBenchmarkWindow,
+	selectScene,
+} from "@/app/sceneSelection"
 import { createRenderSchedule, createUpdateSchedule } from "@/app/schedules"
 import type { SystemTime } from "@/app/SystemTimer"
 import { Asleep } from "@/components/Asleep"
@@ -50,6 +54,7 @@ const ctx = canvas.getContext("2d")!
 const scene = selectScene(location.search)
 const isBenchmark = scene === "benchmark"
 const benchmarkWindow = selectBenchmarkWindow(location.search)
+const benchmarkLayout = selectBenchmarkLayout(location.search)
 
 const world = new World()
 const controller = new Controller(false)
@@ -64,7 +69,7 @@ let demoHandles: DemoHandles | null = null
 if (scene === "benchmark") {
 	canvas.width = BENCHMARK_WIDTH
 	canvas.height = BENCHMARK_HEIGHT
-	buildBenchmarkScene(world)
+	buildBenchmarkScene(world, undefined, benchmarkLayout)
 } else if (scene === "sandbox") {
 	canvas.width = SANDBOX_WIDTH
 	canvas.height = SANDBOX_HEIGHT
@@ -209,7 +214,7 @@ function asleepShare(): number {
 }
 
 function benchmarkText(summary: FrameSummary): string {
-	return `${benchmarkWindow} · ${Math.round(asleepAtSampleEnd * 100)}% asleep · update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
+	return `${benchmarkLayout} · ${benchmarkWindow} · ${Math.round(asleepAtSampleEnd * 100)}% asleep · update ${summary.updateMs.toFixed(2)} ms · render ${summary.renderMs.toFixed(2)} ms · ${summary.drawCalls.toFixed(0)} draw calls`
 }
 
 function drawText(text: string, y: number): void {

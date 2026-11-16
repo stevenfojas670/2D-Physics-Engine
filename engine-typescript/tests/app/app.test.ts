@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { World } from "@/ecs/World"
 import type { Entity } from "@/ecs/Entity"
+import { Asleep } from "@/components/Asleep"
 import { Collider } from "@/components/Collider"
 import { MovementIntent } from "@/components/MovementIntent"
 import { PlayerControlled } from "@/components/PlayerControlled"
@@ -14,7 +15,7 @@ import { GravityResource } from "@/resources/Gravity"
 import { MouseDragResource } from "@/resources/MouseDrag"
 import { WindResource } from "@/resources/Wind"
 import { WorldSizeResource } from "@/resources/WorldSize"
-import { createRectangleShape } from "@/shapes/colliderShapes"
+import { ColliderKind, createRectangleShape } from "@/shapes/colliderShapes"
 import type { ControllerKeys } from "@/types/controller/controller.types"
 import { buildBenchmarkScene } from "@/app/BenchmarkScene"
 import { ControllerKeysResource } from "@/app/ControllerKeys"
@@ -37,7 +38,11 @@ import {
 	buildSandboxScene,
 	createSandboxRespawnSystem,
 } from "@/app/SandboxScene"
-import { selectBenchmarkWindow, selectScene } from "@/app/sceneSelection"
+import {
+	selectBenchmarkLayout,
+	selectBenchmarkWindow,
+	selectScene,
+} from "@/app/sceneSelection"
 import { createUpdateSchedule } from "@/app/schedules"
 
 const STEP = 1 / 60
@@ -188,7 +193,7 @@ describe("scenes", () => {
 	test("demo scene builds the spec's bodies", () => {
 		const world = inputWorld(800, 600)
 		const handles = buildDemoScene(world, 800, 600)
-		expect(world.store(Collider).size).toBe(7)
+		expect(world.store(Collider).size).toBe(10)
 		expect(world.has(handles.player, PlayerControlled)).toBe(true)
 		expect(world.has(handles.player, MovementIntent)).toBe(true)
 		expect(positionOf(world, handles.player)).toEqual([300, 420])
@@ -219,6 +224,53 @@ describe("scenes", () => {
 		buildBenchmarkScene(world)
 		expect(world.store(Collider).size).toBe(2004)
 		expect(world.store(Velocity).size).toBe(2000)
+	})
+
+	test("standing pyramid rests on the floor", () => {
+		const world = new World()
+		buildBenchmarkScene(world, 2000, "standing")
+		expect(world.store(Velocity).size).toBe(2000)
+		const colliders = world.store(Collider)
+		const velocities = world.store(Velocity)
+		let lowestBottom = 0
+		for (let slot = 0; slot < velocities.size; slot++) {
+			const colliderSlot = colliders.slotOf(velocities.entityAt(slot))
+			lowestBottom = Math.max(
+				lowestBottom,
+				colliders.columns.maxY[colliderSlot],
+			)
+		}
+		expect(lowestBottom).toBe(1000)
+	})
+
+	test("benchmark pyramid is all boxes", () => {
+		const world = new World()
+		buildBenchmarkScene(world)
+		const colliders = world.store(Collider)
+		for (let slot = 0; slot < colliders.size; slot++) {
+			expect(colliders.columns.kind[slot]).toBe(ColliderKind.POLYGON)
+		}
+	})
+
+	test("demo crates fall asleep and wake when the player pushes them", () => {
+		const world = inputWorld(800, 600)
+		const handles = buildDemoScene(world, 800, 600)
+		const update = createUpdateSchedule(world)
+		for (let step = 0; step < 180; step++) {
+			update.run(world, STEP)
+		}
+		for (const crate of handles.crates) {
+			expect(world.has(crate, Asleep)).toBe(true)
+		}
+		const keys = releasedKeys()
+		keys.KeyD = true
+		world.setResource(ControllerKeysResource, keys)
+		for (let step = 0; step < 300; step++) {
+			update.run(world, STEP)
+		}
+		for (const crate of handles.crates) {
+			expect(world.has(crate, Asleep)).toBe(false)
+		}
 	})
 })
 
@@ -338,6 +390,16 @@ describe("scene selection", () => {
 		expect(selectScene("?scene=benchmark")).toBe("benchmark")
 		expect(selectScene("?scene=sandbox")).toBe("sandbox")
 		expect(selectScene("?scene=nope")).toBe("demo")
+	})
+
+	test("pyramid query picks the benchmark layout, defaulting to falling", () => {
+		expect(selectBenchmarkLayout("?scene=benchmark")).toBe("falling")
+		expect(selectBenchmarkLayout("?scene=benchmark&pyramid=standing")).toBe(
+			"standing",
+		)
+		expect(selectBenchmarkLayout("?scene=benchmark&pyramid=nope")).toBe(
+			"falling",
+		)
 	})
 
 	test("window query picks the benchmark window, defaulting to collapse", () => {
