@@ -1,6 +1,6 @@
 # Physics performance: design
 
-Issue: #20, with one sub-issue per phase (#21–#25). This spec was written on `feature/physics-performance` and merged into `dev` on its own. Each phase is planned in its own session, in its own `superpowers/plans/` file, just before it is built. Status: draft. Decisions marked **Open** below are still the owner's to make, and each is settled when its phase is planned.
+Issue: #20, with one sub-issue per phase (#21–#25). This spec was written on `feature/physics-performance` and merged into `dev` on its own. Each phase is planned in its own session, in its own `superpowers/plans/` file, just before it is built. Status: phases 0–2 done, phase 3 next. Decisions marked **Open** below are still the owner's to make, and each is settled when its phase is planned.
 
 ## Intent
 
@@ -255,7 +255,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 - **What an island is:** the bodies linked by a chain of contacts or joints. Bodies don't all have to touch each other: if A touches B and B touches C, then A, B and C are one island. Static bodies don't link islands, so two piles on the same floor are two islands.
 - **Building them:** each step after contact detection, use union-find over awake dynamic bodies. Start with every body in its own set, merge the two sets for each contact and joint, and skip static bodies. This is close to linear in the number of contacts. Islands split by themselves when a pile breaks apart, because they're rebuilt every step. An island that falls asleep is recorded in `SleepingIslands` (see "Phase 2 decisions"), because it can't be rebuilt while asleep.
-- **Solving per island (keep only if measured to help):** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory. Islands are needed for sleeping either way; the reordering is kept only if `velocitySolve` gets faster.
+- **Solving per island (keep only if measured to help):** the velocity solve runs island by island, iterating over each island's contacts (phase 1). The result is the same as solving all contacts mixed together, because islands don't affect each other, but the data each island touches stays together in memory. Islands are needed for sleeping either way; the reordering is kept only if `velocitySolve` gets faster. Outcome: not tried (phase 2 plan, Task 12). 1,999 of the benchmark's 2,000 bodies form one island at every check, so grouping manifolds by island leaves their order essentially unchanged.
 - **To try later, not in the phase 2 plan:**
   - _Iteration count per island._ A lone body needs 1–2 passes and a tall stack 8 or more. Stop an island early once its corrections fall below a tolerance.
   - _Bottom-up order._ Solve each island's contacts in order of distance from static bodies, counted in contacts (floor contacts first), so support passes upward each pass. Warm starting may already make this unnecessary.
@@ -272,7 +272,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 #### Handoff: phase 2 done, phase 3 next
 
-**State.** Every task in `superpowers/plans/2026-11-14-physics-performance-phase-2.md` is built or ruled on, on `feature/sleeping`. Lint, typecheck, build and all tests pass. Don't redo any of it.
+**State.** Every task in `superpowers/plans/2026-11-14-physics-performance-phase-2.md` is built or ruled on (Task 12, the per-island solve, was ruled out without trying). It was built on `feature/sleeping` and merged into `dev` in PR #30. Lint, typecheck, build and all tests pass. Don't redo any of it.
 
 **Done before the pull request into `dev`:**
 
@@ -281,11 +281,21 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 3. Done: Status set to done.
 4. Open, moved to phase 3: the falling pile never sleeps because of the split-impulse position correction (Phase 3, first item).
 
-**Deferred minors from the final review** (fix when convenient, none changes behaviour): per-step allocations in `Islands` and the sleep system; contact detection looks up a body's mass and sleep state several times per manifold; a `NeverSleep` tag added at runtime keeps a non-zero timer, so that body stops disturbing sleepers; the sleep system's readiness check does two lookups per body per step.
+**Deferred minors from the final review** (fix when convenient, none changes behaviour): per-step allocations in `Islands` and the sleep system; contact detection looks up a body's mass and sleep state several times per manifold; the sleep system's readiness check does two lookups per body per step.
+
+**Known bug, deferred:** a `NeverSleep` tag added at runtime keeps whatever `sleepTime` the body had, because the sleep system skips `NeverSleep` bodies and never resets it. A body counts as disturbing only when its timer is 0, so that body stops waking the sleepers it touches. The fix is to reset the timer when the tag is added, or to treat `NeverSleep` as disturbing whatever its timer. No scene adds the tag at runtime today.
+
+**Phase 3 next steps (#24):**
+
+1. Start a new session, branch from `dev` (for example `feature/position-correction`), and plan phase 3 in `superpowers/plans/YYYY-MM-DD-physics-performance-phase-3.md` using superpowers:writing-plans.
+2. Plan it as one plan in two parts with a handoff checkpoint between them, as phase 2 did: part A is position correction, part B is broad-phase trimming. Part A changes how every stack behaves and part B is low-risk, so part B can still ship if part A needs more rounds.
+3. Make part A's first task a headless probe for the falling pile, before choosing a method. It reports, over a fixed span after settling: how many boxes moved more than 1 px and their mean outward drift, how many contact points are deeper than 1 px and the deepest one, and the share asleep. The phase 2 numbers under phase 3's first item were taken by hand and nothing in the repo reproduces them. Record the probe's numbers for the current split impulses first, so each candidate is compared against the same baseline.
+4. Gate part A with phase 1's stability tests and a side-by-side visual check of `?scene=demo`, `?scene=benchmark` (both pyramids) and `?scene=sandbox` against `dev`, as phase 1 did.
+5. Re-run both benchmarks and both windows after each part. Fill in Results row 3 and a "Phase 3 split", and set the Status line.
 
 **Resume prompt (phase 3):**
 
-> Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 2 done, phase 3 next" and "Phase 2 split"). Review phase 3 (issue #24), starting with its first item, position correction that lets piles rest. Talk through the choice between nonlinear Gauss–Seidel and a soft step with me, then plan phase 3 with superpowers:writing-plans.
+> Phase 2 of `superpowers/specs/2026-11-13-physics-performance-design.md` is done (see "Handoff: phase 2 done, phase 3 next" and "Phase 2 split"). Review phase 3 (issue #24), starting with its first item, position correction that lets piles rest. Talk through the options with me: nonlinear Gauss–Seidel, a soft step, or a simpler change to the split-impulse pass if the measurements support it. Then plan phase 3 with superpowers:writing-plans, following "Phase 3 next steps".
 
 ### Phase 3: position correction and broad-phase trimming
 
@@ -297,8 +307,9 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 - **Problem:** the 2,000-box falling pyramid collapses into a pile that never stops creeping, so it never sleeps (0% asleep after a minute, update 11.79 ms in the settled window). Measured on the box pile: over 10 s, 1,600 boxes moved more than 1 px, outward on average (2.2 px at friction 0.1, 3.7 px at friction 0.6), while 196–467 contact points sat deeper than 1 px (up to 4.5 px, against a 0.5 px slop).
 - **Cause:** phase 1's split-impulse pass (`pseudoVelocitySolve`) pushes those points apart along their normals with no friction, and between tilted boxes the normals point partly sideways. Gravity pulls the boxes back, so every step ratchets them outward, and the restored velocities keep some bodies above the 1 px/s sleep threshold. With that pass switched off after 30 s, the same pile stopped completely and all 2,000 boxes fell asleep. 16 velocity passes, β 0.1 or a 1 px slop each still ended 0.0–0.1% asleep.
-- **Options to evaluate:** nonlinear Gauss–Seidel position correction (Box2D 2.x: re-measure the overlap from current positions on every correction pass, so correction can't overshoot), or Box2D 3's soft step (soft constraints with relax passes that drop the bias). Either changes how every stack behaves, so the stability tests and a visual check against `dev` gate it.
-- **Done when:** the falling benchmark pile falls asleep within about 30 s of settling, the stability tests pass, and stacks look no worse than on `dev`.
+- **Measurement:** the numbers above were taken by hand during the phase 2 review; nothing in the repo reproduces them. Phase 3 first adds a headless probe that reports them (see "Phase 3 next steps").
+- **Options to evaluate:** nonlinear Gauss–Seidel position correction (Box2D 2.x: re-measure the overlap from current positions on every correction pass, so correction can't overshoot), or Box2D 3's soft step (soft constraints with relax passes that drop the bias). A simpler change to the split-impulse pass is a third candidate if the probe supports it, since switching the pass off entirely let the pile sleep. Any of them changes how every stack behaves, so the stability tests and a visual check against `dev` gate it.
+- **Done when:** the falling benchmark pile is at least 95% asleep by the start of the settled window (1,800 frames, 30 s after the scene starts, `BENCHMARK_SETTLED_WARMUP_FRAMES` in `src/app/BenchmarkScene.ts`), the stability tests pass, and stacks look no worse than on `dev`. If the pile needs longer, raise that warm-up and say so in the Results notes, so the settled window still measures a sleeping pile.
 
 **Then the broad phase:**
 
@@ -346,7 +357,7 @@ What must not change: stacks are at least as stable as on `dev` (the anti-goal),
 
 4. **Cache the separating axis per pair.** SAT exits as soon as an edge separates the shapes (`deepestContact` returns `false` when no vertex lies behind the edge), but in the worst case it tries every edge of both polygons first (up to 8 edge tests for two boxes, each against 4 vertices). Neighbouring bodies rarely change arrangement between steps, so store per pair which polygon and edge separated them last step, and test that edge first. If it still separates, the test ends after 1 edge instead of up to 8. For touching pairs, store the reference edge instead. Phase 1's clipping starts from it, and it's part of the contact's feature ID for warm starting. It lives in the same per-pair store phase 1 adds, keyed by the entity pair. It mostly helps pairs that are near but not touching, so measure it before keeping it.
 5. **`Math.hypot` → `Math.sqrt(x * x + y * y)` in hot paths.** V8's `Math.hypot` guards against overflow and underflow that engine-scale numbers never reach, and it is noticeably slower. Items 2 and 3 remove the calls in collider transforms and the narrow phase. Switch the rest that run per contact or per step, such as friction tangent normalisation in the solver and joint lengths, and leave one-off uses (shape construction) alone.
-6. **Build the block solver's matrix once per step.** Phase 1's 2×2 normal block solve (`solveNormalBlock` in `src/collisionDetectionSystem/sequentialImpulse.ts`) rebuilds K (k11, k12, k22) and its condition check on every velocity pass, although K only depends on the anchors, normal and masses, which don't change within a step. Compute K, its inverse and the condition result once in `prepareContacts`, and store them per manifold in `ContactManifolds`. The velocity solve is the largest system in the phase 1 browser split (40.5%), so measure it before and after. A finding deferred from phase 1's review. Test: the block solver test gives the same impulses with the stored matrix.
+6. **Build the block solver's matrix once per step.** Phase 1's 2×2 normal block solve (`solveNormalBlock` in `src/collisionDetectionSystem/sequentialImpulse.ts`) rebuilds K (k11, k12, k22) and its condition check on every velocity pass, although K only depends on the anchors, normal and masses, which don't change within a step. Compute K, its inverse and the condition result once in `prepareContacts`, and store them per manifold in `ContactManifolds`. The velocity solve is the largest system in the browser splits (40.5% in phase 1, 48% of the falling collapse in phase 2), so measure it before and after. A finding deferred from phase 1's review. Test: the block solver test gives the same impulses with the stored matrix.
 
 **Why last:** phase 1 cuts narrow-phase calls from about 25 per pair to 1, so the same saving is worth about 1/25 of what it would be today. Phase 2 removes sleepers and phase 3 removes static pairs from what reaches the narrow phase and transforms. Optimising this code earlier would mean polishing work that is about to shrink.
 
@@ -374,10 +385,12 @@ Only if phases 1–4 aren't enough:
 ```
 Phase 0 (measure)
   └─ Phase 1 (cached contacts, sequential impulses, warm starting)
-       ├─ Phase 2 (sleeping, then islands)
-       └─ Phase 3 (position correction, then broad-phase trimming)
-            └─ Phase 4 (narrow-phase details)  only if numbers still call for it
+       └─ Phase 2 (sleeping, then islands)
+            └─ Phase 3 (position correction, then broad-phase trimming)
+                 └─ Phase 4 (narrow-phase details)  only if numbers still call for it
 ```
+
+Phase 3 was planned to depend only on phase 1, but its first item comes from phase 2's finding that the falling pile never sleeps, and its pair skipping relies on phase 2's sleepers and wake rules.
 
 Each phase is its own sub-issue (#21–#25), branch from `dev` and pull request back into `dev`, so its benchmark change can be seen on its own. When a phase is planned, built or measured, update its **Status** line and the results table.
 
