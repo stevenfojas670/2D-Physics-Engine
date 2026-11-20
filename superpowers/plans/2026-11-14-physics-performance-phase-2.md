@@ -307,7 +307,7 @@ Keep only if measured to help (spec, "Solving per island").
 
 **Task 13 measurement (headless, two `npm run bench` runs):**
 
-Pyramid sleep with islands: best 0.1% asleep within 3,600 steps at the default thresholds, 0.1% at 2 px/s / 0.07 rad/s and 0.1% at 4 px/s / 0.14 rad/s, so the defaults stay. The pyramid is one island of 1,999–2,000 bodies. At any moment a few bodies in the bottom rows jitter at 1–7 px/s and 0.15–0.57 rad/s while their positions stay within 0.1 px: contact jitter that 8 velocity passes don't remove, not real motion. One restless body keeps the whole island awake.
+Pyramid sleep with islands: best 0.1% asleep within 3,600 steps at the default thresholds, 0.1% at 2 px/s / 0.07 rad/s and 0.1% at 4 px/s / 0.14 rad/s, so the defaults stay. The pyramid is one island of 1,999–2,000 bodies. At any moment a few bodies in the bottom rows jitter at 1–7 px/s and 0.15–0.57 rad/s while their positions stay within 0.1 px: contact jitter that 8 velocity passes don't remove, not real motion. One restless body keeps the whole island awake. (Superseded by the owner's review below: the cause is the split-impulse pass, not too few velocity passes.)
 
 | Window | Update total ms | contactDetection | velocitySolve | broadPhase | islands | sleep | Asleep |
 | --- | --- | --- | --- | --- | --- | --- | --- |
